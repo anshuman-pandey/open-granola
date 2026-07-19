@@ -1,4 +1,4 @@
-import { Download, HardDrive, ShieldCheck, Trash2 } from "lucide-react";
+import { Download, FileUp, HardDrive, ShieldCheck, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { MODELS } from "../lib/data";
 
@@ -122,6 +122,26 @@ export function SettingsView() {
                 )}
               </div>
             ))}
+          </div>
+        </section>
+
+        {/* Import */}
+        <section className="animate-rise rounded-2xl border border-border bg-card shadow-sm" style={{ animationDelay: "160ms" }}>
+          <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
+            <FileUp size={15} className="text-primary" />
+            <span className="text-[14px] font-bold">Import from another notetaker</span>
+          </div>
+          <div className="divide-y divide-border">
+            <Row title="Granola" desc="Bring your history with you: drop Granola's export (Settings → Data → Export, or their API) and Sotto converts notes, transcripts and dates into local meetings. The file is read once, then forgotten.">
+              <button className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary">
+                Choose export…
+              </button>
+            </Row>
+            <Row title="Otter / Fireflies / read.ai" desc="Same trick for the other clouds — CSV or JSON exports become fully local, fully searchable Sotto notes.">
+              <button className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary">
+                Choose export…
+              </button>
+            </Row>
           </div>
         </section>
 

@@ -1,8 +1,8 @@
 # Sotto Launch Kit
 
 Everything you need to push Sotto to GitHub and post it everywhere. Copy-paste ready.
-**Before posting:** replace `sotto-notes/sotto` with your actual GitHub org/repo and add real
-download links after your first release build.
+**Repo is live:** https://github.com/anshuman-pandey/sotto-notes — posts below already use it.
+Add real download links after the first release build (the tag workflow creates a draft).
 
 ---
 
@@ -44,7 +44,7 @@ git tag v0.1.0 && git push origin v0.1.0   # CI builds dmg/msi/AppImage into a d
 >
 > Stack: Tauri (Rust) + React/TS, whisper-rs, llama-cpp-2, rusqlite + sqlite-vec. ~15 MB installer; models (~4 GB) download once on first run.
 >
-> Repo: https://github.com/sotto-notes/sotto — feedback very welcome, especially from the local-inference crowd. The diarizer is currently model-free spectral clustering; curious what you'd do better within a pure-Rust budget.
+> Repo: https://github.com/anshuman-pandey/sotto-notes — feedback very welcome, especially from the local-inference crowd. The diarizer is currently model-free spectral clustering; curious what you'd do better within a pure-Rust budget.
 
 ---
 
@@ -77,7 +77,7 @@ Body: lead with the workflow: no bot joins, notes write themselves, action items
 > 🎙️ bot-free capture · ⚡ on-device Whisper · 🧠 local LLM notes · 🔍 semantic search · 🐧 Linux too
 >
 > Free. Apache-2.0. No accounts, no cloud, no retention.
-> github.com/sotto-notes/sotto 🧵
+> github.com/anshuman-pandey/sotto-notes 🧵
 
 **2/** Granola's trade: nice notes, but your audio goes to their cloud, they train on your data by default, free tier history is capped, and Linux doesn't exist. Sotto keeps the workflow, deletes the business model.
 
@@ -87,7 +87,7 @@ Body: lead with the workflow: no bot joins, notes write themselves, action items
 
 **5/** Under the hood: Tauri + Rust, whisper.cpp streaming (2s windows), llama.cpp for summaries/chat, sqlite-vec for search, spectral-clustering diarization. 15MB installer, models download once. Works fully offline — on a plane, in a SCIF, wherever.
 
-**6/** It's v0.1 and genuinely useful today. Star it, try it in your next call, and tell me what breaks. Issues and PRs welcome — especially Windows WASAPI and PipeWire folks. github.com/sotto-notes/sotto
+**6/** It's v0.1 and genuinely useful today. Star it, try it in your next call, and tell me what breaks. Issues and PRs welcome — especially Windows WASAPI and PipeWire folks. github.com/anshuman-pandey/sotto-notes
 
 ---
 

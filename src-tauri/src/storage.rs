@@ -41,6 +41,23 @@ CREATE TABLE IF NOT EXISTS action_items (
     due        TEXT,
     done       INTEGER DEFAULT 0
 );
+CREATE TABLE IF NOT EXISTS commitments (
+    id         TEXT PRIMARY KEY,
+    meeting_id TEXT NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+    text       TEXT NOT NULL,        -- what was promised, verbatim-ish
+    owner      TEXT,                 -- who promised (speaker label or resolved name)
+    due        TEXT,                 -- normalized date phrase, e.g. "2026-07-24"
+    status     TEXT NOT NULL DEFAULT 'open',   -- open | kept | overdue
+    made_on    TEXT NOT NULL,
+    evidence   TEXT                  -- the transcript quote it came from
+);
+CREATE INDEX IF NOT EXISTS idx_commitments_status ON commitments(status);
+CREATE TABLE IF NOT EXISTS recipes (
+    id     TEXT PRIMARY KEY,
+    name   TEXT NOT NULL,
+    author TEXT,
+    prompt TEXT NOT NULL            -- markdown prompt pack, runs against the local LLM
+);
 CREATE TABLE IF NOT EXISTS embeddings (
     segment_id TEXT PRIMARY KEY REFERENCES segments(id) ON DELETE CASCADE,
     vector     BLOB NOT NULL       -- 768-dim f32, nomic-embed

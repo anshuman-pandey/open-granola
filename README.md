@@ -47,7 +47,8 @@ removes the business model:
 | Trains on your data | **Impossible (no network)** | Opt-out; org-wide = Enterprise |
 | Data retention | **None — audio shredded post-transcript** | Server-side, tier-dependent |
 | Works offline | **Yes, fully** | No |
-| Live assist during the call | **Recall, facts, follow-ups** | No |
+| Live assist during the call | **On-device recall, facts, follow-ups** | Yes — in their cloud |
+| Mobile capture | Companion via local pairing (roadmap) | iOS + Android apps |
 | Speaker diarization | **On-device, free** | Cloud, degrades past 3 people |
 | Linux | **First-class** | No |
 | Audio playback to verify lines | **Optional, encrypted, local** | Not available |
@@ -60,6 +61,10 @@ removes the business model:
 - 🧠 **Local AI notes** — an embedded GGUF model (Qwen3-4B default) writes the summary, chapters, decisions and action items with owners and due dates the moment you stop.
 - 💡 **Live assist** — during the meeting, a private panel surfaces recall from past notes, relevant facts, and suggested follow-up questions. Only you see it.
 - 🔍 **Semantic search + chat** — every meeting is embedded into a local sqlite-vec index. Ask “what did Vesper say about compliance?” and get answers with timestamps.
+- 🗞️ **Pre-meeting Briefs** — before each call, Sotto writes a private brief: what happened last time with these people, which commitments are riding on this meeting, and three things worth raising. All from local RAG.
+- 🤝 **Commitment ledger** — every promise anyone makes (“I'll have it by Friday”) is extracted, tracked across meetings, and resurfaced when due. Nobody else builds this at any price.
+- 📖 **Recipes** — shareable Markdown prompt packs (objection miner, board-update extractor…) that run on your local model. Publish them with a PR.
+- 📥 **Importers** — one-click migration from Granola, Otter, Fireflies and read.ai exports. Switching costs: deleted.
 - 📅 **Calendar-aware** — reads your local calendar (EventKit / ICS / CalDAV cache) to auto-title notes and prompt capture. Google and Outlook treated equally — no account needed.
 - ✅ **Action items that travel** — auto-export to Markdown, Obsidian, Notion (local API token), Todoist or clipboard after every meeting.
 - 🗂️ **Templates** — product sync, 1:1, sales discovery, interview, standup, board update — or your own Markdown.
@@ -69,7 +74,7 @@ removes the business model:
 ## Install
 
 Download the latest build for your platform from
-[**Releases**](https://github.com/sotto-notes/sotto/releases):
+[**Releases**](https://github.com/anshuman-pandey/sotto-notes/releases):
 
 | Platform | Package |
 |---|---|
@@ -85,7 +90,7 @@ socket at all.
 ### Build from source
 
 ```bash
-git clone https://github.com/sotto-notes/sotto.git && cd sotto
+git clone https://github.com/anshuman-pandey/sotto-notes.git && cd sotto
 npm install
 npm run tauri dev        # dev build
 npm run tauri build      # release bundles in src-tauri/target/release/bundle
@@ -123,6 +128,8 @@ Full details in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
 - [x] Streaming Whisper + on-device diarization
 - [x] Local LLM enhancement, chat, semantic search
 - [x] Live assist (recall, facts, follow-ups)
+- [x] Pre-meeting Briefs + cross-meeting commitment ledger
+- [x] Recipes + Granola/Otter/Fireflies importers
 - [ ] Push-to-talk dictation in any app
 - [ ] Local speaker identification ("that was Priya", trained on-device)
 - [ ] SIEM-friendly signed audit export

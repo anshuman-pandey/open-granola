@@ -56,6 +56,24 @@ snippets from the user's past notes, emit STRICT JSON: an array of up to 2 \
 suggestions {kind: recall|fact|follow-up, title, body}. Suggest only what is \
 genuinely useful RIGHT NOW; else output []. Never fabricate citations.";
 
+const COMMITMENTS_SYSTEM: &str = "\
+You are Sotto's commitment extractor. From a diarized transcript, find every \
+explicit promise, offer, or assignment — phrases like \"I'll have it by Friday\", \
+\"I can take that\", \"send me X and I'll review\". Emit STRICT JSON: an array \
+{text, owner, due, evidence}. Rules: owner = the speaker who volunteered or was \
+assigned (use their label if unnamed); due = the deadline phrase as spoken, or \
+null; evidence = the exact quote it came from. Ignore vague intentions (\"we \
+should\", \"let's think about\"). Output [] if there are none.";
+
+const BRIEF_SYSTEM: &str = "\
+You are Sotto's briefer. Given an upcoming meeting (title, attendees) and \
+excerpts from relevant past meetings plus open commitments involving those \
+attendees, write a pre-meeting brief as STRICT JSON: \
+{recap, open_commitments[{owner,text,due,overdue}], worth_raising[]}. \
+recap: <=60 words on what happened last time with these people. \
+worth_raising: exactly 3 sharp, specific questions or flags for this meeting — \
+grounded in the excerpts, never generic advice. Output JSON only.";
+
 impl LocalLlm {
     pub fn load(model_path: &Path) -> Result<Self> {
         let backend = LlamaBackend::init()?;
@@ -139,6 +157,58 @@ impl LocalLlm {
         );
         self.completion("You are Sotto's librarian. Be precise; cite sources.", &user, 600)
     }
+
+    /// Extract explicit promises from a finished transcript — the raw material
+    /// of the cross-meeting commitment ledger.
+    pub fn extract_commitments(&self, transcript: &[Segment]) -> Result<Vec<Commitment>> {
+        let mut text = String::new();
+        for s in transcript {
+            text.push_str(&format!("Speaker {}: {}\n", s.speaker, s.text));
+        }
+        let raw = self.completion(COMMITMENTS_SYSTEM, &text, 900)?;
+        Ok(serde_json::from_str(&extract_json(&raw)?).unwrap_or_default())
+    }
+
+    /// Pre-meeting brief: recap of last time + open commitments + worth raising.
+    /// `context` is RAG output (past-meeting excerpts matched by attendees/title).
+    pub fn generate_brief(&self, title: &str, attendees: &[String], context: &[String]) -> Result<Brief> {
+        let user = format!(
+            "Upcoming meeting: {title}\nAttendees: {}\n\nRelevant history:\n{}",
+            attendees.join(", "),
+            context.join("\n---\n")
+        );
+        let raw = self.completion(BRIEF_SYSTEM, &user, 700)?;
+        serde_json::from_str(&extract_json(&raw)?).context("brief produced invalid JSON")
+    }
+
+    /// Run a recipe (shareable markdown prompt pack) over a meeting or library.
+    pub fn run_recipe(&self, recipe_prompt: &str, context: &[String]) -> Result<String> {
+        let user = format!("{recipe_prompt}\n\nMaterial:\n{}", context.join("\n---\n"));
+        self.completion("Follow the user's recipe exactly. Ground every claim in the material.", &user, 900)
+    }
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Commitment {
+    pub text: String,
+    pub owner: Option<String>,
+    pub due: Option<String>,
+    pub evidence: Option<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct Brief {
+    pub recap: String,
+    pub open_commitments: Vec<BriefCommitment>,
+    pub worth_raising: Vec<String>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct BriefCommitment {
+    pub owner: String,
+    pub text: String,
+    pub due: Option<String>,
+    pub overdue: Option<bool>,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]

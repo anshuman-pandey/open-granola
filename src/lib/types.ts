@@ -59,9 +59,40 @@ export interface Template {
   structure: string[];
 }
 
+export interface Brief {
+  meetingTitle: string;
+  startsIn: string;
+  participants: Person[];
+  lastTime: { title: string; date: string; recap: string };
+  openCommitments: { owner: string; text: string; due?: string; overdue?: boolean }[];
+  worthRaising: string[];
+}
+
+export interface Commitment {
+  id: string;
+  text: string;
+  owner: string;
+  madeIn: string; // meeting title
+  meetingId: string;
+  madeOn: string; // ISO date
+  due?: string;
+  status: "open" | "kept" | "overdue";
+  ageDays: number;
+}
+
+export interface Recipe {
+  id: string;
+  name: string;
+  author: string;
+  downloads: number;
+  description: string;
+  prompt: string;
+}
+
 export type View =
   | { kind: "home" }
   | { kind: "meeting"; id: string }
   | { kind: "actions" }
+  | { kind: "commitments" }
   | { kind: "templates" }
   | { kind: "settings" };

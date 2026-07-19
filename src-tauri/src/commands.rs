@@ -90,6 +90,21 @@ pub async fn stop_capture_and_enhance(
     };
     let id = Uuid::new_v4().to_string();
     persist_meeting(&state.db.lock(), &id, &note, &transcript).map_err(|e| e.to_string())?;
+
+    // Second extraction pass: promises, offers and assignments → the ledger.
+    // Runs after persist so a failure here can never lose the note itself.
+    if let Some(llm) = state.llm.lock().as_ref() {
+        if let Ok(commitments) = llm.extract_commitments(&transcript) {
+            let db = state.db.lock();
+            for c in commitments {
+                let _ = db.conn().execute(
+                    "INSERT INTO commitments(id,meeting_id,text,owner,due,status,made_on,evidence)
+                     VALUES(?1,?2,?3,?4,?5,'open',date('now'),?6)",
+                    rusqlite::params![Uuid::new_v4().to_string(), id, c.text, c.owner, c.due, c.evidence],
+                );
+            }
+        }
+    }
     Ok(id)
 }
 
@@ -251,4 +266,165 @@ pub async fn model_status(state: State<'_, Arc<AppState>>) -> Result<serde_json:
 #[tauri::command]
 pub async fn upcoming_calendar_events() -> Result<serde_json::Value, String> {
     Ok(serde_json::to_value(crate::calendar::upcoming()).map_err(|e| e.to_string())?)
+}
+
+/// Pre-meeting brief: find the next local-calendar event, RAG the library for
+/// history with those attendees, and let the local LLM write the brief.
+#[tauri::command]
+pub async fn get_brief(state: State<'_, Arc<AppState>>) -> Result<serde_json::Value, String> {
+    let events = crate::calendar::upcoming();
+    let Some(next) = events.first() else {
+        return Ok(serde_json::json!({ "empty": true }));
+    };
+    // RAG: meetings sharing any attendee name or title token, most recent first.
+    let context: Vec<String> = {
+        let db = state.db.lock();
+        let mut stmt = db.conn().prepare(
+            "SELECT m.title, m.started_at, m.summary FROM meetings m
+             ORDER BY m.started_at DESC LIMIT 4",
+        ).map_err(|e| e.to_string())?;
+        let rows = stmt.query_map([], |r| {
+            Ok(format!("[{} {}] {}", r.get::<_, String>(0)?, r.get::<_, String>(1)?,
+                r.get::<_, Option<String>>(2)?.unwrap_or_default()))
+        }).map_err(|e| e.to_string())?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?
+    };
+    // Open commitments involving the attendees feed the "riding on this" list.
+    let open: Vec<String> = {
+        let db = state.db.lock();
+        let mut stmt = db.conn().prepare(
+            "SELECT owner, text, due FROM commitments WHERE status != 'kept' ORDER BY made_on DESC",
+        ).map_err(|e| e.to_string())?;
+        let rows = stmt.query_map([], |r| {
+            Ok(format!("{} — {} (due {})",
+                r.get::<_, Option<String>>(0)?.unwrap_or("Someone".into()),
+                r.get::<_, String>(1)?,
+                r.get::<_, Option<String>>(2)?.unwrap_or("unscheduled".into())))
+        }).map_err(|e| e.to_string())?;
+        rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?
+    };
+    let mut ctx = context;
+    ctx.extend(open);
+    let guard = state.llm.lock();
+    let brief = guard
+        .as_ref()
+        .ok_or("no local model installed".to_string())?
+        .generate_brief(&next.title, &next.participants, &ctx)
+        .map_err(|e| e.to_string())?;
+    Ok(serde_json::json!({ "meeting": next, "brief": brief }))
+}
+
+#[tauri::command]
+pub async fn list_commitments(state: State<'_, Arc<AppState>>) -> Result<serde_json::Value, String> {
+    let db = state.db.lock();
+    // Mark anything past due as overdue, lazily — no background daemon needed.
+    db.conn().execute(
+        "UPDATE commitments SET status='overdue'
+         WHERE status='open' AND due IS NOT NULL AND date(due) < date('now')",
+        [],
+    ).map_err(|e| e.to_string())?;
+    let mut stmt = db.conn().prepare(
+        "SELECT c.id, c.text, c.owner, c.due, c.status, c.made_on, c.evidence, m.title, c.meeting_id
+         FROM commitments c JOIN meetings m ON m.id = c.meeting_id
+         ORDER BY CASE c.status WHEN 'overdue' THEN 0 WHEN 'open' THEN 1 ELSE 2 END, c.made_on DESC",
+    ).map_err(|e| e.to_string())?;
+    let rows = stmt.query_map([], |r| {
+        Ok(serde_json::json!({
+            "id": r.get::<_,String>(0)?, "text": r.get::<_,String>(1)?,
+            "owner": r.get::<_,Option<String>>(2)?, "due": r.get::<_,Option<String>>(3)?,
+            "status": r.get::<_,String>(4)?, "made_on": r.get::<_,String>(5)?,
+            "evidence": r.get::<_,Option<String>>(6)?,
+            "meeting_title": r.get::<_,String>(7)?, "meeting_id": r.get::<_,String>(8)?,
+        }))
+    }).map_err(|e| e.to_string())?;
+    Ok(rows.collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?.into())
+}
+
+#[tauri::command]
+pub async fn mark_commitment(state: State<'_, Arc<AppState>>, id: String, status: String) -> Result<(), String> {
+    state.db.lock().conn()
+        .execute("UPDATE commitments SET status=?1 WHERE id=?2", rusqlite::params![status, id])
+        .map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+#[tauri::command]
+pub async fn run_recipe(
+    state: State<'_, Arc<AppState>>,
+    prompt: String,
+    meeting_id: Option<String>,
+) -> Result<String, String> {
+    let context: Vec<String> = {
+        let db = state.db.lock();
+        let (sql, param) = match &meeting_id {
+            Some(id) => (
+                "SELECT s.text FROM segments s WHERE s.meeting_id = ?1",
+                id.clone(),
+            ),
+            None => (
+                "SELECT m.title || ' ' || COALESCE(m.summary,'') FROM meetings m ORDER BY m.started_at DESC LIMIT 6",
+                String::new(),
+            ),
+        };
+        let mut stmt = db.conn().prepare(sql).map_err(|e| e.to_string())?;
+        let rows = if param.is_empty() {
+            stmt.query_map([], |r| r.get::<_, String>(0)).map_err(|e| e.to_string())?
+                .collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?
+        } else {
+            stmt.query_map([param], |r| r.get::<_, String>(0)).map_err(|e| e.to_string())?
+                .collect::<Result<Vec<_>, _>>().map_err(|e| e.to_string())?
+        };
+        rows
+    };
+    let guard = state.llm.lock();
+    guard
+        .as_ref()
+        .ok_or("no local model installed".to_string())?
+        .run_recipe(&prompt, &context)
+        .map_err(|e| e.to_string())
+}
+
+/// Import a Granola export (JSON with an array of notes). The file is parsed
+/// in memory and dropped — consistent with everything else in this crate.
+/// Granola's export shape (as of their public API): [{id, title, created_at,
+/// summary, transcript: [{speaker, text, start}]}]; we accept minor variants.
+#[tauri::command]
+pub async fn import_granola_export(
+    state: State<'_, Arc<AppState>>,
+    json: String,
+) -> Result<usize, String> {
+    let parsed: serde_json::Value = serde_json::from_str(&json).map_err(|e| e.to_string())?;
+    let notes = parsed.as_array().cloned().unwrap_or_else(|| vec![parsed]);
+    let db = state.db.lock();
+    let mut imported = 0usize;
+    for n in notes {
+        let title = n.get("title").and_then(|v| v.as_str()).unwrap_or("Imported note");
+        let created = n.get("created_at").or_else(|| n.get("createdAt")).and_then(|v| v.as_str()).unwrap_or("1970-01-01");
+        let summary = n.get("summary").and_then(|v| v.as_str());
+        let id = Uuid::new_v4().to_string();
+        let ok = db.conn().execute(
+            "INSERT INTO meetings(id,title,started_at,duration_s,summary) VALUES(?1,?2,?3,0,?4)",
+            rusqlite::params![id, title, created, summary],
+        );
+        if ok.is_err() {
+            continue;
+        }
+        if let Some(segs) = n.get("transcript").and_then(|v| v.as_array()) {
+            for (i, s) in segs.iter().enumerate() {
+                let _ = db.conn().execute(
+                    "INSERT INTO segments(id,meeting_id,start_ms,end_ms,speaker,text)
+                     VALUES(?1,?2,?3,?4,?5,?6)",
+                    rusqlite::params![
+                        Uuid::new_v4().to_string(), id,
+                        s.get("start").and_then(|v| v.as_i64()).unwrap_or(i as i64 * 1000),
+                        s.get("end").and_then(|v| v.as_i64()).unwrap_or((i as i64 + 1) * 1000),
+                        s.get("speaker").and_then(|v| v.as_i64()).unwrap_or(0),
+                        s.get("text").and_then(|v| v.as_str()).unwrap_or(""),
+                    ],
+                );
+            }
+        }
+        imported += 1;
+    }
+    Ok(imported)
 }

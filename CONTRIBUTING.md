@@ -11,7 +11,7 @@ First: thank you. Sotto exists because meeting software forgot who it works for.
 ## Dev setup
 
 ```bash
-git clone https://github.com/sotto-notes/sotto.git && cd sotto
+git clone https://github.com/anshuman-pandey/sotto-notes.git && cd sotto
 npm install
 npm run tauri dev
 ```
@@ -26,7 +26,7 @@ folder on first run — or drop GGUFs into `library/models/` manually:
 
 ## Where to start
 
-- Issues labeled [`good first issue`](https://github.com/sotto-notes/sotto/labels/good%20first%20issue)
+- Issues labeled [`good first issue`](https://github.com/anshuman-pandey/sotto-notes/labels/good%20first%20issue)
 - Platform audio: `src-tauri/src/audio/loopback.rs` (Windows WASAPI and Linux PipeWire need the most love)
 - Diarization quality: `src-tauri/src/transcribe.rs` (`spectral_embedding` / clustering)
 - Templates & UX polish: `src/components/TemplatesView.tsx`

@@ -1,6 +1,6 @@
-import { ArrowRight, Calendar, Flame, Lock, Sparkles, Video } from "lucide-react";
+import { AlertTriangle, ArrowRight, Calendar, ChevronDown, Flame, History, Lightbulb, Lock, Sparkles, Video } from "lucide-react";
 import { useState } from "react";
-import { ACTION_ITEMS, MEETINGS } from "../lib/data";
+import { ACTION_ITEMS, BRIEF, MEETINGS } from "../lib/data";
 import type { Meeting } from "../lib/types";
 import { AvatarStack } from "./Avatar";
 
@@ -13,6 +13,7 @@ interface Props {
 
 export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
   const [q, setQ] = useState("");
+  const [briefOpen, setBriefOpen] = useState(true);
   const open = ACTION_ITEMS.filter((a) => !a.done).length;
   const weekMins = MEETINGS.reduce((s, m) => s + m.durationMin, 0);
 
@@ -75,26 +76,104 @@ export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
           ))}
         </div>
 
-        {/* upcoming / record CTA */}
+        {/* pre-meeting brief */}
         <div
-          className="animate-rise mt-6 flex items-center gap-4 rounded-2xl border border-primary/25 bg-primary/5 p-4"
+          className="animate-rise mt-6 overflow-hidden rounded-2xl border border-primary/25 bg-primary/5"
           style={{ animationDelay: "180ms" }}
         >
-          <div className="ember-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white">
-            <Video size={18} />
-          </div>
-          <div className="flex-1">
-            <div className="text-[14px] font-semibold">Next up: Aurora checkpoint — in 2h 14m</div>
-            <div className="text-[12.5px] text-muted-foreground">
-              Sotto noticed it on your local calendar and can capture it with one click.
-            </div>
-          </div>
           <button
-            onClick={onRecord}
-            className="rounded-xl bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background transition-transform hover:scale-[1.02]"
+            onClick={() => setBriefOpen(!briefOpen)}
+            className="flex w-full items-center gap-4 p-4 text-left"
           >
-            Start capture
+            <div className="ember-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white">
+              <Video size={18} />
+            </div>
+            <div className="flex-1">
+              <div className="text-[14px] font-semibold">
+                Briefing ready: {BRIEF.meetingTitle} — in {BRIEF.startsIn}
+              </div>
+              <div className="text-[12.5px] text-muted-foreground">
+                Prepared on-device from your calendar and {MEETINGS.length} past meetings.{" "}
+                {BRIEF.openCommitments.length} open commitments inside.
+              </div>
+            </div>
+            <button
+              onClick={(e) => {
+                e.stopPropagation();
+                onRecord();
+              }}
+              className="rounded-xl bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background transition-transform hover:scale-[1.02]"
+            >
+              Start capture
+            </button>
+            <ChevronDown
+              size={16}
+              className={`shrink-0 text-muted-foreground transition-transform ${briefOpen ? "rotate-180" : ""}`}
+            />
           </button>
+
+          {briefOpen && (
+            <div className="space-y-4 border-t border-primary/15 px-5 py-4">
+              {/* last time */}
+              <div className="flex gap-3">
+                <History size={15} className="mt-0.5 shrink-0 text-primary" />
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Last time — {BRIEF.lastTime.title} · {BRIEF.lastTime.date}
+                  </div>
+                  <p className="mt-1 text-[13px] leading-relaxed">{BRIEF.lastTime.recap}</p>
+                </div>
+              </div>
+              {/* open commitments */}
+              <div className="flex gap-3">
+                <AlertTriangle size={15} className="mt-0.5 shrink-0 text-primary" />
+                <div className="flex-1">
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Commitments riding on this meeting
+                  </div>
+                  <div className="mt-1.5 space-y-1.5">
+                    {BRIEF.openCommitments.map((c, i) => (
+                      <div key={i} className="flex items-center gap-2 text-[13px]">
+                        <span
+                          className={`h-1.5 w-1.5 shrink-0 rounded-full ${c.overdue ? "bg-destructive" : "bg-accent"}`}
+                        />
+                        <span className="flex-1">
+                          <b className="font-semibold">{c.owner}</b> — {c.text}
+                        </span>
+                        <span
+                          className={`font-mono2 text-[10.5px] ${c.overdue ? "font-bold text-destructive" : "text-muted-foreground"}`}
+                        >
+                          {c.overdue ? "overdue " : ""}{c.due}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              {/* worth raising */}
+              <div className="flex gap-3">
+                <Lightbulb size={15} className="mt-0.5 shrink-0 text-primary" />
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                    Worth raising
+                  </div>
+                  <ul className="mt-1 space-y-1">
+                    {BRIEF.worthRaising.map((w, i) => (
+                      <li key={i} className="text-[13px] leading-relaxed text-foreground/85">
+                        · {w}
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+              <div className="flex items-center gap-2 border-t border-primary/10 pt-3">
+                <AvatarStack people={BRIEF.participants} />
+                <span className="text-[11.5px] text-muted-foreground">
+                  Attendees matched to {BRIEF.participants.length} people in your local library
+                </span>
+              </div>
+            </div>
+          )}
         </div>
 
         {/* recent meetings */}

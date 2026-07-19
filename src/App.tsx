@@ -6,6 +6,7 @@ import { NoteView } from "./components/NoteView";
 import { SettingsView } from "./components/SettingsView";
 import { Sidebar } from "./components/Sidebar";
 import { ActionItemsView } from "./components/ActionItemsView";
+import { CommitmentsView } from "./components/CommitmentsView";
 import { TemplatesView } from "./components/TemplatesView";
 import { MEETINGS, PEOPLE } from "./lib/data";
 import { useLiveSession, type LiveLine } from "./hooks/useLiveSession";
@@ -112,6 +113,7 @@ export default function App() {
           <NoteView meeting={activeMeeting} onToggleAction={() => {}} />
         )}
         {view.kind === "actions" && <ActionItemsView onOpenMeeting={openMeeting} />}
+        {view.kind === "commitments" && <CommitmentsView onOpenMeeting={openMeeting} />}
         {view.kind === "templates" && <TemplatesView />}
         {view.kind === "settings" && <SettingsView />}
       </main>

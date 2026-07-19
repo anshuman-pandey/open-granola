@@ -70,6 +70,11 @@ pub fn run() {
             commands::purge_everything,
             commands::model_status,
             commands::upcoming_calendar_events,
+            commands::get_brief,
+            commands::list_commitments,
+            commands::mark_commitment,
+            commands::run_recipe,
+            commands::import_granola_export,
         ])
         .run(tauri::generate_context!())
         .expect("error while running sotto");

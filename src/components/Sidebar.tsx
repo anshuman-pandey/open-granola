@@ -1,5 +1,6 @@
 import {
   CheckSquare,
+  Handshake,
   Home,
   LayoutTemplate,
   Moon,
@@ -137,6 +138,12 @@ export function Sidebar(p: Props) {
           "Action items",
           p.view.kind === "actions",
           () => p.onNavigate({ kind: "actions" }),
+        )}
+        {navItem(
+          <Handshake size={14} />,
+          "Commitments",
+          p.view.kind === "commitments",
+          () => p.onNavigate({ kind: "commitments" }),
         )}
         {navItem(
           <LayoutTemplate size={14} />,

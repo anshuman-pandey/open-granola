@@ -1,4 +1,4 @@
-import type { Meeting, Person, Template } from "./types";
+import type { Brief, Commitment, Meeting, Person, Recipe, Template } from "./types";
 
 export const PEOPLE: Record<string, Person> = {
   you: { id: "you", name: "You", initials: "YO", color: "#E4572E" },
@@ -171,6 +171,77 @@ export const TEMPLATES: Template[] = [
   { id: "tp4", name: "Standup", icon: "Zap", structure: ["Done", "Doing", "Blocked", "Deep-dives"] },
   { id: "tp5", name: "Interview", icon: "Mic", structure: ["Candidate summary", "Signal by competency", "Concerns", "Recommendation"] },
   { id: "tp6", name: "Board update", icon: "Briefcase", structure: ["Highlights", "Metrics vs plan", "Asks", "Risks"] },
+];
+
+export const BRIEF: Brief = {
+  meetingTitle: "Aurora checkpoint",
+  startsIn: "2h 14m",
+  participants: [PEOPLE.you, PEOPLE.amara, PEOPLE.devon, PEOPLE.lin],
+  lastTime: {
+    title: "Aurora — Q3 launch plan",
+    date: "Jul 17",
+    recap:
+      "You locked a three-phase launch starting Aug 4 (tokens first), set a 92 kB bundle budget enforced in CI, and approved 240 ms motion with reduced-motion fallbacks. Two risks were left open: Figma sync flakiness and rollout comms.",
+  },
+  openCommitments: [
+    { owner: "Devon Park", text: "Wire 92 kB bundle-size check into CI", due: "Jul 24" },
+    { owner: "Amara Osei", text: "Send motion spec for sign-off", due: "Jul 18", overdue: true },
+    { owner: "Lin Zhao", text: "Redraft rollout brief for three-phase launch", due: "Jul 20" },
+  ],
+  worthRaising: [
+    "Amara's motion spec is a day overdue — is the checkpoint blocked on it?",
+    "Figma sync flakiness was ~1-in-20 failures; ask for the current rate before phase one gates on it.",
+    "Priya's analytics baseline was a precondition for CI enforcement — confirm it landed.",
+  ],
+};
+
+export const COMMITMENTS: Commitment[] = [
+  { id: "c1", text: "Wire 92 kB bundle-size check into CI", owner: "Devon Park", madeIn: "Aurora — Q3 launch plan", meetingId: "m-aurora-q3", madeOn: "2026-07-17", due: "Jul 24", status: "open", ageDays: 2 },
+  { id: "c2", text: "Send motion spec for sign-off (240 ms + reduced-motion fallbacks)", owner: "Amara Osei", madeIn: "Aurora — Q3 launch plan", meetingId: "m-aurora-q3", madeOn: "2026-07-17", due: "Jul 18", status: "overdue", ageDays: 2 },
+  { id: "c3", text: "Redraft rollout brief for three-phase launch", owner: "Lin Zhao", madeIn: "Aurora — Q3 launch plan", meetingId: "m-aurora-q3", madeOn: "2026-07-17", due: "Jul 20", status: "open", ageDays: 2 },
+  { id: "c4", text: "Churn sensitivity model for usage-based tier", owner: "Priya Nair", madeIn: "Nimbus pricing review w/ Marcus", meetingId: "m-nimbus-review", madeOn: "2026-07-16", due: "Jul 21", status: "open", ageDays: 3 },
+  { id: "c5", text: "Build synthetic edit-history generator for tombstone bug", owner: "Priya Nair", madeIn: "Eng standup — offline sync deep-dive", meetingId: "m-standup", madeOn: "2026-07-15", due: "Jul 18", status: "kept", ageDays: 4 },
+  { id: "c6", text: "Send security whitepaper to Vesper legal", owner: "Lin Zhao", madeIn: "Vesper Health — discovery call", meetingId: "m-client-vesper", madeOn: "2026-07-11", due: "Jul 12", status: "kept", ageDays: 8 },
+  { id: "c7", text: "Scope SIEM audit-export format with Vesper IT", owner: "You", madeIn: "Vesper Health — discovery call", meetingId: "m-client-vesper", madeOn: "2026-07-11", due: "Jul 22", status: "open", ageDays: 8 },
+];
+
+export const RECIPES: Recipe[] = [
+  {
+    id: "r1",
+    name: "Objection miner",
+    author: "@sotto",
+    downloads: 1284,
+    description: "Pulls every objection from a sales call, verbatim, with the answer that landed.",
+    prompt:
+      "From this transcript, list every objection the prospect raised. For each: the verbatim quote with timestamp, the underlying concern in one line, and which response (if any) resolved it. Close with the two objections most likely to resurface.",
+  },
+  {
+    id: "r2",
+    name: "Board-update extractor",
+    author: "@sotto",
+    downloads: 947,
+    description: "Turns a leadership sync into a board-ready metrics narrative.",
+    prompt:
+      "Extract: (1) metrics vs plan with exact numbers, (2) the three most board-worthy highlights, (3) every risk named with its owner, (4) asks made of leadership. Format as four headed sections, board tone, no fluff.",
+  },
+  {
+    id: "r3",
+    name: "Hiring signal scorer",
+    author: "@community",
+    downloads: 631,
+    description: "Scores an interview transcript against your rubric with evidence.",
+    prompt:
+      "Score this interview against these competencies: ownership, technical depth, communication, ambiguity tolerance. For each: score 1–5, then two verbatim evidence quotes with timestamps. End with a hire/no-hire recommendation and the strongest counter-signal.",
+  },
+  {
+    id: "r4",
+    name: "Decision archaeology",
+    author: "@community",
+    downloads: 512,
+    description: "Reconstructs how a decision actually got made, across the whole meeting.",
+    prompt:
+      "Pick the most consequential decision in this meeting. Reconstruct: who proposed it, what alternatives were raised, the turning-point argument, who objected and on what grounds, and the final rationale. Cite timestamps throughout.",
+  },
 ];
 
 export const MODELS = [
