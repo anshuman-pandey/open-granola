@@ -1,6 +1,7 @@
 import { AlertTriangle, CheckCircle2, Circle, ExternalLink, Handshake } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { COMMITMENTS } from "../lib/data";
+import { getBackend } from "../lib/backend";
 
 interface Props {
   onOpenMeeting: (id: string) => void;
@@ -10,13 +11,25 @@ export function CommitmentsView({ onOpenMeeting }: Props) {
   const [items, setItems] = useState(COMMITMENTS);
   const [filter, setFilter] = useState<"open" | "all">("open");
 
+  // Real ledger when running on the Rust backend.
+  useEffect(() => {
+    if (getBackend().mode === "tauri") {
+      getBackend()
+        .listCommitments()
+        .then((rows) => rows.length > 0 && setItems(rows))
+        .catch(() => {});
+    }
+  }, []);
+
   const overdue = items.filter((c) => c.status === "overdue").length;
   const open = items.filter((c) => c.status === "open").length;
   const kept = items.filter((c) => c.status === "kept").length;
   const shown = items.filter((c) => filter === "all" || c.status !== "kept");
 
-  const markKept = (id: string) =>
+  const markKept = (id: string) => {
     setItems((prev) => prev.map((c) => (c.id === id ? { ...c, status: "kept" as const } : c)));
+    getBackend().markCommitment(id, "kept").catch(() => {});
+  };
 
   return (
     <div className="scrollbar-thin paper-texture flex-1 overflow-y-auto">

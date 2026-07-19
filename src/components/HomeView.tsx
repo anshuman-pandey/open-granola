@@ -1,17 +1,18 @@
 import { AlertTriangle, ArrowRight, Calendar, ChevronDown, Flame, History, Lightbulb, Lock, Sparkles, Video } from "lucide-react";
 import { useState } from "react";
-import { ACTION_ITEMS, BRIEF, MEETINGS } from "../lib/data";
-import type { Meeting } from "../lib/types";
+import { ACTION_ITEMS, MEETINGS } from "../lib/data";
+import type { Brief, Meeting } from "../lib/types";
 import { AvatarStack } from "./Avatar";
 
 interface Props {
   meetings: Meeting[];
+  brief: Brief | null;
   onOpenMeeting: (id: string) => void;
   onRecord: () => void;
   onAsk: (q: string) => void;
 }
 
-export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
+export function HomeView({ meetings, brief, onOpenMeeting, onRecord, onAsk }: Props) {
   const [q, setQ] = useState("");
   const [briefOpen, setBriefOpen] = useState(true);
   const open = ACTION_ITEMS.filter((a) => !a.done).length;
@@ -77,6 +78,7 @@ export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
         </div>
 
         {/* pre-meeting brief */}
+        {brief && (
         <div
           className="animate-rise mt-6 overflow-hidden rounded-2xl border border-primary/25 bg-primary/5"
           style={{ animationDelay: "180ms" }}
@@ -90,11 +92,11 @@ export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
             </div>
             <div className="flex-1">
               <div className="text-[14px] font-semibold">
-                Briefing ready: {BRIEF.meetingTitle} — in {BRIEF.startsIn}
+                Briefing ready: {brief.meetingTitle} — in {brief.startsIn}
               </div>
               <div className="text-[12.5px] text-muted-foreground">
                 Prepared on-device from your calendar and {MEETINGS.length} past meetings.{" "}
-                {BRIEF.openCommitments.length} open commitments inside.
+                {brief.openCommitments.length} open commitments inside.
               </div>
             </div>
             <button
@@ -119,9 +121,9 @@ export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
                 <History size={15} className="mt-0.5 shrink-0 text-primary" />
                 <div>
                   <div className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Last time — {BRIEF.lastTime.title} · {BRIEF.lastTime.date}
+                    Last time — {brief.lastTime.title} · {brief.lastTime.date}
                   </div>
-                  <p className="mt-1 text-[13px] leading-relaxed">{BRIEF.lastTime.recap}</p>
+                  <p className="mt-1 text-[13px] leading-relaxed">{brief.lastTime.recap}</p>
                 </div>
               </div>
               {/* open commitments */}
@@ -132,7 +134,7 @@ export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
                     Commitments riding on this meeting
                   </div>
                   <div className="mt-1.5 space-y-1.5">
-                    {BRIEF.openCommitments.map((c, i) => (
+                    {brief.openCommitments.map((c, i) => (
                       <div key={i} className="flex items-center gap-2 text-[13px]">
                         <span
                           className={`h-1.5 w-1.5 shrink-0 rounded-full ${c.overdue ? "bg-destructive" : "bg-accent"}`}
@@ -158,7 +160,7 @@ export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
                     Worth raising
                   </div>
                   <ul className="mt-1 space-y-1">
-                    {BRIEF.worthRaising.map((w, i) => (
+                    {brief.worthRaising.map((w, i) => (
                       <li key={i} className="text-[13px] leading-relaxed text-foreground/85">
                         · {w}
                       </li>
@@ -167,14 +169,39 @@ export function HomeView({ meetings, onOpenMeeting, onRecord, onAsk }: Props) {
                 </div>
               </div>
               <div className="flex items-center gap-2 border-t border-primary/10 pt-3">
-                <AvatarStack people={BRIEF.participants} />
+                <AvatarStack people={brief.participants} />
                 <span className="text-[11.5px] text-muted-foreground">
-                  Attendees matched to {BRIEF.participants.length} people in your local library
+                  Attendees matched to {brief.participants.length} people in your local library
                 </span>
               </div>
             </div>
           )}
         </div>
+        )}
+
+        {/* plain capture CTA when there's no upcoming event */}
+        {!brief && (
+          <div
+            className="animate-rise mt-6 flex items-center gap-4 rounded-2xl border border-primary/25 bg-primary/5 p-4"
+            style={{ animationDelay: "180ms" }}
+          >
+            <div className="ember-gradient flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-white">
+              <Video size={18} />
+            </div>
+            <div className="flex-1">
+              <div className="text-[14px] font-semibold">No meetings on your local calendar right now</div>
+              <div className="text-[12.5px] text-muted-foreground">
+                Capture any call or in-person conversation with one click — no bot joins.
+              </div>
+            </div>
+            <button
+              onClick={onRecord}
+              className="rounded-xl bg-foreground px-3.5 py-2 text-[13px] font-semibold text-background transition-transform hover:scale-[1.02]"
+            >
+              Start capture
+            </button>
+          </div>
+        )}
 
         {/* recent meetings */}
         <div className="animate-rise mt-8" style={{ animationDelay: "240ms" }}>

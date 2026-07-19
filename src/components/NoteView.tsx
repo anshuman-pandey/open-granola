@@ -12,13 +12,15 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { ACTION_ITEMS, PEOPLE } from "../lib/data";
+import { getBackend } from "../lib/backend";
 import { fmtTs } from "../hooks/useLiveSession";
-import type { ChatMessage, Meeting } from "../lib/types";
+import type { ActionItem, ChatMessage, Meeting } from "../lib/types";
 import { Avatar, AvatarStack } from "./Avatar";
 
 interface Props {
   meeting: Meeting;
-  onToggleAction: (id: string) => void;
+  onToggleAction: (id: string, done: boolean) => void;
+  askFn?: (q: string) => Promise<string>;
 }
 
 const CANNED: { match: RegExp; answer: string }[] = [
@@ -47,8 +49,11 @@ const CANNED: { match: RegExp; answer: string }[] = [
 const FALLBACK =
   "I searched the local index of all 4 meetings. The strongest matches are in “Aurora — Q3 launch plan” and the Vesper discovery call — try asking about the **bundle budget**, **motion spec**, **open risks**, or **Vesper's compliance requirements**.";
 
-export function NoteView({ meeting, onToggleAction }: Props) {
+export function NoteView({ meeting, onToggleAction, askFn }: Props) {
   const [tab, setTab] = useState<"notes" | "transcript">("notes");
+  const [items, setItems] = useState<ActionItem[]>(() =>
+    ACTION_ITEMS.filter((a) => a.meetingId === meeting.id),
+  );
   const [chat, setChat] = useState<ChatMessage[]>([
     {
       id: "c0",
@@ -60,11 +65,33 @@ export function NoteView({ meeting, onToggleAction }: Props) {
   const [thinking, setThinking] = useState(false);
   const chatEnd = useRef<HTMLDivElement>(null);
 
+  // Real action items when running on the Rust backend.
+  useEffect(() => {
+    if (getBackend().mode === "tauri") {
+      getBackend()
+        .getMeeting(meeting.id)
+        .then((r) => setItems(r.actionItems))
+        .catch(() => {});
+    }
+  }, [meeting.id]);
+
   useEffect(() => {
     chatEnd.current?.scrollIntoView({ behavior: "smooth" });
   }, [chat, thinking]);
 
-  const items = ACTION_ITEMS.filter((a) => a.meetingId === meeting.id);
+  const streamAnswer = (answer: string) => {
+    const aid = `a-${Date.now()}`;
+    setChat((c) => [...c, { id: aid, role: "assistant", text: "" }]);
+    let i = 0;
+    const iv = window.setInterval(() => {
+      i += 3;
+      setChat((c) => c.map((m) => (m.id === aid ? { ...m, text: answer.slice(0, i) } : m)));
+      if (i >= answer.length) {
+        window.clearInterval(iv);
+        setThinking(false);
+      }
+    }, 14);
+  };
 
   const send = (text: string) => {
     if (!text.trim() || thinking) return;
@@ -72,20 +99,18 @@ export function NoteView({ meeting, onToggleAction }: Props) {
     setChat((c) => [...c, userMsg]);
     setDraft("");
     setThinking(true);
+    if (askFn) {
+      // Real path: RAG + local LLM in the Rust core.
+      askFn(text)
+        .then((answer) => streamAnswer(answer))
+        .catch(() => {
+          streamAnswer("The local model isn't ready yet — install one in Settings → On-device models.");
+        });
+      return;
+    }
+    // Demo path: canned librarian answers.
     const answer = CANNED.find((c) => c.match.test(text))?.answer ?? FALLBACK;
-    const aid = `a-${Date.now()}`;
-    setTimeout(() => {
-      setChat((c) => [...c, { id: aid, role: "assistant", text: "" }]);
-      let i = 0;
-      const iv = window.setInterval(() => {
-        i += 3;
-        setChat((c) => c.map((m) => (m.id === aid ? { ...m, text: answer.slice(0, i) } : m)));
-        if (i >= answer.length) {
-          window.clearInterval(iv);
-          setThinking(false);
-        }
-      }, 14);
-    }, 700);
+    setTimeout(() => streamAnswer(answer), 700);
   };
 
   const renderMd = (t: string) => {
@@ -222,7 +247,10 @@ export function NoteView({ meeting, onToggleAction }: Props) {
                     {items.map((a) => (
                       <button
                         key={a.id}
-                        onClick={() => onToggleAction(a.id)}
+                        onClick={() => {
+                          setItems((prev) => prev.map((x) => (x.id === a.id ? { ...x, done: !x.done } : x)));
+                          onToggleAction(a.id, !a.done);
+                        }}
                         className="flex w-full items-center gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left shadow-sm"
                       >
                         {a.done ? (

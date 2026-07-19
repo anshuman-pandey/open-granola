@@ -1,6 +1,7 @@
 import { CheckSquare, FileText, Search, Sparkles } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import { ACTION_ITEMS } from "../lib/data";
+import type { SearchHit } from "../lib/backend";
 import type { Meeting } from "../lib/types";
 
 interface Props {
@@ -8,18 +9,37 @@ interface Props {
   onClose: () => void;
   onOpenMeeting: (id: string) => void;
   onOpenActions: () => void;
+  searchFn?: (q: string) => Promise<SearchHit[]>;
 }
 
-export function CommandPalette({ meetings, onClose, onOpenMeeting, onOpenActions }: Props) {
+export function CommandPalette({ meetings, onClose, onOpenMeeting, onOpenActions, searchFn }: Props) {
   const [q, setQ] = useState("");
   const [idx, setIdx] = useState(0);
+  const [remote, setRemote] = useState<SearchHit[] | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => inputRef.current?.focus(), []);
 
+  // Remote search (FTS5 + sqlite-vec in the Rust core) when available,
+  // debounced; otherwise the local in-memory filter below.
+  useEffect(() => {
+    if (!searchFn) return;
+    if (!q.trim()) {
+      setRemote(null);
+      return;
+    }
+    const t = window.setTimeout(() => {
+      searchFn(q).then(setRemote).catch(() => setRemote(null));
+    }, 200);
+    return () => window.clearTimeout(t);
+  }, [q, searchFn]);
+
   const results = useMemo(() => {
+    if (searchFn && q.trim()) {
+      return (remote ?? []).slice(0, 8);
+    }
     const needle = q.toLowerCase();
-    const hits: { id: string; kind: "meeting" | "action"; title: string; sub: string; ref: string }[] = [];
+    const hits: SearchHit[] = [];
     meetings.forEach((m) => {
       if (!needle || m.title.toLowerCase().includes(needle) || m.summary.toLowerCase().includes(needle)) {
         hits.push({ id: `m-${m.id}`, kind: "meeting", title: m.title, sub: m.template, ref: m.id });
@@ -31,7 +51,7 @@ export function CommandPalette({ meetings, onClose, onOpenMeeting, onOpenActions
       }
     });
     return hits.slice(0, 8);
-  }, [q, meetings]);
+  }, [q, meetings, searchFn, remote]);
 
   useEffect(() => setIdx(0), [q]);
 

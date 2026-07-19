@@ -1,6 +1,7 @@
 import { Download, FileUp, HardDrive, ShieldCheck, Trash2 } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { MODELS } from "../lib/data";
+import { getBackend } from "../lib/backend";
 
 function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
   return (
@@ -34,6 +35,40 @@ export function SettingsView() {
   const [audioCache, setAudioCache] = useState(false);
   const [purge, setPurge] = useState(true);
   const [crashReports, setCrashReports] = useState(false);
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
+  const [purgeArmed, setPurgeArmed] = useState(false);
+  const [importMsg, setImportMsg] = useState<string | null>(null);
+  const fileRef = useRef<HTMLInputElement>(null);
+  const backend = getBackend();
+
+  useEffect(() => {
+    if (backend.mode === "tauri") {
+      backend.modelStatus().then(setStatus).catch(() => {});
+    }
+  }, [backend]);
+
+  const modelReady = (kind: string, fallback: boolean) =>
+    status ? Boolean(status[kind]) : fallback;
+
+  const handleImportFile = (file: File) => {
+    const reader = new FileReader();
+    reader.onload = () => {
+      backend
+        .importGranola(String(reader.result))
+        .then((n) => setImportMsg(`Imported ${n} meeting${n === 1 ? "" : "s"} — now fully local, indexed and searchable.`))
+        .catch(() => setImportMsg("Couldn't parse that export — expected a JSON array of notes."));
+    };
+    reader.readAsText(file);
+  };
+
+  const handlePurge = () => {
+    if (!purgeArmed) {
+      setPurgeArmed(true);
+      setTimeout(() => setPurgeArmed(false), 4000);
+      return;
+    }
+    backend.purgeAll().then(() => window.location.reload());
+  };
 
   return (
     <div className="scrollbar-thin paper-texture flex-1 overflow-y-auto">
@@ -80,11 +115,25 @@ export function SettingsView() {
               <Toggle on={audioCache} onChange={() => setAudioCache(!audioCache)} />
             </Row>
             <Row title="Auto-purge notes older than 90 days" desc="Your retention policy, enforced locally. Notes, transcripts and embeddings are shredded — not just hidden.">
-              <Toggle on={purge} onChange={() => setPurge(!purge)} />
+              <Toggle
+                on={purge}
+                onChange={() => {
+                  const next = !purge;
+                  setPurge(next);
+                  backend.setRetention(next ? 90 : 0).catch(() => {});
+                }}
+              />
             </Row>
             <Row title="Delete everything" desc="One click wipes every note, transcript, embedding and model cache from this device.">
-              <button className="flex items-center gap-1.5 rounded-xl border border-destructive/40 px-3 py-1.5 text-[12px] font-semibold text-destructive transition-colors hover:bg-destructive hover:text-destructive-foreground">
-                <Trash2 size={13} /> Purge library
+              <button
+                onClick={handlePurge}
+                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
+                  purgeArmed
+                    ? "border-destructive bg-destructive text-destructive-foreground"
+                    : "border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
+                }`}
+              >
+                <Trash2 size={13} /> {purgeArmed ? "Click again to confirm" : "Purge library"}
               </button>
             </Row>
           </div>
@@ -111,7 +160,15 @@ export function SettingsView() {
                     {m.size} · {m.note}
                   </div>
                 </div>
-                {m.status === "installed" ? (
+                {m.status === "installed" &&
+                modelReady(
+                  m.id.startsWith("whisper") || m.id.startsWith("parakeet")
+                    ? "whisper"
+                    : m.id.startsWith("nomic")
+                      ? "embed"
+                      : "llm",
+                  true,
+                ) ? (
                   <span className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">
                     <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
                   </span>
@@ -133,9 +190,30 @@ export function SettingsView() {
           </div>
           <div className="divide-y divide-border">
             <Row title="Granola" desc="Bring your history with you: drop Granola's export (Settings → Data → Export, or their API) and Sotto converts notes, transcripts and dates into local meetings. The file is read once, then forgotten.">
-              <button className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary">
-                Choose export…
-              </button>
+              <div>
+                <input
+                  ref={fileRef}
+                  type="file"
+                  accept=".json"
+                  className="hidden"
+                  onChange={(e) => {
+                    const f = e.target.files?.[0];
+                    if (f) handleImportFile(f);
+                    e.target.value = "";
+                  }}
+                />
+                <button
+                  onClick={() => fileRef.current?.click()}
+                  className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary"
+                >
+                  Choose export…
+                </button>
+                {importMsg && (
+                  <p className="mt-1.5 max-w-[220px] text-right text-[11px] text-emerald-700 dark:text-emerald-400">
+                    {importMsg}
+                  </p>
+                )}
+              </div>
             </Row>
             <Row title="Otter / Fireflies / read.ai" desc="Same trick for the other clouds — CSV or JSON exports become fully local, fully searchable Sotto notes.">
               <button className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary">

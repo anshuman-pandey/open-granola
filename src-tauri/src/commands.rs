@@ -160,17 +160,54 @@ pub async fn list_meetings(state: State<'_, Arc<AppState>>) -> Result<serde_json
 pub async fn get_meeting(state: State<'_, Arc<AppState>>, id: String) -> Result<serde_json::Value, String> {
     let db = state.db.lock();
     let meeting = db.conn().query_row(
-        "SELECT title,started_at,duration_s,summary,chapters_json,decisions_json FROM meetings WHERE id=?1",
+        "SELECT title,started_at,duration_s,summary,chapters_json,decisions_json,template,starred FROM meetings WHERE id=?1",
         [&id],
         |r| {
             Ok(serde_json::json!({
                 "title": r.get::<_,String>(0)?, "started_at": r.get::<_,String>(1)?,
                 "duration_s": r.get::<_,i64>(2)?, "summary": r.get::<_,Option<String>>(3)?,
                 "chapters": r.get::<_,Option<String>>(4)?, "decisions": r.get::<_,Option<String>>(5)?,
+                "template": r.get::<_,Option<String>>(6)?, "starred": r.get::<_,i64>(7)?,
             }))
         },
-    );
-    meeting.map_err(|e| e.to_string())
+    ).map_err(|e| e.to_string())?;
+
+    let mut stmt = db.conn().prepare(
+        "SELECT id,start_ms,end_ms,speaker,text FROM segments WHERE meeting_id=?1 ORDER BY start_ms",
+    ).map_err(|e| e.to_string())?;
+    let segments: Vec<serde_json::Value> = stmt
+        .query_map([&id], |r| {
+            Ok(serde_json::json!({
+                "id": r.get::<_,String>(0)?, "start_ms": r.get::<_,i64>(1)?,
+                "end_ms": r.get::<_,i64>(2)?, "speaker": r.get::<_,i64>(3)?,
+                "text": r.get::<_,String>(4)?,
+            }))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    let mut stmt = db.conn().prepare(
+        "SELECT id,text,owner,due,done FROM action_items WHERE meeting_id=?1",
+    ).map_err(|e| e.to_string())?;
+    let actions: Vec<serde_json::Value> = stmt
+        .query_map([&id], |r| {
+            Ok(serde_json::json!({
+                "id": r.get::<_,String>(0)?, "text": r.get::<_,String>(1)?,
+                "owner": r.get::<_,Option<String>>(2)?, "due": r.get::<_,Option<String>>(3)?,
+                "done": r.get::<_,i64>(4)?,
+            }))
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    Ok(serde_json::json!({
+        "id": id,
+        "meeting": meeting,
+        "segments": segments,
+        "action_items": actions,
+    }))
 }
 
 #[tauri::command]

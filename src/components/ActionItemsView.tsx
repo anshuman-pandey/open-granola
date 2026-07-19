@@ -4,9 +4,10 @@ import { ACTION_ITEMS } from "../lib/data";
 
 interface Props {
   onOpenMeeting: (id: string) => void;
+  onToggle?: (id: string, done: boolean) => void;
 }
 
-export function ActionItemsView({ onOpenMeeting }: Props) {
+export function ActionItemsView({ onOpenMeeting, onToggle }: Props) {
   const [items, setItems] = useState(ACTION_ITEMS);
   const [filter, setFilter] = useState<"open" | "all">("open");
 
@@ -52,7 +53,10 @@ export function ActionItemsView({ onOpenMeeting }: Props) {
                     className="flex items-center gap-3 rounded-2xl border border-border bg-card px-4 py-3.5 shadow-sm"
                   >
                     <button
-                      onClick={() => setItems((prev) => prev.map((x) => (x.id === a.id ? { ...x, done: !x.done } : x)))}
+                      onClick={() => {
+                        setItems((prev) => prev.map((x) => (x.id === a.id ? { ...x, done: !x.done } : x)));
+                        onToggle?.(a.id, !a.done);
+                      }}
                     >
                       {a.done ? (
                         <CheckCircle2 size={19} className="text-emerald-600" />
