@@ -1,0 +1,7 @@
+{
+  "$schema": "../gen/schemas/desktop-schema.json",
+  "identifier": "main-capability",
+  "description": "Capabilities for the main window. Note: deliberately grants NO http/fs-network scopes — the Airlock applies to the webview too.",
+  "windows": ["main", "capture"],
+  "permissions": ["core:default", "core:event:default", "store:default"]
+}

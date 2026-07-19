@@ -1,0 +1,23 @@
+# Dependencies
+node_modules/
+dist/
+
+# Rust
+src-tauri/target/
+src-tauri/Cargo.lock
+src-tauri/gen/
+
+# Local models & library data (never commit)
+**/models/*.gguf
+**/models/*.bin
+**/library/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editors
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.log

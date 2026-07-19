@@ -1,0 +1,163 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Sotto "Paper & Ember" — light */
+    --background: 36 38% 96%;
+    --foreground: 26 18% 11%;
+    --card: 40 44% 99%;
+    --card-foreground: 26 18% 11%;
+    --popover: 40 44% 99%;
+    --popover-foreground: 26 18% 11%;
+    --primary: 14 78% 47%;
+    --primary-foreground: 40 44% 98%;
+    --secondary: 34 30% 92%;
+    --secondary-foreground: 26 18% 16%;
+    --muted: 34 26% 91%;
+    --muted-foreground: 28 10% 42%;
+    --accent: 34 88% 55%;
+    --accent-foreground: 26 18% 11%;
+    --destructive: 0 72% 46%;
+    --destructive-foreground: 40 44% 98%;
+    --border: 32 20% 86%;
+    --input: 32 20% 84%;
+    --ring: 14 78% 47%;
+    --radius: 0.75rem;
+    --sidebar-background: 35 32% 94%;
+    --sidebar-foreground: 26 14% 24%;
+    --sidebar-primary: 14 78% 47%;
+    --sidebar-primary-foreground: 40 44% 98%;
+    --sidebar-accent: 34 30% 89%;
+    --sidebar-accent-foreground: 26 18% 14%;
+    --sidebar-border: 32 20% 86%;
+    --sidebar-ring: 14 78% 47%;
+  }
+
+  .dark {
+    /* Sotto "Espresso" — dark */
+    --background: 24 16% 8%;
+    --foreground: 38 30% 92%;
+    --card: 24 14% 11%;
+    --card-foreground: 38 30% 92%;
+    --popover: 24 14% 10%;
+    --popover-foreground: 38 30% 92%;
+    --primary: 16 84% 56%;
+    --primary-foreground: 24 16% 8%;
+    --secondary: 24 10% 16%;
+    --secondary-foreground: 38 24% 88%;
+    --muted: 24 10% 15%;
+    --muted-foreground: 30 10% 58%;
+    --accent: 36 86% 58%;
+    --accent-foreground: 24 16% 8%;
+    --destructive: 0 62% 44%;
+    --destructive-foreground: 38 30% 92%;
+    --border: 26 10% 18%;
+    --input: 26 10% 22%;
+    --ring: 16 84% 56%;
+    --sidebar-background: 24 15% 9.5%;
+    --sidebar-foreground: 34 16% 76%;
+    --sidebar-primary: 16 84% 56%;
+    --sidebar-primary-foreground: 24 16% 8%;
+    --sidebar-accent: 24 10% 15%;
+    --sidebar-accent-foreground: 38 24% 90%;
+    --sidebar-border: 26 10% 17%;
+    --sidebar-ring: 16 84% 56%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: "Inter", system-ui, sans-serif;
+    font-feature-settings: "cv11", "ss01";
+  }
+  .font-display {
+    font-family: "Instrument Serif", Georgia, serif;
+  }
+  .font-mono2 {
+    font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
+}
+
+@layer utilities {
+  .ember-gradient {
+    background-image: linear-gradient(120deg, hsl(14 78% 47%), hsl(34 88% 55%));
+  }
+  .ember-gradient-text {
+    background-image: linear-gradient(120deg, hsl(14 82% 52%), hsl(34 92% 50%));
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .dark .ember-gradient-text {
+    background-image: linear-gradient(120deg, hsl(16 90% 62%), hsl(38 92% 58%));
+  }
+  .paper-texture {
+    background-image: radial-gradient(
+        circle at 20% 0%,
+        hsl(34 88% 55% / 0.05),
+        transparent 40%
+      ),
+      radial-gradient(circle at 90% 10%, hsl(14 78% 47% / 0.05), transparent 35%);
+  }
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: hsl(var(--border));
+    border-radius: 999px;
+  }
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+}
+
+@keyframes wave {
+  0%,
+  100% {
+    transform: scaleY(0.35);
+  }
+  50% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes pulse-rec {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.35;
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-rise {
+  animation: rise-in 0.35s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.wave-bar {
+  animation: wave 1.1s ease-in-out infinite;
+  transform-origin: center;
+}
+
+.rec-dot {
+  animation: pulse-rec 1.4s ease-in-out infinite;
+}

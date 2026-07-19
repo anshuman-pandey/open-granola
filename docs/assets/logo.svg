@@ -1,0 +1,11 @@
+<svg width="96" height="96" viewBox="0 0 96 96" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="ember" x1="0" y1="0" x2="96" y2="96" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#E4572E"/>
+      <stop offset="1" stop-color="#F2A33C"/>
+    </linearGradient>
+  </defs>
+  <rect width="96" height="96" rx="24" fill="url(#ember)"/>
+  <path d="M20 56c0-15.5 12.5-28 28-28s28 12.5 28 28" stroke="white" stroke-width="8" stroke-linecap="round" fill="none"/>
+  <circle cx="48" cy="63" r="9" fill="white"/>
+</svg>

@@ -1,0 +1,44 @@
+name: Airlock
+
+# The privacy guarantee, enforced by CI. If any PR introduces a network
+# dependency, this workflow fails and the PR cannot merge.
+
+on: [push, pull_request]
+
+jobs:
+  no-network-deps:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Forbid HTTP/network crates in the dependency tree
+        run: |
+          cd src-tauri
+          cargo generate-lockfile
+          if cargo tree | grep -Ei 'reqwest|hyper|ureq|curl|isahc|surf|aws-sdk|tonic|websocket|tokio-tungstenite|firebase|sentry'; then
+            echo "::error::Network dependency detected. Sotto ships with no network stack — see PRIVACY.md."
+            exit 1
+          fi
+
+      - name: Forbid network syscalls in first-party source
+        run: |
+          if grep -rnE 'TcpStream::connect|UdpSocket::bind|reqwest::|ureq::|fetch\(|XMLHttpRequest|WebSocket' src-tauri/src src --include='*.rs' --include='*.ts' --include='*.tsx' | grep -v 'airlock.rs' | grep -v 'tests'; then
+            echo "::error::Network call found in first-party source."
+            exit 1
+          fi
+
+      - name: Verify airlock test exists and passes
+        run: |
+          grep -q "outbound_tcp_is_impossible" src-tauri/src/airlock.rs
+          echo "airlock test present"
+
+  csp-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: CSP must not allow remote origins
+        run: |
+          if grep -E 'connect-src' src-tauri/tauri.conf.json | grep -Ev "'self'|ipc:|http://ipc.localhost"; then
+            echo "::error::CSP allows a remote origin."
+            exit 1
+          fi

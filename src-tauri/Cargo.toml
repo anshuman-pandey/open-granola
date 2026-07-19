@@ -1,0 +1,72 @@
+[package]
+name = "sotto"
+version = "0.1.0"
+description = "Sotto — local-first meeting notes. Nothing leaves your machine."
+authors = ["Sotto contributors"]
+license = "Apache-2.0"
+edition = "2021"
+rust-version = "1.77"
+
+[lib]
+name = "sotto_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# --- app framework ---
+tauri = { version = "2", features = ["macos-private-api"] }
+tauri-plugin-store = "2"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+tokio = { version = "1", features = ["full"] }
+anyhow = "1"
+thiserror = "1"
+log = "0.4"
+env_logger = "0.11"
+parking_lot = "0.12"
+
+# --- audio capture (mic + system loopback) ---
+cpal = "0.15"
+rubato = "0.16"          # resampling to 16 kHz mono for whisper
+ringbuf = "0.4"
+
+# --- on-device inference ---
+whisper-rs = { version = "0.13", features = ["raw-api"] }   # whisper.cpp bindings
+llama-cpp-2 = { version = "0.1", features = ["cuda", "metal"] }  # local LLM
+# NOTE: there is deliberately NO http client anywhere in this tree.
+# Airlock is architectural: sotto physically cannot make network calls.
+
+# --- local storage ---
+rusqlite = { version = "0.32", features = ["bundled"] }
+sqlite-vec = "0.1"       # vector index for semantic search
+
+# --- audio fingerprint / diarization ---
+rustfft = "6"            # spectral embeddings for speaker clustering
+ndarray = "0.16"
+
+# --- calendar (local only: ICS files, CalDAV cache, EventKit via objc) ---
+ical = "0.11"
+
+# --- misc ---
+uuid = { version = "1", features = ["v4"] }
+chrono = { version = "0.4", default-features = false, features = ["clock", "serde"] }
+sha2 = "0.10"            # integrity manifests for the audit export
+
+[target."cfg(target_os = \"macos\")".dependencies]
+coreaudio-rs = "0.12"    # process-tap system audio (macOS 14.4+)
+objc2 = "0.5"
+objc2-event-kit = "0.2"  # read-only local calendar
+
+[target."cfg(windows)".dependencies]
+windows = { version = "0.58", features = [
+    "Win32_Media_Audio",   # WASAPI loopback capture
+    "Win32_System_Com",
+] }
+
+[profile.release]
+opt-level = 3
+lto = "fat"
+codegen-units = 1
+strip = true

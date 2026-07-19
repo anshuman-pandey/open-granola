@@ -1,0 +1,66 @@
+{
+  "$schema": "https://schema.tauri.app/config/2",
+  "productName": "Sotto",
+  "version": "0.1.0",
+  "identifier": "notes.sotto.app",
+  "build": {
+    "beforeDevCommand": "npm run dev",
+    "devUrl": "http://localhost:1420",
+    "beforeBuildCommand": "npm run build",
+    "frontendDist": "../dist"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Sotto",
+        "width": 1280,
+        "height": 820,
+        "minWidth": 980,
+        "minHeight": 640,
+        "titleBarStyle": "Overlay",
+        "hiddenTitle": true,
+        "trafficLightPosition": { "x": 14, "y": 18 }
+      },
+      {
+        "title": "Sotto — Live Capture",
+        "label": "capture",
+        "width": 860,
+        "height": 300,
+        "alwaysOnTop": true,
+        "decorations": false,
+        "transparent": true,
+        "skipTaskbar": true,
+        "visible": false
+      }
+    ],
+    "security": {
+      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost",
+      "capabilities": ["main-capability"]
+    }
+  },
+  "plugins": {
+    "updater": null
+  },
+  "bundle": {
+    "active": true,
+    "targets": ["dmg", "msi", "appimage", "deb"],
+    "category": "Productivity",
+    "shortDescription": "Local-first meeting notes. Nothing leaves your machine.",
+    "longDescription": "Sotto captures meetings without a bot, transcribes on-device with Whisper, and enhances notes with a local LLM. No cloud, no accounts, no data retention.",
+    "macOS": {
+      "entitlements": "entitlements.plist",
+      "minimumSystemVersion": "14.4",
+      "info": {
+        "NSMicrophoneUsageDescription": "Sotto captures your microphone to transcribe meetings on-device. Audio is never uploaded or stored by default.",
+        "NSSystemAudioUsageDescription": "Sotto captures system audio to transcribe meetings on-device. Audio is never uploaded or stored by default."
+      }
+    },
+    "windows": {
+      "certificateThumbprint": null,
+      "nsis": { "installMode": "perMachine" }
+    },
+    "linux": {
+      "deb": { "depends": ["libpipewire-0.3-0", "libwebkit2gtk-4.1-0"] }
+    }
+  }
+}
