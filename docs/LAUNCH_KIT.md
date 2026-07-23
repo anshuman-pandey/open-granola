@@ -1,7 +1,7 @@
-# Sotto Launch Kit
+# Open Granola Launch Kit
 
-Everything you need to push Sotto to GitHub and post it everywhere. Copy-paste ready.
-**Repo is live:** https://github.com/anshuman-pandey/sotto-notes — posts below already use it.
+Everything you need to push Open Granola to GitHub and post it everywhere. Copy-paste ready.
+**Repo is live:** https://github.com/anshuman-pandey/open-granola — posts below already use it.
 Add real download links after the first release build (the tag workflow creates a draft).
 
 ---
@@ -9,9 +9,9 @@ Add real download links after the first release build (the tag workflow creates 
 ## 0. Ship to GitHub (5 minutes)
 
 ```bash
-cd sotto
-git init && git add -A && git commit -m "Sotto v0.1.0 — local-first meeting notes"
-gh repo create sotto --public --source=. --push \
+cd open-granola
+git init && git add -A && git commit -m "Open Granola v0.1.0 — local-first meeting notes"
+gh repo create open-granola --public --source=. --push \
   --description "Your meetings, remembered. Nothing leaves your machine. Free, open-source (Apache-2.0) AI meeting notes — 100% on-device."
 ```
 
@@ -33,10 +33,10 @@ git tag v0.1.0 && git push origin v0.1.0   # CI builds dmg/msi/AppImage into a d
 ## 1. Hacker News — Show HN
 
 **Title:**
-> Show HN: Sotto – open-source Granola alternative, 100% on-device (no cloud, no accounts)
+> Show HN: Open Granola – open-source Granola alternative, 100% on-device (no cloud, no accounts)
 
 **Body:**
-> Hi HN — I built Sotto, a meeting notepad that captures calls without a bot (like Granola), but the entire pipeline runs on your own hardware: whisper.cpp for streaming transcription, an embedded llama.cpp model for notes/chat, sqlite-vec for semantic search. There is no server, no account, and no network stack in the binary at all — CI rejects any PR that adds an HTTP dependency, and the macOS build ships without the network.client entitlement, so the OS itself blocks outbound connections.
+> Hi HN — I built Open Granola, a meeting notepad that captures calls without a bot (like Granola), but the entire pipeline runs on your own hardware: whisper.cpp for streaming transcription, an embedded llama.cpp model for notes/chat, sqlite-vec for semantic search. There is no server, no account, and no network stack in the binary at all — CI rejects any PR that adds an HTTP dependency, and the macOS build ships without the network.client entitlement, so the OS itself blocks outbound connections.
 >
 > Why: Granola is lovely but uploads your audio, trains on your data unless you opt out, caps free-tier history, and has no Linux app. I wanted the same workflow with the privacy of an air-gapped machine — and free, Apache-2.0.
 >
@@ -44,7 +44,7 @@ git tag v0.1.0 && git push origin v0.1.0   # CI builds dmg/msi/AppImage into a d
 >
 > Stack: Tauri (Rust) + React/TS, whisper-rs, llama-cpp-2, rusqlite + sqlite-vec. ~15 MB installer; models (~4 GB) download once on first run.
 >
-> Repo: https://github.com/anshuman-pandey/sotto-notes — feedback very welcome, especially from the local-inference crowd. The diarizer is currently model-free spectral clustering; curious what you'd do better within a pure-Rust budget.
+> Repo: https://github.com/anshuman-pandey/open-granola — feedback very welcome, especially from the local-inference crowd. The diarizer is currently model-free spectral clustering; curious what you'd do better within a pure-Rust budget.
 
 ---
 
@@ -56,7 +56,7 @@ git tag v0.1.0 && git push origin v0.1.0   # CI builds dmg/msi/AppImage into a d
 Body: lead with architecture (streaming whisper windows, llama.cpp enhancement with strict-JSON schema, sqlite-vec RAG, spectral diarization), link repo + ARCHITECTURE.md, ask for feedback on the diarization approach and prompt-constrained JSON extraction.
 
 **r/selfhosted / r/privacy** (title):
-> Sotto: AI meeting notes with no server at all — the app has no network stack (auditable, Apache-2.0)
+> Open Granola: AI meeting notes with no server at all — the app has no network stack (auditable, Apache-2.0)
 
 Body: lead with the Airlock (no HTTP deps, CI gate, macOS sandbox entitlement omission, `lsof` shows zero connections), audio-shredded-by-default, zero-fill purge. Link PRIVACY.md.
 
@@ -77,17 +77,17 @@ Body: lead with the workflow: no bot joins, notes write themselves, action items
 > 🎙️ bot-free capture · ⚡ on-device Whisper · 🧠 local LLM notes · 🔍 semantic search · 🐧 Linux too
 >
 > Free. Apache-2.0. No accounts, no cloud, no retention.
-> github.com/anshuman-pandey/sotto-notes 🧵
+> github.com/anshuman-pandey/open-granola 🧵
 
-**2/** Granola's trade: nice notes, but your audio goes to their cloud, they train on your data by default, free tier history is capped, and Linux doesn't exist. Sotto keeps the workflow, deletes the business model.
+**2/** Granola's trade: nice notes, but your audio goes to their cloud, they train on your data by default, free tier history is capped, and Linux doesn't exist. Open Granola keeps the workflow, deletes the business model.
 
-**3/** The Airlock: there is no HTTP client anywhere in the dependency tree. CI fails any PR that adds one. On macOS the app ships without the network.client entitlement — the kernel itself blocks outbound connections. Run `lsof -i | grep sotto`: nothing.
+**3/** The Airlock: there is no HTTP client anywhere in the dependency tree. CI fails any PR that adds one. On macOS the app ships without the network.client entitlement — the kernel itself blocks outbound connections. Run `lsof -i | grep open-granola`: nothing.
 
 **4/** Live assist is my favorite part: during the call, a private panel surfaces recall from past meetings, facts, and follow-up questions to ask — computed on-device against your local vector index. Granola only helps you after the meeting ends.
 
 **5/** Under the hood: Tauri + Rust, whisper.cpp streaming (2s windows), llama.cpp for summaries/chat, sqlite-vec for search, spectral-clustering diarization. 15MB installer, models download once. Works fully offline — on a plane, in a SCIF, wherever.
 
-**6/** It's v0.1 and genuinely useful today. Star it, try it in your next call, and tell me what breaks. Issues and PRs welcome — especially Windows WASAPI and PipeWire folks. github.com/anshuman-pandey/sotto-notes
+**6/** It's v0.1 and genuinely useful today. Star it, try it in your next call, and tell me what breaks. Issues and PRs welcome — especially Windows WASAPI and PipeWire folks. github.com/anshuman-pandey/open-granola
 
 ---
 
@@ -97,7 +97,7 @@ Body: lead with the workflow: no bot joins, notes write themselves, action items
 > Open-source AI meeting notes. Nothing leaves your machine.
 
 **Description (260 chars):**
-> Sotto captures any call without a bot, transcribes on-device with Whisper, and writes notes with a local LLM. No cloud, no accounts, no data retention — the app has no network stack at all. Free & Apache-2.0 for macOS, Windows, Linux.
+> Open Granola captures any call without a bot, transcribes on-device with Whisper, and writes notes with a local LLM. No cloud, no accounts, no data retention — the app has no network stack at all. Free & Apache-2.0 for macOS, Windows, Linux.
 
 **First comment (maker):**
 > Hey PH! I loved Granola's bot-free capture but not its cloud — audio uploads, training on your data unless you opt out, capped free history. So I built the version I wanted: same workflow, 100% on-device inference (whisper.cpp + llama.cpp), plus things Granola doesn't do — live assist during the call, Linux support, optional encrypted audio playback, and action items that auto-export to your tools. It's Apache-2.0 and free forever. Happy to answer anything about the local-inference pipeline!
@@ -112,7 +112,7 @@ Body: lead with the workflow: no bot joins, notes write themselves, action items
 |---|---|
 | Lobsters | Architecture deep-dive (link ARCHITECTURE.md directly) |
 | r/opensource, r/rust, r/tauri | "Built with Rust/Tauri, whisper-rs, llama-cpp-2" |
-| HackerNews (again, 3+ months later) | "Sotto 1.0" once roadmap items land |
+| HackerNews (again, 3+ months later) | "Open Granola 1.0" once roadmap items land |
 | dev.to / Hashnode blog | "I reverse-engineered Granola's magic and made it run 100% locally" — technical writeup |
 | Awesome lists | PRs to awesome-selfhosted, awesome-privacy, awesome-local-ai |
 | Discord/Slack communities | LocalLLaMA Discord, Tauri Discord #showcase, Ollama Discord |
@@ -124,7 +124,7 @@ Body: lead with the workflow: no bot joins, notes write themselves, action items
 
 - [ ] Repo public, LICENSE (Apache-2.0) detected by GitHub
 - [ ] Release v0.1.0 with dmg/msi/AppImage attached
-- [ ] Landing page live (GitHub Pages: push `sotto-site/` to `gh-pages` branch)
+- [ ] Landing page live (GitHub Pages: push `landing/` to `gh-pages` branch)
 - [ ] Social preview image set
 - [ ] Show HN posted Tue–Thu, 8–10am ET (best window)
 - [ ] X thread + Product Hunt same day; Reddit spread across the week

@@ -5,7 +5,7 @@
 //!   * all:   ICS files the user drops into the library folder
 //!   * all:   a CalDAV *cache file* the user syncs with any external tool
 //!
-//! Sotto uses this to pre-title notes ("Aurora checkpoint") and to show the
+//! Open Granola uses this to pre-title notes ("Aurora checkpoint") and to show the
 //! "starts in 2h" card on Home. It never authenticates to a calendar server.
 
 use serde::Serialize;

@@ -132,7 +132,7 @@ export function CommitmentsView({ onOpenMeeting }: Props) {
         </div>
 
         <p className="mt-6 text-center text-[11.5px] text-muted-foreground">
-          Sotto detects commitments with the on-device model — phrases like “I'll have it by Friday” — and never
+          Open Granola detects commitments with the on-device model — phrases like “I'll have it by Friday” — and never
           shames anyone publicly. This ledger is yours alone.
         </p>
       </div>

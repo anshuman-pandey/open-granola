@@ -1,5 +1,5 @@
 //! Local storage: SQLite (bundled) + sqlite-vec for semantic search.
-//! Single file at <app_data>/library/sotto.db. No sync, no backup beacon,
+//! Single file at <app_data>/library/opengranola.db. No sync, no backup beacon,
 //! no analytics events table — there is nothing to send anywhere.
 
 use anyhow::Result;

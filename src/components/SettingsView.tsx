@@ -85,7 +85,7 @@ export function SettingsView() {
             <div>
               <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-300">Airlock</div>
               <div className="text-[12px] text-emerald-700/80 dark:text-emerald-400/80">
-                Sotto's network stack is physically disabled — verify it in the source, it's one build flag.
+                Open Granola's network stack is physically disabled — verify it in the source, it's one build flag.
               </div>
             </div>
             <div className="ml-auto text-right">
@@ -94,7 +94,7 @@ export function SettingsView() {
             </div>
           </div>
           <div className="divide-y divide-border">
-            <Row title="Airlock (offline mode)" desc="Blocks every outbound connection at the OS level. With it on, Sotto works fully offline, forever.">
+            <Row title="Airlock (offline mode)" desc="Blocks every outbound connection at the OS level. With it on, Open Granola works fully offline, forever.">
               <Toggle on={airlock} onChange={() => setAirlock(!airlock)} />
             </Row>
             <Row title="Anonymous crash reports" desc="Off by default. Even on, reports are stored locally for you to inspect and send manually.">
@@ -108,7 +108,7 @@ export function SettingsView() {
           <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
             <HardDrive size={15} className="text-primary" />
             <span className="text-[14px] font-bold">Storage & retention</span>
-            <span className="ml-auto font-mono2 text-[11px] text-muted-foreground">1.9 GB used · ~/Library/Sotto</span>
+            <span className="ml-auto font-mono2 text-[11px] text-muted-foreground">1.9 GB used · ~/Library/Open Granola</span>
           </div>
           <div className="divide-y divide-border">
             <Row title="Keep raw audio" desc="Off by default: audio is deleted the moment transcription finishes. Enable to keep encrypted local audio you can play back and verify against.">
@@ -189,7 +189,7 @@ export function SettingsView() {
             <span className="text-[14px] font-bold">Import from another notetaker</span>
           </div>
           <div className="divide-y divide-border">
-            <Row title="Granola" desc="Bring your history with you: drop Granola's export (Settings → Data → Export, or their API) and Sotto converts notes, transcripts and dates into local meetings. The file is read once, then forgotten.">
+            <Row title="Granola" desc="Bring your history with you: drop Granola's export (Settings → Data → Export, or their API) and Open Granola converts notes, transcripts and dates into local meetings. The file is read once, then forgotten.">
               <div>
                 <input
                   ref={fileRef}
@@ -215,7 +215,7 @@ export function SettingsView() {
                 )}
               </div>
             </Row>
-            <Row title="Otter / Fireflies / read.ai" desc="Same trick for the other clouds — CSV or JSON exports become fully local, fully searchable Sotto notes.">
+            <Row title="Otter / Fireflies / read.ai" desc="Same trick for the other clouds — CSV or JSON exports become fully local, fully searchable Open Granola notes.">
               <button className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary">
                 Choose export…
               </button>
@@ -224,7 +224,7 @@ export function SettingsView() {
         </section>
 
         <p className="text-center font-mono2 text-[11px] text-muted-foreground">
-          sotto 0.1.0 · apache-2.0 · built with tauri + whisper.cpp + llama.cpp
+          open granola 0.2.0 · apache-2.0 · built with tauri + whisper.cpp + llama.cpp
         </p>
       </div>
     </div>

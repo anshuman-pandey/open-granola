@@ -1,17 +1,17 @@
-# Contributing to Sotto
+# Contributing to Open Granola
 
-First: thank you. Sotto exists because meeting software forgot who it works for. Help us keep it honest.
+First: thank you. Open Granola exists because meeting software forgot who it works for. Help us keep it honest.
 
-## The three laws of Sotto PRs
+## The three laws of Open Granola PRs
 
 1. **No network dependencies.** No HTTP clients, no WebSocket, no cloud SDKs, no "anonymous analytics". CI (`airlock.yml`) enforces this; a human will too.
-2. **No accounts or sync servers.** If a feature seems to need a server, the Sotto way is to do it on-device or not at all. Pair-device sync (LAN, end-to-end encrypted, user-initiated) is the only exception on the roadmap.
+2. **No accounts or sync servers.** If a feature seems to need a server, the Open Granola way is to do it on-device or not at all. Pair-device sync (LAN, end-to-end encrypted, user-initiated) is the only exception on the roadmap.
 3. **Deletion must mean deletion.** Any feature that stores data must respect the retention policy and the purge path in `storage.rs`.
 
 ## Dev setup
 
 ```bash
-git clone https://github.com/anshuman-pandey/sotto-notes.git && cd sotto
+git clone https://github.com/anshuman-pandey/open-granola.git && cd open-granola
 npm install
 npm run tauri dev
 ```
@@ -26,7 +26,7 @@ folder on first run — or drop GGUFs into `library/models/` manually:
 
 ## Where to start
 
-- Issues labeled [`good first issue`](https://github.com/anshuman-pandey/sotto-notes/labels/good%20first%20issue)
+- Issues labeled [`good first issue`](https://github.com/anshuman-pandey/open-granola/labels/good%20first%20issue)
 - Platform audio: `src-tauri/src/audio/loopback.rs` (Windows WASAPI and Linux PipeWire need the most love)
 - Diarization quality: `src-tauri/src/transcribe.rs` (`spectral_embedding` / clustering)
 - Templates & UX polish: `src/components/TemplatesView.tsx`

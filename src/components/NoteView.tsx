@@ -305,7 +305,7 @@ export function NoteView({ meeting, onToggleAction, askFn }: Props) {
             <Sparkles size={12} />
           </div>
           <div>
-            <div className="text-[13px] font-semibold">Ask Sotto</div>
+            <div className="text-[13px] font-semibold">Ask Open Granola</div>
             <div className="text-[10px] text-muted-foreground">Qwen3 4B · on-device · zero retention</div>
           </div>
         </div>

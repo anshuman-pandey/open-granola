@@ -284,7 +284,7 @@ pub async fn set_retention_policy(state: State<'_, Arc<AppState>>, days: u32) ->
 
 #[tauri::command]
 pub async fn purge_everything(state: State<'_, Arc<AppState>>) -> Result<(), String> {
-    let path = state.data_dir.join("sotto.db");
+    let path = state.data_dir.join("opengranola.db");
     state.db.lock().purge_all(&path).map_err(|e| e.to_string())
 }
 

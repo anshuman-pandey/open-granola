@@ -1,8 +1,8 @@
 <p align="center">
-  <img src="docs/assets/logo.svg" width="72" alt="Sotto logo" />
+  <img src="docs/assets/logo.svg" width="72" alt="Open Granola logo" />
 </p>
 
-<h1 align="center">Sotto</h1>
+<h1 align="center">Open Granola</h1>
 
 <p align="center">
   <strong>Your meetings, remembered. Nothing leaves your machine.</strong>
@@ -15,7 +15,7 @@
 
 <p align="center">
   <a href="#install">Install</a> ·
-  <a href="#why-sotto">Why Sotto</a> ·
+  <a href="#why-open-granola">Why Open Granola</a> ·
   <a href="#how-it-works">How it works</a> ·
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
   <a href="PRIVACY.md">Privacy</a> ·
@@ -24,23 +24,23 @@
 
 ---
 
-Sotto is the meeting notepad for people who read the privacy policy first. It captures any call
+Open Granola is the meeting notepad for people who read the privacy policy first. It captures any call
 (Zoom, Meet, Teams, Webex, huddles, in-person) **without a bot joining**, transcribes it with
 **whisper.cpp on your own hardware**, and turns it into chapters, decisions and action items with a
-**local LLM** (llama.cpp). There is no Sotto server. There is no account. There is no telemetry.
+**local LLM** (llama.cpp). There is no Open Granola server. There is no account. There is no telemetry.
 There isn't even a network stack in the binary — we call that **Airlock**, and you can verify it
 yourself in about 40 lines of source.
 
-> *Sotto voce — Italian: “in a low voice.” Your meetings stay that way.*
+> *Granola's workflow, everyone's source code. Your meetings stay yours.*
 
-## Why Sotto
+## Why Open Granola
 
 Granola proved that bot-free capture is the right idea. It also uploads your audio, trains on your
 data unless you opt out (org-wide opt-out costs $35/user/mo), caps the free tier's history, skips
-Linux entirely, and offers no help while the meeting is actually happening. Sotto keeps the idea and
+Linux entirely, and offers no help while the meeting is actually happening. Open Granola keeps the idea and
 removes the business model:
 
-| | **Sotto** | Granola |
+| | **Open Granola** | Granola |
 |---|---|---|
 | Price | **Free, forever** | $0–35/user/mo |
 | Audio & AI processing | **100% on-device** | Cloud |
@@ -61,7 +61,7 @@ removes the business model:
 - 🧠 **Local AI notes** — an embedded GGUF model (Qwen3-4B default) writes the summary, chapters, decisions and action items with owners and due dates the moment you stop.
 - 💡 **Live assist** — during the meeting, a private panel surfaces recall from past notes, relevant facts, and suggested follow-up questions. Only you see it.
 - 🔍 **Semantic search + chat** — every meeting is embedded into a local sqlite-vec index. Ask “what did Vesper say about compliance?” and get answers with timestamps.
-- 🗞️ **Pre-meeting Briefs** — before each call, Sotto writes a private brief: what happened last time with these people, which commitments are riding on this meeting, and three things worth raising. All from local RAG.
+- 🗞️ **Pre-meeting Briefs** — before each call, Open Granola writes a private brief: what happened last time with these people, which commitments are riding on this meeting, and three things worth raising. All from local RAG.
 - 🤝 **Commitment ledger** — every promise anyone makes (“I'll have it by Friday”) is extracted, tracked across meetings, and resurfaced when due. Nobody else builds this at any price.
 - 📖 **Recipes** — shareable Markdown prompt packs (objection miner, board-update extractor…) that run on your local model. Publish them with a PR.
 - 📥 **Importers** — one-click migration from Granola, Otter, Fireflies and read.ai exports. Switching costs: deleted.
@@ -74,23 +74,23 @@ removes the business model:
 ## Install
 
 Download the latest build for your platform from
-[**Releases**](https://github.com/anshuman-pandey/sotto-notes/releases):
+[**Releases**](https://github.com/anshuman-pandey/open-granola/releases):
 
 | Platform | Package |
 |---|---|
-| macOS (Apple Silicon + Intel) | `Sotto.dmg` |
-| Windows | `Sotto.msi` |
-| Linux | `Sotto.AppImage` / `sotto.deb` / Flatpak |
+| macOS (Apple Silicon + Intel) | `Open Granola.dmg` |
+| Windows | `Open Granola.msi` |
+| Linux | `Open Granola.AppImage` / `opengranola.deb` / Flatpak |
 
-On first launch Sotto offers to fetch the on-device models (~4 GB total: Whisper, Qwen3, Nomic
-embed). That model download is **the only network request Sotto ever makes** — disable Airlock for
+On first launch Open Granola offers to fetch the on-device models (~4 GB total: Whisper, Qwen3, Nomic
+embed). That model download is **the only network request Open Granola ever makes** — disable Airlock for
 one minute to fetch them, or drop the GGUF files into the library folder manually and never open a
 socket at all.
 
 ### Build from source
 
 ```bash
-git clone https://github.com/anshuman-pandey/sotto-notes.git && cd sotto
+git clone https://github.com/anshuman-pandey/open-granola.git && cd open-granola
 npm install
 npm run tauri dev        # dev build
 npm run tauri build      # release bundles in src-tauri/target/release/bundle
@@ -143,5 +143,5 @@ else is negotiable.
 
 ## License
 
-[Apache-2.0](LICENSE) © Sotto contributors. Use it, fork it, ship it in your company, sell support
+[Apache-2.0](LICENSE) © Open Granola contributors. Use it, fork it, ship it in your company, sell support
 for it — just keep the license notice.

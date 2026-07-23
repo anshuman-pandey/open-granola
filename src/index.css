@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Sotto "Paper & Ember" — light */
+    /* Open Granola "Paper & Ember" — light */
     --background: 36 38% 96%;
     --foreground: 26 18% 11%;
     --card: 40 44% 99%;
@@ -36,7 +36,7 @@
   }
 
   .dark {
-    /* Sotto "Espresso" — dark */
+    /* Open Granola "Espresso" — dark */
     --background: 24 16% 8%;
     --foreground: 38 30% 92%;
     --card: 24 14% 11%;

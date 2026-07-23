@@ -1,4 +1,4 @@
-//! Sotto — local-first meeting notes.
+//! Open Granola — local-first meeting notes.
 //!
 //! Design law, in order:
 //! 1. NO network. There is no http client in this crate. Airlock (see `airlock.rs`)
@@ -47,7 +47,7 @@ pub fn run() {
         .setup(|app| {
             let data_dir = app.path().app_data_dir()?.join("library");
             std::fs::create_dir_all(&data_dir)?;
-            let db = storage::Db::open(&data_dir.join("sotto.db"))?;
+            let db = storage::Db::open(&data_dir.join("opengranola.db"))?;
             app.manage(Arc::new(AppState {
                 data_dir,
                 db: Mutex::new(db),
@@ -77,5 +77,5 @@ pub fn run() {
             commands::import_granola_export,
         ])
         .run(tauri::generate_context!())
-        .expect("error while running sotto");
+        .expect("error while running open-granola");
 }

@@ -18,7 +18,7 @@ export function TemplatesView() {
       <div className="mx-auto max-w-3xl px-8 pb-16 pt-10">
         <h1 className="font-display text-[32px]">Note templates</h1>
         <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-muted-foreground">
-          Sotto matches the right template to each meeting automatically — or pin one before you hit record. Write your
+          Open Granola matches the right template to each meeting automatically — or pin one before you hit record. Write your
           own in plain Markdown; the local model fills the structure from the transcript.
         </p>
 

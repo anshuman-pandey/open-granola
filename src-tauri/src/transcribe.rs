@@ -33,7 +33,7 @@ pub struct WhisperEngine {
 impl WhisperEngine {
     /// Load a GGML whisper model from the local model directory.
     /// (Models are downloaded once by the user inside the app — the only
-    ///  moment Sotto ever opens a socket, and only with Airlock off.)
+    ///  moment Open Granola ever opens a socket, and only with Airlock off.)
     pub fn load(model_path: &Path) -> Result<Self> {
         let ctx = WhisperContext::new_with_params(
             model_path.to_str().context("bad model path")?,

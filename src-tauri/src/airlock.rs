@@ -83,7 +83,7 @@ mod windows {
 #[cfg(test)]
 mod tests {
     /// The one test that must never be deleted: prove no socket can open.
-    /// If this test passes, Sotto cannot phone home even if it wanted to.
+    /// If this test passes, Open Granola cannot phone home even if it wanted to.
     #[test]
     fn outbound_tcp_is_impossible() {
         let res = std::net::TcpStream::connect("8.8.8.8:53");

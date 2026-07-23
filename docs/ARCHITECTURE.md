@@ -1,4 +1,4 @@
-# Sotto Architecture
+# Open Granola Architecture
 
 ```
 ┌────────────────────────────────────────────────────────────────────┐

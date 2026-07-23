@@ -43,7 +43,7 @@ pub struct LocalLlm {
 }
 
 const ENHANCE_SYSTEM: &str = "\
-You are Sotto, a meeting-notes engine running entirely on the user's device. \
+You are Open Granola, a meeting-notes engine running entirely on the user's device. \
 Given a diarized transcript, produce STRICT JSON with keys: title, summary, \
 chapters[{title,timestamp,body}], decisions[], action_items[{text,owner,due}]. \
 Rules: prefer concrete facts and exact numbers; never invent content; keep \
@@ -51,13 +51,13 @@ chapter bodies under 45 words; timestamps as mm:ss; action items must have an \
 owner if any speaker volunteered or was assigned. Output JSON only.";
 
 const LIVE_ASSIST_SYSTEM: &str = "\
-You are Sotto Live Assist. Given a rolling transcript window and (optionally) \
+You are Open Granola Live Assist. Given a rolling transcript window and (optionally) \
 snippets from the user's past notes, emit STRICT JSON: an array of up to 2 \
 suggestions {kind: recall|fact|follow-up, title, body}. Suggest only what is \
 genuinely useful RIGHT NOW; else output []. Never fabricate citations.";
 
 const COMMITMENTS_SYSTEM: &str = "\
-You are Sotto's commitment extractor. From a diarized transcript, find every \
+You are Open Granola's commitment extractor. From a diarized transcript, find every \
 explicit promise, offer, or assignment — phrases like \"I'll have it by Friday\", \
 \"I can take that\", \"send me X and I'll review\". Emit STRICT JSON: an array \
 {text, owner, due, evidence}. Rules: owner = the speaker who volunteered or was \
@@ -66,7 +66,7 @@ null; evidence = the exact quote it came from. Ignore vague intentions (\"we \
 should\", \"let's think about\"). Output [] if there are none.";
 
 const BRIEF_SYSTEM: &str = "\
-You are Sotto's briefer. Given an upcoming meeting (title, attendees) and \
+You are Open Granola's briefer. Given an upcoming meeting (title, attendees) and \
 excerpts from relevant past meetings plus open commitments involving those \
 attendees, write a pre-meeting brief as STRICT JSON: \
 {recap, open_commitments[{owner,text,due,overdue}], worth_raising[]}. \
@@ -155,7 +155,7 @@ impl LocalLlm {
             "Answer ONLY from this context, citing [meeting, timestamp]:\n{}\n\nQ: {question}",
             context_chunks.join("\n---\n")
         );
-        self.completion("You are Sotto's librarian. Be precise; cite sources.", &user, 600)
+        self.completion("You are Open Granola's librarian. Be precise; cite sources.", &user, 600)
     }
 
     /// Extract explicit promises from a finished transcript — the raw material

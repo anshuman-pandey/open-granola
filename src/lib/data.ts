@@ -147,7 +147,7 @@ export const MEETINGS: Meeting[] = [
     transcript: [
       { id: "t1", speakerId: "lin", start: 0, text: "Thanks for making time. To kick off — what broke with the tools you've already tried?" },
       { id: "t2", speakerId: "you", start: 8, text: "Their answer, paraphrasing: every one of them phones home. Legal killed all five evaluations on data residency alone." },
-      { id: "t3", speakerId: "lin", start: 22, text: "That's exactly the wall we built Sotto behind. Everything runs on the device — transcript, summary, the lot." },
+      { id: "t3", speakerId: "lin", start: 22, text: "That's exactly the wall we built Open Granola behind. Everything runs on the device — transcript, summary, the lot." },
       { id: "t4", speakerId: "you", start: 34, text: "They want a forty-clinician pilot, two sites, and a hard requirement: one-click audit export into their SIEM." },
       { id: "t5", speakerId: "lin", start: 46, text: "Doable. Budget confirmed this quarter, six-week decision window, and the gate is their security review. I'll send the whitepaper tonight." },
     ],
@@ -209,7 +209,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "r1",
     name: "Objection miner",
-    author: "@sotto",
+    author: "@opengranola",
     downloads: 1284,
     description: "Pulls every objection from a sales call, verbatim, with the answer that landed.",
     prompt:
@@ -218,7 +218,7 @@ export const RECIPES: Recipe[] = [
   {
     id: "r2",
     name: "Board-update extractor",
-    author: "@sotto",
+    author: "@opengranola",
     downloads: 947,
     description: "Turns a leadership sync into a board-ready metrics narrative.",
     prompt:

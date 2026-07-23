@@ -88,7 +88,7 @@ export function Sidebar(p: Props) {
           </svg>
         </div>
         <div>
-          <div className="font-display text-[19px] leading-none">Sotto</div>
+          <div className="font-display text-[19px] leading-none">Open Granola</div>
           <div className="text-[10.5px] text-muted-foreground">local-first meeting notes</div>
         </div>
         <button
