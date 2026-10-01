@@ -1,231 +1,473 @@
-import { Download, FileUp, HardDrive, ShieldCheck, Trash2 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
-import { MODELS } from "../lib/data";
+import {
+  AlertCircle,
+  Cpu,
+  FileUp,
+  Folder,
+  HardDrive,
+  RefreshCw,
+  Shield,
+  Trash2,
+} from "lucide-react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getBackend } from "../lib/backend";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogTitle,
+} from "./ui/dialog";
 
-function Toggle({ on, onChange }: { on: boolean; onChange: () => void }) {
+function Section({
+  title,
+  icon,
+  children,
+}: {
+  title: string;
+  icon: ReactNode;
+  children: ReactNode;
+}) {
   return (
-    <button
-      onClick={onChange}
-      className={`relative h-5.5 w-10 rounded-full transition-colors ${on ? "bg-primary" : "bg-input"}`}
-      style={{ height: 22 }}
-    >
-      <span
-        className="absolute top-[2px] h-[18px] w-[18px] rounded-full bg-white shadow transition-all"
-        style={{ left: on ? 20 : 2 }}
-      />
-    </button>
+    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+      <h2 className="flex items-center gap-2 border-b border-border px-5 py-4 text-sm font-semibold">
+        {icon}
+        {title}
+      </h2>
+      <div className="space-y-4 p-5">{children}</div>
+    </section>
   );
 }
 
-function Row({ title, desc, children }: { title: string; desc: string; children: React.ReactNode }) {
-  return (
-    <div className="flex items-center justify-between gap-6 px-5 py-4">
-      <div>
-        <div className="text-[13.5px] font-semibold">{title}</div>
-        <div className="mt-0.5 text-[12px] leading-snug text-muted-foreground">{desc}</div>
-      </div>
-      {children}
-    </div>
-  );
-}
-
-export function SettingsView() {
-  const [airlock, setAirlock] = useState(true);
-  const [audioCache, setAudioCache] = useState(false);
-  const [purge, setPurge] = useState(true);
-  const [crashReports, setCrashReports] = useState(false);
-  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
-  const [purgeArmed, setPurgeArmed] = useState(false);
-  const [importMsg, setImportMsg] = useState<string | null>(null);
-  const fileRef = useRef<HTMLInputElement>(null);
+export function SettingsView({
+  onLibraryChange,
+}: {
+  onLibraryChange?: () => void;
+}) {
   const backend = getBackend();
+  const demo = backend.mode === "demo";
+  const [status, setStatus] = useState<Record<string, unknown> | null>(null);
+  const [loading, setLoading] = useState(!demo);
+  const [busy, setBusy] = useState(false);
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const [confirmation, setConfirmation] = useState<
+    "purge" | "retention" | null
+  >(null);
+  const [confirmText, setConfirmText] = useState("");
+  const [retention, setRetention] = useState("90");
+  const fileRef = useRef<HTMLInputElement>(null);
+  const capabilities =
+    status?.capabilities && typeof status.capabilities === "object"
+      ? (status.capabilities as Record<string, unknown>)
+      : {};
 
   useEffect(() => {
-    if (backend.mode === "tauri") {
-      backend.modelStatus().then(setStatus).catch(() => {});
-    }
-  }, [backend]);
-
-  const modelReady = (kind: string, fallback: boolean) =>
-    status ? Boolean(status[kind]) : fallback;
-
-  const handleImportFile = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      backend
-        .importGranola(String(reader.result))
-        .then((n) => setImportMsg(`Imported ${n} meeting${n === 1 ? "" : "s"} — now fully local, indexed and searchable.`))
-        .catch(() => setImportMsg("Couldn't parse that export — expected a JSON array of notes."));
+    if (demo) return;
+    let active = true;
+    backend
+      .modelStatus()
+      .then((value) => {
+        if (active) setStatus(value);
+      })
+      .catch(() => {
+        if (active)
+          setError(
+            "Couldn’t read desktop readiness. Retry to check your setup.",
+          );
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
     };
-    reader.readAsText(file);
+  }, [backend, demo]);
+  const refresh = async () => {
+    setLoading(true);
+    setError("");
+    try {
+      setStatus(await backend.modelStatus());
+    } catch {
+      setError("Couldn’t read desktop readiness. Please try again.");
+    } finally {
+      setLoading(false);
+    }
   };
-
-  const handlePurge = () => {
-    if (!purgeArmed) {
-      setPurgeArmed(true);
-      setTimeout(() => setPurgeArmed(false), 4000);
+  const importFile = async (file: File) => {
+    if (file.size > 20 * 1024 * 1024) {
+      setError("Choose a JSON export smaller than 20 MB.");
       return;
     }
-    backend.purgeAll().then(() => window.location.reload());
+    setBusy(true);
+    setError("");
+    setNotice("");
+    try {
+      const content = await file.text();
+      JSON.parse(content);
+      const count = await backend.importGranola(content);
+      setNotice(
+        `Imported ${count} meeting${count === 1 ? "" : "s"}. Your library has been refreshed.`,
+      );
+      onLibraryChange?.();
+    } catch {
+      setError(
+        "Import failed. Check that this is a supported Granola JSON export, then try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
+  };
+  const apply = async () => {
+    setBusy(true);
+    setError("");
+    try {
+      if (confirmation === "purge") {
+        await backend.purgeAll();
+        setNotice("Your meeting library has been deleted.");
+      } else {
+        await backend.setRetention(Number(retention));
+        setNotice(
+          Number(retention)
+            ? `Retention set to ${retention} days. Older notes may be removed by the desktop app.`
+            : "Automatic retention deletion disabled.",
+        );
+      }
+      setConfirmation(null);
+      setConfirmText("");
+      onLibraryChange?.();
+      await refresh();
+    } catch {
+      setError(
+        "This change could not be completed. Your library may be in use; stop any active session and try again.",
+      );
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
-    <div className="scrollbar-thin paper-texture flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-2xl space-y-6 px-8 pb-16 pt-10">
+    <div className="scrollbar-thin paper-texture min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto max-w-3xl space-y-6 px-5 pb-24 pt-10 sm:px-8">
         <div>
-          <h1 className="font-display text-[32px]">Settings</h1>
-          <p className="mt-1 text-[13.5px] text-muted-foreground">Everything runs here. Nothing leaves here.</p>
+          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+            Make yourself at home
+          </p>
+          <h1 className="font-display mt-2 text-[36px]">Settings</h1>
+          <p className="mt-2 text-[13px] text-muted-foreground">
+            Know what’s running, where your notes live, and what’s available.
+          </p>
         </div>
-
-        {/* Airlock */}
-        <section className="animate-rise overflow-hidden rounded-2xl border border-emerald-600/30 bg-card shadow-sm">
-          <div className="flex items-center gap-3 border-b border-emerald-600/20 bg-emerald-500/10 px-5 py-4">
-            <ShieldCheck size={20} className="text-emerald-700 dark:text-emerald-400" />
+        {demo && (
+          <div className="flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+            <AlertCircle size={17} className="mt-0.5 shrink-0 text-primary" />
+            <p className="text-xs leading-relaxed">
+              <strong className="font-semibold">
+                You’re exploring the browser demo.
+              </strong>{" "}
+              Meetings are sample data. Audio capture, local AI models, import,
+              and library deletion require the desktop app.
+            </p>
+          </div>
+        )}
+        {notice && (
+          <p
+            role="status"
+            className="rounded-xl border border-border bg-secondary p-4 text-xs leading-relaxed"
+          >
+            {notice}
+          </p>
+        )}
+        {error && (
+          <p
+            role="alert"
+            className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs leading-relaxed text-destructive"
+          >
+            {error}
+          </p>
+        )}
+        <Section
+          title="Privacy & storage"
+          icon={<Shield size={16} className="text-primary" />}
+        >
+          <div>
+            <h3 className="text-[13px] font-semibold">A local workspace</h3>
+            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              The desktop app stores notes and transcripts in its local
+              database. Local storage is not a claim of encryption; your device
+              and backups still control who can access those files.
+            </p>
+          </div>
+          <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
             <div>
-              <div className="text-[14px] font-bold text-emerald-800 dark:text-emerald-300">Airlock</div>
-              <div className="text-[12px] text-emerald-700/80 dark:text-emerald-400/80">
-                Open Granola's network stack is physically disabled — verify it in the source, it's one build flag.
-              </div>
+              <h3 className="text-[13px] font-semibold">Network mode</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                {demo
+                  ? "This page is a browser preview. No network telemetry is measured here."
+                  : status?.airlock === true
+                    ? "Airlock build enabled. This is an application build setting, not an operating-system firewall or a traffic meter."
+                    : status?.airlock === false
+                      ? "Airlock is not enabled in this build. Review your desktop configuration before recording."
+                      : "Waiting for desktop status. Network usage is not measured in this interface."}
+              </p>
             </div>
-            <div className="ml-auto text-right">
-              <div className="font-mono2 text-[11px] text-emerald-700 dark:text-emerald-400">0 bytes sent · 0 connections</div>
-              <div className="font-mono2 text-[11px] text-emerald-700 dark:text-emerald-400">since install</div>
+            <div>
+              <h3 className="text-[13px] font-semibold">
+                Recording responsibly
+              </h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Let everyone in the conversation know before recording. Verify
+                important details in transcripts and AI summaries.
+              </p>
             </div>
+          </div>
+        </Section>
+        <Section
+          title="Desktop readiness"
+          icon={<Cpu size={16} className="text-primary" />}
+        >
+          <div className="flex items-center justify-between gap-3">
+            <p className="text-xs text-muted-foreground">
+              {demo
+                ? "Model checks are available in the desktop app."
+                : loading
+                  ? "Checking your device…"
+                  : "Based on the desktop app’s latest status."}
+            </p>
+            <button
+              disabled={demo || loading}
+              onClick={() => void refresh()}
+              aria-label="Refresh desktop readiness"
+              className="rounded-lg border border-border p-2 text-muted-foreground"
+            >
+              <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
+            </button>
           </div>
           <div className="divide-y divide-border">
-            <Row title="Airlock (offline mode)" desc="Blocks every outbound connection at the OS level. With it on, Open Granola works fully offline, forever.">
-              <Toggle on={airlock} onChange={() => setAirlock(!airlock)} />
-            </Row>
-            <Row title="Anonymous crash reports" desc="Off by default. Even on, reports are stored locally for you to inspect and send manually.">
-              <Toggle on={crashReports} onChange={() => setCrashReports(!crashReports)} />
-            </Row>
-          </div>
-        </section>
-
-        {/* Storage & retention */}
-        <section className="animate-rise rounded-2xl border border-border bg-card shadow-sm" style={{ animationDelay: "60ms" }}>
-          <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
-            <HardDrive size={15} className="text-primary" />
-            <span className="text-[14px] font-bold">Storage & retention</span>
-            <span className="ml-auto font-mono2 text-[11px] text-muted-foreground">1.9 GB used · ~/Library/Open Granola</span>
-          </div>
-          <div className="divide-y divide-border">
-            <Row title="Keep raw audio" desc="Off by default: audio is deleted the moment transcription finishes. Enable to keep encrypted local audio you can play back and verify against.">
-              <Toggle on={audioCache} onChange={() => setAudioCache(!audioCache)} />
-            </Row>
-            <Row title="Auto-purge notes older than 90 days" desc="Your retention policy, enforced locally. Notes, transcripts and embeddings are shredded — not just hidden.">
-              <Toggle
-                on={purge}
-                onChange={() => {
-                  const next = !purge;
-                  setPurge(next);
-                  backend.setRetention(next ? 90 : 0).catch(() => {});
-                }}
-              />
-            </Row>
-            <Row title="Delete everything" desc="One click wipes every note, transcript, embedding and model cache from this device.">
-              <button
-                onClick={handlePurge}
-                className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-                  purgeArmed
-                    ? "border-destructive bg-destructive text-destructive-foreground"
-                    : "border-destructive/40 text-destructive hover:bg-destructive hover:text-destructive-foreground"
-                }`}
+            {[
+              {
+                label: "Speech transcription",
+                detail: "Whisper model file",
+                key: "whisper",
+              },
+              {
+                label: "Meeting summaries & assistant",
+                detail: "Local language model file",
+                key: "llm",
+              },
+            ].map((model) => (
+              <div
+                key={model.key}
+                className="flex items-center justify-between gap-4 py-3"
               >
-                <Trash2 size={13} /> {purgeArmed ? "Click again to confirm" : "Purge library"}
-              </button>
-            </Row>
-          </div>
-        </section>
-
-        {/* Models */}
-        <section className="animate-rise rounded-2xl border border-border bg-card shadow-sm" style={{ animationDelay: "120ms" }}>
-          <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
-            <Download size={15} className="text-primary" />
-            <span className="text-[14px] font-bold">On-device models</span>
-            <span className="ml-auto text-[11.5px] text-muted-foreground">downloaded once, used offline forever</span>
-          </div>
-          <div className="divide-y divide-border">
-            {MODELS.map((m) => (
-              <div key={m.id} className="flex items-center gap-3 px-5 py-3.5">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[13.5px] font-semibold">{m.name}</span>
-                    <span className="rounded-full bg-secondary px-2 py-0.5 text-[10px] font-medium text-secondary-foreground">
-                      {m.kind}
-                    </span>
-                  </div>
-                  <div className="mt-0.5 text-[11.5px] text-muted-foreground">
-                    {m.size} · {m.note}
-                  </div>
+                <div>
+                  <p className="text-[13px] font-medium">{model.label}</p>
+                  <p className="mt-1 text-[11px] text-muted-foreground">
+                    {model.detail}
+                  </p>
                 </div>
-                {m.status === "installed" &&
-                modelReady(
-                  m.id.startsWith("whisper") || m.id.startsWith("parakeet")
-                    ? "whisper"
-                    : m.id.startsWith("nomic")
-                      ? "embed"
-                      : "llm",
-                  true,
-                ) ? (
-                  <span className="flex items-center gap-1.5 text-[12px] font-semibold text-emerald-700 dark:text-emerald-400">
-                    <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" /> Ready
-                  </span>
-                ) : (
-                  <button className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary">
-                    Download
-                  </button>
-                )}
+                <span
+                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${!demo && status?.[model.key] === true ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}
+                >
+                  {demo
+                    ? "Desktop only"
+                    : loading
+                      ? "Checking…"
+                      : status?.[model.key] === true
+                        ? "File present"
+                        : status?.[model.key] === false
+                          ? "Not installed"
+                          : "Unknown"}
+                </span>
               </div>
             ))}
           </div>
-        </section>
-
-        {/* Import */}
-        <section className="animate-rise rounded-2xl border border-border bg-card shadow-sm" style={{ animationDelay: "160ms" }}>
-          <div className="flex items-center gap-2 border-b border-border px-5 py-3.5">
-            <FileUp size={15} className="text-primary" />
-            <span className="text-[14px] font-bold">Import from another notetaker</span>
+          {!demo && typeof status?.model_directory === "string" && (
+            <div className="rounded-xl bg-secondary p-3">
+              <p className="flex items-center gap-1.5 text-[11px] font-semibold">
+                <Folder size={13} />
+                Model folder
+              </p>
+              <code className="mt-2 block break-all text-[10px] text-muted-foreground">
+                {status.model_directory}
+              </code>
+              <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
+                Install the model files using the repository setup instructions,
+                then refresh. File presence does not guarantee successful
+                inference.
+              </p>
+            </div>
+          )}
+          <p className="border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
+            {capabilities.system_audio === true
+              ? "This build supports system audio capture."
+              : "System audio capture is not available in this build."}{" "}
+            {capabilities.diarization === true
+              ? "Speaker separation is available."
+              : "Automatic speaker separation is not available."}{" "}
+            {capabilities.calendar === true
+              ? "Calendar integration is available."
+              : "Calendar integration is not connected."}
+          </p>
+        </Section>
+        <Section
+          title="Import your notes"
+          icon={<FileUp size={16} className="text-primary" />}
+        >
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="max-w-md">
+              <h3 className="text-[13px] font-semibold">Granola JSON export</h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Choose an exported JSON file up to 20 MB. Imported notes will
+                appear in your desktop library. Other export formats are not
+                currently supported.
+              </p>
+            </div>
+            <input
+              ref={fileRef}
+              type="file"
+              accept=".json,application/json"
+              className="hidden"
+              aria-label="Choose Granola JSON export"
+              onChange={(e) => {
+                const file = e.target.files?.[0];
+                if (file) void importFile(file);
+                e.target.value = "";
+              }}
+            />
+            <button
+              disabled={demo || busy}
+              onClick={() => fileRef.current?.click()}
+              className="shrink-0 rounded-xl border border-border px-4 py-2.5 text-xs font-semibold"
+            >
+              {busy ? "Working…" : "Choose JSON export"}
+            </button>
           </div>
-          <div className="divide-y divide-border">
-            <Row title="Granola" desc="Bring your history with you: drop Granola's export (Settings → Data → Export, or their API) and Open Granola converts notes, transcripts and dates into local meetings. The file is read once, then forgotten.">
-              <div>
-                <input
-                  ref={fileRef}
-                  type="file"
-                  accept=".json"
-                  className="hidden"
-                  onChange={(e) => {
-                    const f = e.target.files?.[0];
-                    if (f) handleImportFile(f);
-                    e.target.value = "";
-                  }}
-                />
-                <button
-                  onClick={() => fileRef.current?.click()}
-                  className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary"
-                >
-                  Choose export…
-                </button>
-                {importMsg && (
-                  <p className="mt-1.5 max-w-[220px] text-right text-[11px] text-emerald-700 dark:text-emerald-400">
-                    {importMsg}
-                  </p>
-                )}
-              </div>
-            </Row>
-            <Row title="Otter / Fireflies / read.ai" desc="Same trick for the other clouds — CSV or JSON exports become fully local, fully searchable Open Granola notes.">
-              <button className="rounded-xl border border-border px-3 py-1.5 text-[12px] font-semibold transition-colors hover:bg-secondary">
-                Choose export…
-              </button>
-            </Row>
+        </Section>
+        <Section
+          title="Library retention"
+          icon={<HardDrive size={16} className="text-primary" />}
+        >
+          <p className="text-xs leading-relaxed text-muted-foreground">
+            {typeof status?.retention_days === "number"
+              ? status.retention_days === 0
+                ? "Current policy: keep all notes."
+                : `Current policy: remove notes older than ${status.retention_days} days.`
+              : "The current retention policy is not available in this view."}{" "}
+            Deleting notes also removes their transcripts and related items.
+            Export any notes you want to keep first.
+          </p>
+          <div className="flex flex-wrap items-center gap-3">
+            <label className="text-xs font-medium" htmlFor="retention-policy">
+              Keep notes for
+            </label>
+            <select
+              id="retention-policy"
+              disabled={demo || busy}
+              value={retention}
+              onChange={(e) => setRetention(e.target.value)}
+              className="rounded-lg border border-border bg-background px-3 py-2 text-xs"
+            >
+              <option value="0">Forever</option>
+              <option value="30">30 days</option>
+              <option value="90">90 days</option>
+              <option value="365">1 year</option>
+            </select>
+            <button
+              disabled={demo || busy}
+              onClick={() => {
+                setConfirmation("retention");
+                setConfirmText("");
+              }}
+              className="rounded-lg border border-border px-3 py-2 text-xs font-semibold"
+            >
+              Review change
+            </button>
           </div>
-        </section>
-
-        <p className="text-center font-mono2 text-[11px] text-muted-foreground">
-          open granola 0.2.0 · apache-2.0 · built with tauri + whisper.cpp + llama.cpp
+          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
+            <div>
+              <h3 className="text-[13px] font-semibold">
+                Delete meeting library
+              </h3>
+              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+                Permanently remove saved meetings and their related data.
+              </p>
+            </div>
+            <button
+              disabled={demo || busy}
+              onClick={() => {
+                setConfirmation("purge");
+                setConfirmText("");
+              }}
+              className="flex items-center gap-2 rounded-xl border border-destructive/30 px-3 py-2 text-xs font-semibold text-destructive"
+            >
+              <Trash2 size={14} />
+              Delete library
+            </button>
+          </div>
+        </Section>
+        <p className="text-center text-[10px] text-muted-foreground">
+          Open Granola · Apache 2.0 · Built for conversations worth keeping
         </p>
+        <Dialog
+          open={confirmation !== null}
+          onOpenChange={(open) => {
+            if (!open && !busy) setConfirmation(null);
+          }}
+        >
+          <DialogContent>
+            <DialogTitle>
+              {confirmation === "purge"
+                ? "Delete your meeting library?"
+                : "Change note retention?"}
+            </DialogTitle>
+            <DialogDescription>
+              {confirmation === "purge"
+                ? "This permanently deletes saved meetings, transcripts, action items, and commitments. Export anything you want to keep before continuing."
+                : Number(retention)
+                  ? `Notes older than ${retention} days may be permanently deleted. Export anything you want to keep before applying this policy.`
+                  : "Notes will be kept until you delete them. Previously deleted notes cannot be recovered."}
+            </DialogDescription>
+            {(confirmation === "purge" || Number(retention) > 0) && (
+              <label className="space-y-2 text-xs">
+                <span>Type DELETE to confirm</span>
+                <input
+                  autoComplete="off"
+                  value={confirmText}
+                  onChange={(e) => setConfirmText(e.target.value)}
+                  className="block h-10 w-full rounded-lg border border-border bg-background px-3"
+                />
+              </label>
+            )}
+            {error && (
+              <p role="alert" className="text-xs text-destructive">
+                {error}
+              </p>
+            )}
+            <div className="flex justify-end gap-2">
+              <button
+                disabled={busy}
+                onClick={() => setConfirmation(null)}
+                className="rounded-lg border border-border px-4 py-2 text-xs font-semibold"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={
+                  busy ||
+                  ((confirmation === "purge" || Number(retention) > 0) &&
+                    confirmText !== "DELETE")
+                }
+                onClick={() => void apply()}
+                className="rounded-lg bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground"
+              >
+                {busy
+                  ? "Applying…"
+                  : confirmation === "purge"
+                    ? "Delete library"
+                    : "Apply policy"}
+              </button>
+            </div>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

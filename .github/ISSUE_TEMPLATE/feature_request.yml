@@ -1,0 +1,29 @@
+name: Feature request
+description: Suggest a focused improvement to the local meeting notebook.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Check existing issues and the README's current limitations first. Describe your use case with synthetic examples.
+        Open Granola is a local, open-source project. Suggestions should explain how they fit its offline behavior.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem would this solve?
+      description: Describe who needs this and what is difficult today.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed behavior
+      description: Describe the smallest useful change and what success would look like.
+    validations:
+      required: true
+  - type: textarea
+    id: constraints
+    attributes:
+      label: Alternatives and constraints (optional)
+      description: Mention workarounds, target platforms, or effects on local storage, privacy, and offline use.
+    validations:
+      required: false

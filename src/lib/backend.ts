@@ -31,12 +31,18 @@ export interface LiveSegment {
 export interface Backend {
   mode: "demo" | "tauri";
   listMeetings(): Promise<Meeting[]>;
-  getMeeting(id: string): Promise<{ meeting: Meeting; actionItems: ActionItem[] }>;
+  listActionItems(): Promise<ActionItem[]>;
+  onLibraryChanged(cb: () => void): Promise<() => void>;
+  getMeeting(
+    id: string,
+  ): Promise<{ meeting: Meeting; actionItems: ActionItem[] }>;
   ask(question: string, meetingId?: string): Promise<string>;
   search(query: string): Promise<SearchHit[]>;
   toggleAction(id: string, done: boolean): Promise<void>;
   startCapture(meetingHint?: string): Promise<void>;
   stopCapture(segments: LiveSegment[], template: string): Promise<string>;
+  cancelCapture(): Promise<void>;
+  onCaptureError(cb: (message: string) => void): Promise<() => void>;
   onSegment(cb: (seg: LiveSegment) => void): Promise<() => void>;
   getBrief(): Promise<Brief | null>;
   listCommitments(): Promise<Commitment[]>;
@@ -57,7 +63,9 @@ export const isTauri = () =>
 
 const demoBackend: Backend = {
   mode: "demo",
-  listMeetings: async () => MEETINGS,
+  listMeetings: async () => structuredClone(MEETINGS),
+  listActionItems: async () => structuredClone(ACTION_ITEMS),
+  onLibraryChanged: async () => () => {},
   getMeeting: async (id) => ({
     meeting: MEETINGS.find((m) => m.id === id) ?? MEETINGS[0],
     actionItems: ACTION_ITEMS.filter((a) => a.meetingId === id),
@@ -69,6 +77,8 @@ const demoBackend: Backend = {
   toggleAction: async () => {},
   startCapture: async () => {},
   stopCapture: async () => "",
+  cancelCapture: async () => {},
+  onCaptureError: async () => () => {},
   onSegment: async () => () => {},
   getBrief: async () => BRIEF,
   listCommitments: async () => COMMITMENTS,
@@ -76,7 +86,12 @@ const demoBackend: Backend = {
   runRecipe: async () =>
     "Demo mode: recipes run against the on-device model in the desktop app. Copy the prompt and it will execute locally over your real library.",
   importGranola: async () => 0,
-  modelStatus: async () => ({ whisper: true, llm: true, embed: true, bytes_sent_lifetime: 0 }),
+  modelStatus: async () => ({
+    whisper: false,
+    llm: false,
+    embed: false,
+    demo: true,
+  }),
   setRetention: async () => {},
   purgeAll: async () => {},
 };
@@ -88,9 +103,15 @@ const demoBackend: Backend = {
 const PALETTE = ["#2E86AB", "#3D9B6C", "#C25E8A", "#B07A2A", "#7C5CBF"];
 
 function speakerPerson(speaker: number): Person {
-  if (speaker === 0) return { id: "you", name: "You", initials: "YO", color: "#E4572E" };
-  const c = PALETTE[(speaker - 1) % PALETTE.length];
-  return { id: `sp-${speaker}`, name: `Speaker ${speaker}`, initials: `S${speaker}`, color: c };
+  if (speaker === 0)
+    return { id: "sp-0", name: "Speaker 0", initials: "S0", color: "#E4572E" };
+  const c = PALETTE[Math.abs(speaker - 1) % PALETTE.length];
+  return {
+    id: `sp-${speaker}`,
+    name: `Speaker ${speaker}`,
+    initials: `S${speaker}`,
+    color: c,
+  };
 }
 
 interface RemoteMeetingRow {
@@ -100,6 +121,9 @@ interface RemoteMeetingRow {
   duration_s: number;
   summary: string | null;
   starred: number;
+  chapters: string | null;
+  decisions: string | null;
+  template: string | null;
 }
 
 interface RemoteGetMeeting {
@@ -114,25 +138,61 @@ interface RemoteGetMeeting {
     template: string | null;
     starred: number;
   };
-  segments: { id: string; start_ms: number; end_ms: number; speaker: number; text: string }[];
-  action_items: { id: string; text: string; owner: string | null; due: string | null; done: number }[];
+  segments: {
+    id: string;
+    start_ms: number;
+    end_ms: number;
+    speaker: number;
+    text: string;
+  }[];
+  action_items: {
+    id: string;
+    text: string;
+    owner: string | null;
+    due: string | null;
+    done: number;
+  }[];
 }
 
-function adaptMeeting(id: string, m: RemoteGetMeeting["meeting"], segs: RemoteGetMeeting["segments"]): Meeting {
-  const speakers = [...new Set(segs.map((s) => s.speaker))].sort();
-  const participants = speakers.length > 0 ? speakers.map(speakerPerson) : [speakerPerson(0)];
+export function adaptMeeting(
+  id: string,
+  m: RemoteGetMeeting["meeting"],
+  segs: RemoteGetMeeting["segments"],
+): Meeting {
+  const speakers = [...new Set(segs.map((s) => s.speaker))].sort(
+    (a, b) => a - b,
+  );
+  const participants = speakers.map(speakerPerson);
   let chapters: Meeting["chapters"] = [];
   let decisions: string[] = [];
   try {
-    chapters = m.chapters ? JSON.parse(m.chapters) : [];
-    decisions = m.decisions ? JSON.parse(m.decisions) : [];
+    const parsedChapters: unknown = m.chapters ? JSON.parse(m.chapters) : [];
+    if (Array.isArray(parsedChapters)) {
+      chapters = parsedChapters.filter(
+        (chapter): chapter is Meeting["chapters"][number] =>
+          chapter !== null &&
+          typeof chapter === "object" &&
+          typeof chapter.title === "string" &&
+          typeof chapter.body === "string" &&
+          typeof chapter.timestamp === "string",
+      );
+    }
+  } catch {
+    /* A damaged legacy field must not hide the transcript. */
+  }
+  try {
+    const parsedDecisions: unknown = m.decisions ? JSON.parse(m.decisions) : [];
+    if (Array.isArray(parsedDecisions))
+      decisions = parsedDecisions.filter(
+        (value): value is string => typeof value === "string",
+      );
   } catch {
     /* tolerate legacy rows */
   }
   return {
     id,
     title: m.title,
-    date: m.started_at.replace(" ", "T"),
+    date: normalizeDatabaseDate(m.started_at),
     durationMin: Math.max(1, Math.round(m.duration_s / 60)),
     participants,
     summary: m.summary ?? "",
@@ -140,7 +200,7 @@ function adaptMeeting(id: string, m: RemoteGetMeeting["meeting"], segs: RemoteGe
     decisions,
     transcript: segs.map((s) => ({
       id: s.id,
-      speakerId: s.speaker === 0 ? "you" : `sp-${s.speaker}`,
+      speakerId: `sp-${s.speaker}`,
       start: Math.round(s.start_ms / 1000),
       text: s.text,
     })),
@@ -150,7 +210,18 @@ function adaptMeeting(id: string, m: RemoteGetMeeting["meeting"], segs: RemoteGe
   };
 }
 
-async function tauriInvoke<T>(cmd: string, args?: Record<string, unknown>): Promise<T> {
+export function normalizeDatabaseDate(value: string): string {
+  // SQLite datetime('now') is UTC, even though its serialized value has no zone.
+  const normalized = value.replace(" ", "T");
+  return /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?$/.test(normalized)
+    ? `${normalized}Z`
+    : normalized;
+}
+
+async function tauriInvoke<T>(
+  cmd: string,
+  args?: Record<string, unknown>,
+): Promise<T> {
   const { invoke } = await import("@tauri-apps/api/core");
   return invoke<T>(cmd, args);
 }
@@ -160,14 +231,35 @@ const tauriBackend: Backend = {
 
   async listMeetings() {
     const rows = await tauriInvoke<RemoteMeetingRow[]>("list_meetings");
-    // Small-library pragmatism: hydrate each row. TODO: batch endpoint once
-    // libraries routinely exceed a few hundred meetings.
-    const out: Meeting[] = [];
-    for (const r of rows) {
-      const full = await this.getMeeting(r.id);
-      out.push(full.meeting);
-    }
-    return out;
+    return rows.map((row) => adaptMeeting(row.id, row, []));
+  },
+
+  async onLibraryChanged(callback) {
+    const { listen } = await import("@tauri-apps/api/event");
+    return listen("library-changed", callback);
+  },
+
+  async listActionItems() {
+    const rows = await tauriInvoke<
+      {
+        id: string;
+        text: string;
+        owner: string | null;
+        due: string | null;
+        done: number;
+        meeting_id: string;
+        meeting_title: string;
+      }[]
+    >("list_action_items");
+    return rows.map((row) => ({
+      id: row.id,
+      text: row.text,
+      owner: row.owner ?? "Unassigned",
+      due: row.due ?? undefined,
+      done: row.done === 1,
+      meetingId: row.meeting_id,
+      meetingTitle: row.meeting_title,
+    }));
   },
 
   async getMeeting(id) {
@@ -185,13 +277,16 @@ const tauriBackend: Backend = {
     return { meeting, actionItems };
   },
 
-  ask: (question) => tauriInvoke<string>("ask_library", { question }),
+  ask: (question, meetingId) =>
+    tauriInvoke<string>("ask_library", {
+      question,
+      meetingId: meetingId ?? null,
+    }),
 
   async search(query) {
-    const rows = await tauriInvoke<{ id: string; title: string; started_at: string }[]>(
-      "semantic_search",
-      { query },
-    );
+    const rows = await tauriInvoke<
+      { id: string; title: string; started_at: string }[]
+    >("semantic_search", { query });
     return rows.map((r) => ({
       id: `m-${r.id}`,
       kind: "meeting" as const,
@@ -203,10 +298,35 @@ const tauriBackend: Backend = {
 
   toggleAction: (id, done) => tauriInvoke("toggle_action_item", { id, done }),
 
-  startCapture: (meetingHint) => tauriInvoke("start_capture", { meetingHint: meetingHint ?? null }),
+  startCapture: (meetingHint) =>
+    tauriInvoke("start_capture", { meetingHint: meetingHint ?? null }),
 
   stopCapture: (segments, template) =>
-    tauriInvoke<string>("stop_capture_and_enhance", { transcript: segments, templateMd: template }),
+    tauriInvoke<string>("stop_capture_and_enhance", {
+      transcript: segments,
+      templateMd: template,
+    }),
+
+  cancelCapture: () => tauriInvoke("cancel_capture"),
+
+  async onCaptureError(cb) {
+    const { listen } = await import("@tauri-apps/api/event");
+    const errorListener = await listen<string>("capture-error", (event) =>
+      cb(event.payload),
+    );
+    try {
+      const warningListener = await listen<string>("capture-warning", (event) =>
+        cb(event.payload),
+      );
+      return () => {
+        errorListener();
+        warningListener();
+      };
+    } catch (error) {
+      errorListener();
+      throw error;
+    }
+  },
 
   async onSegment(cb) {
     const { listen } = await import("@tauri-apps/api/event");
@@ -220,7 +340,12 @@ const tauriBackend: Backend = {
           meeting: { title: string; starts_at: string; participants: string[] };
           brief: {
             recap: string;
-            open_commitments: { owner: string; text: string; due: string | null; overdue: boolean | null }[];
+            open_commitments: {
+              owner: string;
+              text: string;
+              due: string | null;
+              overdue: boolean | null;
+            }[];
             worth_raising: string[];
           };
         }
@@ -233,10 +358,19 @@ const tauriBackend: Backend = {
       participants: raw.meeting.participants.map((p, i) => ({
         id: `p-${i}`,
         name: p,
-        initials: p.split(" ").map((w) => w[0]).join("").slice(0, 2).toUpperCase(),
+        initials: p
+          .split(" ")
+          .map((w) => w[0])
+          .join("")
+          .slice(0, 2)
+          .toUpperCase(),
         color: PALETTE[i % PALETTE.length],
       })),
-      lastTime: { title: raw.meeting.title, date: raw.meeting.starts_at, recap: raw.brief.recap },
+      lastTime: {
+        title: raw.meeting.title,
+        date: raw.meeting.starts_at,
+        recap: raw.brief.recap,
+      },
       openCommitments: raw.brief.open_commitments.map((c) => ({
         owner: c.owner,
         text: c.text,
@@ -250,8 +384,14 @@ const tauriBackend: Backend = {
   async listCommitments() {
     const rows = await tauriInvoke<
       {
-        id: string; text: string; owner: string | null; due: string | null;
-        status: string; made_on: string; meeting_title: string; meeting_id: string;
+        id: string;
+        text: string;
+        owner: string | null;
+        due: string | null;
+        status: string;
+        made_on: string;
+        meeting_title: string;
+        meeting_id: string;
       }[]
     >("list_commitments");
     return rows.map((r) => ({
@@ -262,16 +402,26 @@ const tauriBackend: Backend = {
       meetingId: r.meeting_id,
       madeOn: r.made_on,
       due: r.due ?? undefined,
-      status: (r.status === "kept" ? "kept" : r.status === "overdue" ? "overdue" : "open") as Commitment["status"],
-      ageDays: Math.max(0, Math.round((Date.now() - +new Date(r.made_on)) / 86400000)),
+      status: (r.status === "kept"
+        ? "kept"
+        : r.status === "overdue"
+          ? "overdue"
+          : "open") as Commitment["status"],
+      ageDays: Math.max(
+        0,
+        Math.round((Date.now() - +new Date(r.made_on)) / 86400000),
+      ),
     }));
   },
 
-  markCommitment: (id, status) => tauriInvoke("mark_commitment", { id, status }),
+  markCommitment: (id, status) =>
+    tauriInvoke("mark_commitment", { id, status }),
 
-  runRecipe: (prompt, meetingId) => tauriInvoke("run_recipe", { prompt, meetingId: meetingId ?? null }),
+  runRecipe: (prompt, meetingId) =>
+    tauriInvoke("run_recipe", { prompt, meetingId: meetingId ?? null }),
 
-  importGranola: (json) => tauriInvoke<number>("import_granola_export", { json }),
+  importGranola: (json) =>
+    tauriInvoke<number>("import_granola_export", { json }),
 
   modelStatus: () => tauriInvoke("model_status"),
 

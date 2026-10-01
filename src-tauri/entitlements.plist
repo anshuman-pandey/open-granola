@@ -7,14 +7,12 @@
     <true/>
     <key>com.apple.security.device.microphone</key>
     <true/>
-    <!-- App sandbox is ON, network.client is deliberately ABSENT.
-         macOS itself will kill any outbound connection Sotto attempts.
-         That is the Airlock, enforced below the process. -->
+    <!-- Signed release bundles request the App Sandbox and omit both network
+         client/server entitlements. Validate the signed artifact at release. -->
     <key>com.apple.security.app-sandbox</key>
     <true/>
+    <!-- Import/export files explicitly selected by the user. -->
     <key>com.apple.security.files.user-selected.read-write</key>
-    <true/>
-    <key>com.apple.security.assets.movies.read-write</key>
     <true/>
 </dict>
 </plist>

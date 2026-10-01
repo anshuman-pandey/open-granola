@@ -64,7 +64,12 @@ export interface Brief {
   startsIn: string;
   participants: Person[];
   lastTime: { title: string; date: string; recap: string };
-  openCommitments: { owner: string; text: string; due?: string; overdue?: boolean }[];
+  openCommitments: {
+    owner: string;
+    text: string;
+    due?: string;
+    overdue?: boolean;
+  }[];
   worthRaising: string[];
 }
 
@@ -84,7 +89,6 @@ export interface Recipe {
   id: string;
   name: string;
   author: string;
-  downloads: number;
   description: string;
   prompt: string;
 }

@@ -1,8 +1,19 @@
-import { BookOpen, Briefcase, Copy, Download, Layers, Mic, Plus, Target, Users, Zap } from "lucide-react";
-import { useState } from "react";
+import {
+  BookOpen,
+  Briefcase,
+  Copy,
+  Download,
+  Layers,
+  Mic,
+  Target,
+  Users,
+  Zap,
+} from "lucide-react";
+import { useState, type ReactNode } from "react";
 import { RECIPES, TEMPLATES } from "../lib/data";
+import { downloadMarkdown } from "./meeting-export";
 
-const ICONS: Record<string, React.ReactNode> = {
+const ICONS: Record<string, ReactNode> = {
   Layers: <Layers size={17} />,
   Users: <Users size={17} />,
   Target: <Target size={17} />,
@@ -12,103 +23,133 @@ const ICONS: Record<string, React.ReactNode> = {
 };
 
 export function TemplatesView() {
-  const [copied, setCopied] = useState<string | null>(null);
+  const [notice, setNotice] = useState("");
+  const [error, setError] = useState("");
+  const copy = async (text: string, name: string) => {
+    try {
+      await navigator.clipboard.writeText(text);
+      setNotice(`${name} copied.`);
+      setError("");
+    } catch {
+      setError(
+        "Clipboard access was unavailable. Use Download to save the Markdown instead.",
+      );
+    }
+  };
   return (
-    <div className="scrollbar-thin paper-texture flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-3xl px-8 pb-16 pt-10">
-        <h1 className="font-display text-[32px]">Note templates</h1>
-        <p className="mt-1 max-w-lg text-[13.5px] leading-relaxed text-muted-foreground">
-          Open Granola matches the right template to each meeting automatically — or pin one before you hit record. Write your
-          own in plain Markdown; the local model fills the structure from the transcript.
+    <div className="scrollbar-thin paper-texture min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto max-w-4xl px-5 pb-24 pt-10 sm:px-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+          A place to start
         </p>
-
-        <div className="mt-6 grid grid-cols-2 gap-3">
-          {TEMPLATES.map((t, i) => (
-            <div
-              key={t.id}
-              className="animate-rise group rounded-2xl border border-border bg-card p-5 shadow-sm transition-all hover:-translate-y-0.5 hover:shadow-md"
-              style={{ animationDelay: `${i * 50}ms` }}
-            >
-              <div className="flex items-center gap-2.5">
-                <span className="ember-gradient flex h-8 w-8 items-center justify-center rounded-xl text-white">
-                  {ICONS[t.icon]}
-                </span>
-                <span className="text-[15px] font-semibold">{t.name}</span>
-              </div>
-              <ul className="mt-3 space-y-1.5">
-                {t.structure.map((s) => (
-                  <li key={s} className="flex items-center gap-2 text-[12.5px] text-muted-foreground">
-                    <span className="h-1 w-1 rounded-full bg-primary/60" />
-                    {s}
-                  </li>
-                ))}
-              </ul>
-            </div>
-          ))}
-          <button className="animate-rise flex min-h-[140px] flex-col items-center justify-center gap-2 rounded-2xl border border-dashed border-border text-muted-foreground transition-colors hover:border-primary/50 hover:text-primary" style={{ animationDelay: "300ms" }}>
-            <Plus size={20} />
-            <span className="text-[13px] font-medium">New template from Markdown</span>
-          </button>
-        </div>
-
-        {/* recipes */}
-        <div className="mt-10">
-          <div className="flex items-end justify-between">
-            <div>
-              <h2 className="font-display text-[26px]">Recipes</h2>
-              <p className="mt-1 max-w-lg text-[13px] leading-relaxed text-muted-foreground">
-                Shareable prompt packs that run on your local model over any meeting — or across your whole
-                library. Plain Markdown, so they sync through git, gist, or carrier pigeon.
-              </p>
-            </div>
-            <span className="rounded-full bg-secondary px-3 py-1 text-[11px] font-semibold text-secondary-foreground">
-              {RECIPES.length} installed
-            </span>
-          </div>
-          <div className="mt-4 space-y-2.5">
-            {RECIPES.map((r, i) => (
-              <div
-                key={r.id}
-                className="animate-rise rounded-2xl border border-border bg-card p-4 shadow-sm"
-                style={{ animationDelay: `${i * 50}ms` }}
+        <h1 className="font-display mt-2 text-[36px]">Note templates</h1>
+        <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-muted-foreground">
+          Useful outlines for different conversations. Copy or download a
+          template to adapt in your own notes.
+        </p>
+        {notice && (
+          <p
+            role="status"
+            className="mt-4 rounded-xl border border-border bg-secondary p-3 text-xs"
+          >
+            {notice}
+          </p>
+        )}
+        {error && (
+          <p
+            role="alert"
+            className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive"
+          >
+            {error}
+          </p>
+        )}
+        <div className="mt-7 grid gap-4 sm:grid-cols-2">
+          {TEMPLATES.map((template) => {
+            const markdown = `# ${template.name}\n\n${template.structure.map((section) => `## ${section}\n\n`).join("")}`;
+            return (
+              <section
+                key={template.id}
+                className="flex flex-col rounded-2xl border border-border bg-card p-5 shadow-sm"
               >
                 <div className="flex items-center gap-3">
-                  <span className="ember-gradient flex h-8 w-8 shrink-0 items-center justify-center rounded-xl text-white">
-                    <BookOpen size={15} />
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    {ICONS[template.icon] ?? <BookOpen size={17} />}
                   </span>
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className="text-[14px] font-semibold">{r.name}</span>
-                      <span className="text-[11px] text-muted-foreground">{r.author}</span>
-                    </div>
-                    <div className="text-[12px] text-muted-foreground">{r.description}</div>
-                  </div>
-                  <span className="flex items-center gap-1 text-[11px] text-muted-foreground">
-                    <Download size={11} /> {r.downloads.toLocaleString()}
-                  </span>
+                  <h2 className="text-sm font-semibold">{template.name}</h2>
+                </div>
+                <ul className="mb-5 mt-4 space-y-2">
+                  {template.structure.map((section) => (
+                    <li
+                      key={section}
+                      className="flex items-center gap-2 text-xs text-muted-foreground"
+                    >
+                      <span className="h-1 w-1 rounded-full bg-primary/60" />
+                      {section}
+                    </li>
+                  ))}
+                </ul>
+                <div className="mt-auto flex items-center gap-2 border-t border-border pt-4">
                   <button
-                    onClick={() => {
-                      navigator.clipboard?.writeText(r.prompt);
-                      setCopied(r.id);
-                      setTimeout(() => setCopied(null), 1200);
-                    }}
-                    className={`flex items-center gap-1.5 rounded-xl border px-3 py-1.5 text-[12px] font-semibold transition-colors ${
-                      copied === r.id
-                        ? "border-emerald-600/40 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                        : "border-border hover:bg-secondary"
-                    }`}
+                    onClick={() => void copy(markdown, template.name)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-[11px] font-semibold"
                   >
-                    <Copy size={12} /> {copied === r.id ? "Copied" : "Copy prompt"}
+                    <Copy size={12} />
+                    Copy outline
+                  </button>
+                  <button
+                    onClick={() => downloadMarkdown(template.name, markdown)}
+                    className="ml-auto rounded-lg p-2 text-muted-foreground hover:bg-secondary"
+                    aria-label={`Download ${template.name} template`}
+                    title="Download Markdown"
+                  >
+                    <Download size={14} />
                   </button>
                 </div>
-              </div>
+              </section>
+            );
+          })}
+        </div>
+        <section className="mt-10">
+          <h2 className="font-display text-[28px]">Prompts to try</h2>
+          <p className="mt-2 max-w-lg text-[13px] leading-relaxed text-muted-foreground">
+            Starting points for turning meeting notes into useful follow-ups.
+            Review each prompt before using it with your chosen assistant.
+          </p>
+          <div className="mt-5 space-y-3">
+            {RECIPES.map((recipe) => (
+              <details
+                key={recipe.id}
+                className="rounded-2xl border border-border bg-card p-5"
+              >
+                <summary className="cursor-pointer text-sm font-semibold">
+                  {recipe.name}
+                  <span className="mt-1 block text-xs font-normal leading-relaxed text-muted-foreground">
+                    {recipe.description}
+                  </span>
+                </summary>
+                <pre className="mt-4 whitespace-pre-wrap rounded-xl bg-secondary p-4 font-sans text-xs leading-relaxed">
+                  {recipe.prompt}
+                </pre>
+                <div className="mt-4 flex gap-2">
+                  <button
+                    onClick={() => void copy(recipe.prompt, recipe.name)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-[11px] font-semibold"
+                  >
+                    <Copy size={12} />
+                    Copy prompt
+                  </button>
+                  <button
+                    onClick={() => downloadMarkdown(recipe.name, recipe.prompt)}
+                    className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-[11px] font-semibold"
+                  >
+                    <Download size={12} />
+                    Download
+                  </button>
+                </div>
+              </details>
             ))}
           </div>
-          <p className="mt-3 text-[11.5px] text-muted-foreground">
-            Publish your own: add a <span className="font-mono2">*.recipe.md</span> file to the community repo —
-            recipes are sandboxed prompts, never code, so they're safe to share.
-          </p>
-        </div>
+        </section>
       </div>
     </div>
   );

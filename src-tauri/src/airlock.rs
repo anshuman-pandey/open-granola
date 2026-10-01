@@ -1,95 +1,223 @@
-//! Airlock — the guarantee that nothing leaves the machine.
-//!
-//! Two layers, both auditable in ~40 lines:
-//!
-//! 1. **Build-time**: this crate has no http/websocket dependency. Any PR that
-//!    adds one fails CI (see `.github/workflows/airlock.yml`), which greps the
-//!    dependency tree for `reqwest`, `hyper`, `ureq`, `curl`, `aws-*`, etc.
-//!
-//! 2. **Run-time**: on startup we ask the host OS to deny outbound traffic for
-//!    this process. macOS: the sandbox profile lacks `network*` entitlements
-//!    (see `entitlements.plist`) and we additionally load a seatbelt rule.
-//!    Windows/Linux: we install a process-scoped packet filter where the
-//!    platform permits it; where it doesn't, layer 1 is the guarantee.
+//! Network policy reporting. Release macOS builds install a process sandbox;
+//! other platforms currently rely on application policy and webview CSP.
+//! A dependency scan is a regression check, not proof that sockets cannot open.
 
-use log::info;
-
-/// Engage the airlock. Must be called before the Tauri builder runs.
-/// Never fails closed-open: if the OS hook cannot be installed we log loudly
-/// but continue, because layer 1 (no network code) is still absolute.
-pub fn engage() {
-    #[cfg(target_os = "macos")]
-    macos::deny_network();
-
-    #[cfg(target_os = "linux")]
-    linux::warn_if_unsandboxed();
-
-    #[cfg(windows)]
-    windows::deny_network_via_wfp();
-
-    info!("airlock engaged: outbound network disabled for this process");
+#[derive(Debug, Clone, Copy, serde::Serialize)]
+pub struct AirlockStatus {
+    pub os_enforced: bool,
+    pub mode: &'static str,
+    pub detail: &'static str,
 }
 
-#[cfg(target_os = "macos")]
-mod macos {
-    /// Seatbelt: deny every outbound socket. The .app already ships without
-    /// `com.apple.security.network.client`, so this is belt and suspenders.
-    pub fn deny_network() {
-        const PROFILE: &str = "(version 1)(allow default)(deny network*)";
-        // SAFETY: `sandbox_init` is a stable libSystem API. We pass a static
-        // profile string; on failure we return the error code and log.
-        extern "C" {
-            fn sandbox_init(profile: *const std::ffi::c_char, flags: u64, error: *mut *mut std::ffi::c_char) -> i32;
-        }
-        let mut err: *mut std::ffi::c_char = std::ptr::null_mut();
-        let rc = unsafe {
-            sandbox_init(
-                std::ffi::CString::new(PROFILE).unwrap().as_ptr(),
-                0, // SANDBOX_NAMED
-                &mut err,
-            )
+/// Called before the Tauri builder. Release macOS builds fail startup if their
+/// network sandbox cannot be installed. Debug builds need the local Vite server.
+pub fn engage() -> anyhow::Result<AirlockStatus> {
+    #[cfg(all(target_os = "macos", not(debug_assertions)))]
+    {
+        macos::deny_network()?;
+        log::info!("macOS process network sandbox installed");
+        Ok(AirlockStatus {
+            os_enforced: true,
+            mode: "macos_sandbox",
+            detail: "The macOS process sandbox denies network access. Webview content also uses a local-only CSP.",
+        })
+    }
+
+    #[cfg(any(not(target_os = "macos"), debug_assertions))]
+    {
+        let status = if cfg!(debug_assertions) {
+            AirlockStatus {
+                os_enforced: false,
+                mode: "development",
+                detail: "Development permits the local frontend server; OS network blocking is not enabled.",
+            }
+        } else {
+            AirlockStatus {
+                os_enforced: false,
+                mode: "application_policy",
+                detail: "The app has no upload feature and restricts webview connections. OS network blocking is not implemented on this platform.",
+            }
         };
-        if rc != 0 {
-            log::error!("seatbelt profile failed to load (rc={rc}); build-time airlock still holds");
+        log::warn!("{}", status.detail);
+        Ok(status)
+    }
+}
+
+#[cfg(all(target_os = "macos", any(not(debug_assertions), test)))]
+mod macos {
+    use std::ffi::{c_char, c_void, CString};
+
+    #[link(name = "Security", kind = "framework")]
+    extern "C" {
+        fn SecTaskCreateFromSelf(allocator: *const c_void) -> *const c_void;
+        fn SecTaskCopyValueForEntitlement(
+            task: *const c_void,
+            name: *const c_void,
+            error: *mut *const c_void,
+        ) -> *const c_void;
+    }
+
+    #[link(name = "CoreFoundation", kind = "framework")]
+    extern "C" {
+        fn CFStringCreateWithCString(
+            allocator: *const c_void,
+            value: *const c_char,
+            encoding: u32,
+        ) -> *const c_void;
+        fn CFGetTypeID(value: *const c_void) -> usize;
+        fn CFBooleanGetTypeID() -> usize;
+        fn CFBooleanGetValue(value: *const c_void) -> u8;
+        fn CFRelease(value: *const c_void);
+    }
+
+    struct OwnedCf(*const c_void);
+
+    impl Drop for OwnedCf {
+        fn drop(&mut self) {
+            if !self.0.is_null() {
+                // SAFETY: only retained Create/Copy API results are wrapped.
+                unsafe { CFRelease(self.0) };
+            }
         }
     }
-}
 
-#[cfg(target_os = "linux")]
-mod linux {
-    /// On Linux the strongest portable guarantee is layer 1 plus the Flatpak
-    /// manifest shipping `--unshare=network`. Bare AppImage/deb installs get a
-    /// loud log line so packagers notice.
-    pub fn warn_if_unsandboxed() {
-        if std::env::var_os("FLATPAK_ID").is_none() {
-            log::warn!("not running under Flatpak: OS-level network denial unavailable; \
-                        compile-time airlock (no http stack) remains in effect");
+    fn entitlement_enabled(name: &str) -> anyhow::Result<bool> {
+        let name = CString::new(name)?;
+        // SAFETY: null allocator selects the system default; the name is valid
+        // UTF-8, NUL-terminated, and alive for the call. All retained CF objects
+        // are released by OwnedCf, including any returned error.
+        let task = OwnedCf(unsafe { SecTaskCreateFromSelf(std::ptr::null()) });
+        let key = OwnedCf(unsafe {
+            CFStringCreateWithCString(std::ptr::null(), name.as_ptr(), 0x0800_0100)
+        });
+        anyhow::ensure!(
+            !task.0.is_null() && !key.0.is_null(),
+            "Cannot inspect application sandbox entitlements"
+        );
+        let mut error = std::ptr::null();
+        let value = OwnedCf(unsafe { SecTaskCopyValueForEntitlement(task.0, key.0, &mut error) });
+        let error = OwnedCf(error);
+        anyhow::ensure!(
+            error.0.is_null(),
+            "Cannot read application sandbox entitlements"
+        );
+        if value.0.is_null() {
+            return Ok(false);
         }
+        // SAFETY: the non-null returned object is retained; check its type
+        // before using the CFBoolean accessor.
+        anyhow::ensure!(
+            unsafe { CFGetTypeID(value.0) == CFBooleanGetTypeID() },
+            "Unexpected sandbox entitlement type"
+        );
+        Ok(unsafe { CFBooleanGetValue(value.0) != 0 })
+    }
+
+    pub(super) fn deny_network() -> anyhow::Result<()> {
+        use std::ffi::{c_int, CStr};
+        // sandbox_init cannot replace a sandbox that signing already enabled.
+        // Accept that existing boundary only when its effective entitlements
+        // contain neither inbound nor outbound network access.
+        if entitlement_enabled("com.apple.security.app-sandbox")? {
+            anyhow::ensure!(
+                !entitlement_enabled("com.apple.security.network.client")?
+                    && !entitlement_enabled("com.apple.security.network.server")?,
+                "The signed application unexpectedly has network entitlements"
+            );
+            return Ok(());
+        }
+        extern "C" {
+            fn sandbox_init(profile: *const c_char, flags: u64, error: *mut *mut c_char) -> c_int;
+            fn sandbox_free_error(error: *mut c_char);
+        }
+        let profile = CString::new("(version 1)(allow default)(deny network*)")?;
+        let mut error: *mut c_char = std::ptr::null_mut();
+        // SAFETY: profile is NUL-terminated and lives through the call; error is
+        // an out pointer owned by libsandbox and freed with sandbox_free_error.
+        let result = unsafe { sandbox_init(profile.as_ptr(), 0, &mut error) };
+        let detail = if error.is_null() {
+            String::from("no platform error supplied")
+        } else {
+            let detail = unsafe { CStr::from_ptr(error) }
+                .to_string_lossy()
+                .into_owned();
+            unsafe { sandbox_free_error(error) };
+            detail
+        };
+        anyhow::ensure!(result == 0, "Cannot install the network sandbox: {detail}");
+        Ok(())
     }
 }
 
-#[cfg(windows)]
-mod windows {
-    /// Windows Filtering Platform: block all outbound traffic for this PID.
-    pub fn deny_network_via_wfp() {
-        // Implemented with the `windows` crate: open the WFP engine, add an
-        // AppContainer/ALE_AUTH_CONNECT filter scoped to this process that
-        // returns BLOCK. Omitted here only for brevity of the listing; see
-        // src-tauri/src/airlock_win.rs in the full tree.
-        log::info!("WFP outbound block requested for current process");
-    }
-}
-
-#[cfg(test)]
+#[cfg(all(test, target_os = "macos"))]
 mod tests {
-    /// The one test that must never be deleted: prove no socket can open.
-    /// If this test passes, Open Granola cannot phone home even if it wanted to.
+    use std::net::{TcpListener, TcpStream};
+    use std::process::Command;
+    use std::time::Duration;
+
+    // Isolate irreversible sandbox installation in a child test process. The
+    // parent first proves that the exact local endpoint is reachable, avoiding
+    // false positives from an offline machine or unreachable public DNS host.
     #[test]
-    fn outbound_tcp_is_impossible() {
-        let res = std::net::TcpStream::connect("8.8.8.8:53");
-        #[cfg(target_os = "macos")]
-        assert!(res.is_err(), "airlock breached: outbound connect succeeded");
-        #[cfg(not(target_os = "macos"))]
-        let _ = res; // layer-1 guarantee only on non-macOS CI runners
+    fn sandbox_denies_reachable_loopback_in_child() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let address = listener.local_addr().unwrap();
+        TcpStream::connect_timeout(&address, Duration::from_secs(2)).unwrap();
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "airlock::tests::sandbox_child_probe",
+                "--nocapture",
+            ])
+            .env("OPEN_GRANOLA_SANDBOX_PROBE", address.to_string())
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "sandbox probe failed: {} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    #[test]
+    fn sandbox_child_probe() {
+        let Ok(address) = std::env::var("OPEN_GRANOLA_SANDBOX_PROBE") else {
+            return;
+        };
+        super::macos::deny_network().unwrap();
+        let error = TcpStream::connect_timeout(&address.parse().unwrap(), Duration::from_secs(2))
+            .unwrap_err();
+        assert_eq!(
+            error.kind(),
+            std::io::ErrorKind::PermissionDenied,
+            "expected an OS denial: {error}"
+        );
+        let output = Command::new(std::env::current_exe().unwrap())
+            .args([
+                "--exact",
+                "airlock::tests::sandbox_inherited_probe",
+                "--nocapture",
+            ])
+            .output()
+            .unwrap();
+        assert!(
+            output.status.success(),
+            "exec child failed to inherit the network sandbox: {} {}",
+            String::from_utf8_lossy(&output.stdout),
+            String::from_utf8_lossy(&output.stderr)
+        );
+    }
+
+    #[test]
+    fn sandbox_inherited_probe() {
+        let Ok(address) = std::env::var("OPEN_GRANOLA_SANDBOX_PROBE") else {
+            return;
+        };
+        // Deliberately do not call sandbox_init: an exec'd worker must inherit
+        // the already-sandboxed parent's policy without reinstalling it.
+        let error = TcpStream::connect_timeout(&address.parse().unwrap(), Duration::from_secs(2))
+            .unwrap_err();
+        assert_eq!(error.kind(), std::io::ErrorKind::PermissionDenied);
     }
 }

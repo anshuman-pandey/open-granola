@@ -7,16 +7,47 @@ export interface LiveLine {
   color: string;
   text: string;
   final: boolean;
+  startMs?: number;
+  endMs?: number;
+  speakerId?: number;
 }
 
 const SCRIPT: { speaker: string; color: string; text: string }[] = [
-  { speaker: "You", color: "#E4572E", text: "Alright, let's talk about the onboarding drop-off. Where are people bailing?" },
-  { speaker: "Priya Nair", color: "#C25E8A", text: "Step three, the workspace invite screen. Sixty-one percent never get past it." },
-  { speaker: "Devon Park", color: "#2E86AB", text: "That screen asks for too much. We could defer invites until after the first project exists." },
-  { speaker: "You", color: "#E4572E", text: "Agreed. What does that do to activation if invites move to day two?" },
-  { speaker: "Priya Nair", color: "#C25E8A", text: "Based on the beta cohort, activation should rise roughly eight points. Team invites were the friction, not the value prop." },
-  { speaker: "Devon Park", color: "#2E86AB", text: "I can have the reordered flow behind a flag by Friday. We'll run it as a fifty-fifty split." },
-  { speaker: "You", color: "#E4572E", text: "Perfect. Decision: defer invites, flag-gated rollout Friday, Priya watches the activation dashboard." },
+  {
+    speaker: "You",
+    color: "#E4572E",
+    text: "Alright, let's talk about the onboarding drop-off. Where are people bailing?",
+  },
+  {
+    speaker: "Priya Nair",
+    color: "#C25E8A",
+    text: "Step three, the workspace invite screen. Sixty-one percent never get past it.",
+  },
+  {
+    speaker: "Devon Park",
+    color: "#2E86AB",
+    text: "That screen asks for too much. We could defer invites until after the first project exists.",
+  },
+  {
+    speaker: "You",
+    color: "#E4572E",
+    text: "Agreed. What does that do to activation if invites move to day two?",
+  },
+  {
+    speaker: "Priya Nair",
+    color: "#C25E8A",
+    text: "Based on the beta cohort, activation should rise roughly eight points. Team invites were the friction, not the value prop.",
+  },
+  {
+    speaker: "Devon Park",
+    color: "#2E86AB",
+    text: "I can have the reordered flow behind a flag by Friday. We'll run it as a fifty-fifty split.",
+  },
+  {
+    speaker: "You",
+    color: "#E4572E",
+    text: "Perfect. Decision: defer invites, flag-gated rollout Friday, Priya watches the activation dashboard.",
+  },
 ];
 
 const SUGGESTIONS: { at: number; s: Omit<LiveSuggestion, "id"> }[] = [
@@ -52,7 +83,8 @@ export function useLiveSession(onFinish: (lines: LiveLine[]) => void) {
   const [lines, setLines] = useState<LiveLine[]>([]);
   const [suggestions, setSuggestions] = useState<LiveSuggestion[]>([]);
   const timers = useRef<number[]>([]);
-  const lineCount = useRef(0);
+  const linesRef = useRef<LiveLine[]>([]);
+  const activeRef = useRef(false);
 
   const clearAll = () => {
     timers.current.forEach((t) => window.clearTimeout(t));
@@ -60,11 +92,13 @@ export function useLiveSession(onFinish: (lines: LiveLine[]) => void) {
   };
 
   const start = useCallback(() => {
+    if (activeRef.current) return;
+    activeRef.current = true;
     clearAll();
+    linesRef.current = [];
     setLines([]);
     setSuggestions([]);
     setElapsed(0);
-    lineCount.current = 0;
     setActive(true);
 
     let t = 1200;
@@ -72,18 +106,33 @@ export function useLiveSession(onFinish: (lines: LiveLine[]) => void) {
       const id = `live-${i}`;
       timers.current.push(
         window.setTimeout(() => {
-          lineCount.current += 1;
-          setLines((prev) => [...prev, { id, speaker: entry.speaker, color: entry.color, text: "", final: false }]);
+          linesRef.current = [
+            ...linesRef.current,
+            {
+              id,
+              speaker: entry.speaker,
+              color: entry.color,
+              text: "",
+              final: false,
+              startMs: i * 3000,
+            },
+          ];
+          setLines(linesRef.current);
           // stream the line word by word
           const words = entry.text.split(" ");
           words.forEach((_, wi) => {
             timers.current.push(
               window.setTimeout(() => {
-                setLines((prev) =>
-                  prev.map((l) =>
-                    l.id === id ? { ...l, text: words.slice(0, wi + 1).join(" "), final: wi === words.length - 1 } : l,
-                  ),
+                linesRef.current = linesRef.current.map((line) =>
+                  line.id === id
+                    ? {
+                        ...line,
+                        text: words.slice(0, wi + 1).join(" "),
+                        final: wi === words.length - 1,
+                      }
+                    : line,
                 );
+                setLines(linesRef.current);
               }, wi * 90),
             );
           });
@@ -102,13 +151,16 @@ export function useLiveSession(onFinish: (lines: LiveLine[]) => void) {
   }, []);
 
   const stop = useCallback(() => {
+    if (!activeRef.current) return;
+    activeRef.current = false;
     clearAll();
     setActive(false);
-    setLines((prev) => {
-      const finished = prev.map((l) => ({ ...l, final: true }));
-      onFinish(finished);
-      return finished;
-    });
+    const finished = linesRef.current
+      .filter((line) => line.text.trim())
+      .map((line) => ({ ...line, final: true }));
+    linesRef.current = finished;
+    setLines(finished);
+    onFinish(finished);
   }, [onFinish]);
 
   useEffect(() => {
@@ -123,7 +175,9 @@ export function useLiveSession(onFinish: (lines: LiveLine[]) => void) {
 }
 
 export function fmtClock(totalSec: number) {
-  const m = Math.floor(totalSec / 60).toString().padStart(2, "0");
+  const m = Math.floor(totalSec / 60)
+    .toString()
+    .padStart(2, "0");
   const s = (totalSec % 60).toString().padStart(2, "0");
   return `${m}:${s}`;
 }

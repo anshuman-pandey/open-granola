@@ -1,78 +1,46 @@
-# Open Granola Architecture
+# Architecture
 
-```
-┌────────────────────────────────────────────────────────────────────┐
-│                          React frontend                            │
-│  Home · NoteView (notes/transcript/chat) · CaptureBar · Settings   │
-│  CSP: connect-src 'self' ipc: — the UI cannot reach the internet   │
-└───────────────────────────────┬────────────────────────────────────┘
-                                │ Tauri IPC (commands.rs)
-┌───────────────────────────────▼────────────────────────────────────┐
-│                            Rust core                               │
-│                                                                    │
-│  audio/          transcribe.rs        llm.rs          storage.rs   │
-│  ├ mic (cpal)    ├ whisper.cpp        ├ enhance       ├ SQLite     │
-│  ├ loopback      │  (streaming)       ├ live assist   ├ sqlite-vec │
-│  │ ├ mac: tap    ├ spectral diarize   ├ chat (RAG)    ├ FTS5       │
-│  │ ├ win: WASAPI └ vocab prompting    └ embeddings    ├ retention  │
-│  │ └ linux: PW                                        └ purge      │
-│  └ 16 kHz mono ring buffer (RAM only)                              │
-│                                                                    │
-│  airlock.rs — seatbelt/WFP/Flatpak: kernel-level outbound denial   │
-│  calendar.rs — EventKit / ICS / CalDAV cache (read-only, local)    │
-└────────────────────────────────────────────────────────────────────┘
+## Runtime boundary
+
+The React workspace uses one `Backend` interface. Browser mode is an in-memory sample workspace. Tauri mode invokes the Rust core; an empty or failing desktop library never falls back to samples. List queries load up to 1,000 recent meetings and 5,000 action items; selecting a meeting loads that transcript separately. Search uses a debounced, cancellable result lifecycle.
+
+The production webview loads bundled assets under a restrictive CSP and receives only the event subscription permissions it needs. Custom IPC commands validate inputs. There is no shell, filesystem plugin or HTTP plugin exposed to the renderer. The framework and OS webview still contain networking functionality; the application does not claim otherwise.
+
+## Capture and persistence
+
+```mermaid
+flowchart LR
+  Mic[Microphone] --> Audio[Native owner thread]
+  Audio --> Buffer[Bounded audio buffer]
+  Buffer --> Resample[16 kHz mono]
+  Resample --> Whisper[Local Whisper]
+  Whisper --> Events[Live segment events]
+  Whisper --> Transcript[Backend transcript]
+  Transcript --> Raw[Transactional raw note save]
+  Raw --> LLM[Optional local enhancement]
+  LLM --> Notes[Notes and actions]
 ```
 
-## Data flow for one meeting
+Capture startup loads the model and validates microphone access before reporting success. A capture gate serializes startup, stop, cancel and destructive data operations. The audio stream stays on its owner thread. Stop joins the worker after draining buffered input, preserves actual timestamps, and persists the native transcript. The frontend never reconstructs timing from line positions.
 
-1. **Capture.** Mic (cpal) and system loopback are mixed, resampled to 16 kHz mono with rubato, and
-   pushed into a lock-free ring buffer sized for 4 minutes (drained continuously, so steady-state
-   usage is ~2 seconds of audio ≈ 64 kB). **Audio never touches disk in default mode.**
-2. **Transcribe.** A worker drains the buffer in 2 s windows / 500 ms stride through whisper.cpp.
-   Each segment gets a speaker label from online clustering of spectral embeddings (40-bin log
-   envelopes, cosine threshold 0.78, EMA centroid updates). Partial results stream to the UI as
-   `segment` events. A vocabulary prompt built from the user's custom dictionary biases decoding
-   toward correct names and numbers.
-3. **Live assist.** Every ~8 s the rolling window plus top-3 recalled snippets (sqlite-vec cosine
-   over the local embedding index) go to the local LLM, which returns ≤2 suggestions as strict JSON.
-4. **Enhance.** On Stop, the full transcript + the selected Markdown template go to the LLM with a
-   schema-constrained prompt → summary, chapters, decisions, action items (owner/due). The JSON is
-   peeled with `extract_json` and validated; a failed parse retries with temperature 0.
-5. **Persist.** Meeting, segments, action items in SQLite; segment embeddings (nomic-embed via
-   llama.cpp pooling) into sqlite-vec; full-text index in FTS5. Retention policy sets `expires_at`;
-   enforcement deletes + `VACUUM`s.
-6. **Destroy.** Purge zero-fills the DB file before unlink. Opt-in audio files are AES-256-GCM with
-   the key in the OS keychain, so deleting the key is cryptographic erasure.
+Raw notes are saved before LLM inference. A missing model or invalid response leaves the transcript intact. If persistence fails, the pending capture remains in native memory for retry; the UI offers retry or explicit discard. This does not survive process exit or power loss. Raw audio is not intentionally written to disk, but RAM disposal is not a cryptographic erasure guarantee.
 
-## Why these choices
+## Inference
 
-- **Tauri over Electron** — ~15 MB installer vs ~200 MB, Rust audio stack without Node FFI pain,
-  and a CSP/sandbox model that makes the Airlock claim enforceable in the UI layer too.
-- **whisper.cpp + llama.cpp over hosted APIs** — the only way "nothing leaves your machine" is a
-  fact rather than a policy. Apple Silicon / CUDA acceleration makes Large-v3-Turbo realtime on
-  anything from an M1 up; Parakeet is offered for CUDA boxes.
-- **Spectral diarization over pyannote** — pyannote needs PyTorch (GBs, Python). A model-free
-  spectral-clustering diarizer is ~150 lines of Rust, runs in real time on CPU, and is good enough
-  for ≤6 speakers. A candle-based embedding model is a planned upgrade behind the same interface.
-- **SQLite + sqlite-vec over a vector DB** — one file, zero services, trivially inspectable and
-  truly deletable.
+Whisper runs in the application process; llama.cpp runs in a persistent adjacent helper executable. The helper uses bounded newline-delimited JSON through private stdin/stdout pipes, with a 180-second timeout and kill/wait cleanup on failure. No shell or socket is used. The helper inherits the macOS application network sandbox; its standalone executable does not claim OS isolation. Signed macOS packaging must preserve its sandbox-inheritance entitlements.
 
-## Threat model (what Airlock defends)
+Whisper and llama.cpp read model files installed manually under the app's `library/models` directory. CPU inference is the default; Metal/CUDA are explicit feature flags. LLM prompts use the model's chat template, bounded context and generation, batched evaluation and explicit sampling. Structured output is parsed and validated before it enters the database.
 
-| Threat | Mitigation |
-|---|---|
-| App phones home (compromise or malicious PR) | No network stack in deps; CI grep; seatbelt `(deny network*)` |
-| UI layer exfiltration (XSS → fetch) | CSP `connect-src 'self' ipc:`; no remote content |
-| Forensic recovery of audio | RAM-only capture; zero-fill + VACUUM on purge; opt-in audio encrypted, keychain-held key |
-| Malicious model file | Models are GGUF (data, not code); SHA-256 manifest checked at load |
-| "Anonymous analytics" creep | Banned by CONTRIBUTING law #1; airlock.yml CI gate |
+Library questions retrieve matching FTS passages, optionally scoped to one meeting. This is lexical retrieval. Semantic embeddings, diarization and system audio capture are planned, not implemented. Context limits produce actionable errors rather than silent transcript truncation.
 
-## Performance targets (M2 Air, 16 GB)
+## Storage
 
-| Metric | Target |
-|---|---|
-| Cold start → ready | < 2.5 s (models lazy-loaded) |
-| Transcription latency | < 1.5 s behind speech (Whisper Turbo) |
-| Enhancement after Stop (45 min meeting) | < 20 s |
-| Idle RAM | < 500 MB; < 7 GB during inference |
-| Search over 1,000 meetings | < 150 ms |
+SQLite stores meetings, segments, actions, commitments, recipes, embeddings placeholders and settings. Foreign keys are enabled. FTS5 triggers track segment inserts, edits and deletes. Migration removes historical orphan rows and rebuilds the search index. Multi-row imports and note saves use transactions.
+
+Retention applies to future inserts as well as existing meetings. Expiry is enforced on startup and periodically while running. Deletion removes related content, rebuilds the FTS index, reclaims pages and truncates the WAL without overwriting a live database. Purge clears all user tables but retains the schema and installed model files. OS backups and snapshots remain outside the app's control.
+
+## Privacy and delivery
+
+See [PRIVACY.md](../PRIVACY.md) and [SECURITY.md](../SECURITY.md) for the threat boundary, platform enforcement and reporting process. Static CI policy checks protect CSP, permissions and first-party network behavior. Native tests exercise database and capture utilities; the macOS sandbox test runs in a child process. Dependency audits and OS build matrices complement these checks.
+
+Shipping requires real-model transcription tests, packaged microphone permissions, platform-specific QA, and maintainer signing credentials. A passing typecheck is not evidence that system audio, model quality or cross-platform packaging works.
