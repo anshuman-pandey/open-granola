@@ -87,7 +87,7 @@ jobs:
         run: sudo apt-get update && sudo apt-get install -y libwebkit2gtk-4.1-dev libasound2-dev libclang-dev libxdo-dev libayatana-appindicator3-dev librsvg2-dev patchelf
       - run: npm ci
       - name: Build draft release bundles
-        uses: tauri-apps/tauri-action@v0
+        uses: tauri-apps/tauri-action@v1
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
