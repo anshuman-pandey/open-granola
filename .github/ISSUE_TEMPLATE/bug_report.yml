@@ -1,0 +1,62 @@
+name: Bug report
+description: Report a reproducible problem in the browser demo or desktop app.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Search existing issues before opening a new report. Use sample or synthetic data to reproduce the problem.
+        **Do not attach private meeting recordings, transcripts, exports, database files, or credentials.** Remove personal information from logs and screenshots.
+        For suspected vulnerabilities, follow [SECURITY.md](https://github.com/anshuman-pandey/open-granola/blob/main/SECURITY.md).
+  - type: dropdown
+    id: mode
+    attributes:
+      label: Where does it happen?
+      options:
+        - Browser demo
+        - Desktop development build
+        - Packaged desktop app
+        - Build or repository tooling
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Environment
+      description: OS/version, CPU architecture, and browser if relevant.
+      placeholder: macOS 15, Apple Silicon, Safari 18
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: Commit or version
+      description: Use the commit from `git rev-parse --short HEAD`, or the app version if known.
+    validations:
+      required: false
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to reproduce
+      description: Include model filename and build command when relevant; use synthetic meeting content.
+      placeholder: |
+        1. Start the app with…
+        2. Open…
+        3. Observe…
+    validations:
+      required: true
+  - type: textarea
+    id: behavior
+    attributes:
+      label: Expected and actual behavior
+      placeholder: |
+        Expected:
+        Actual:
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Relevant diagnostics (optional)
+      description: Include only the relevant error text or a redacted screenshot. Review it for private data first.
+    validations:
+      required: false

@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024" fill="none">
+  <defs><linearGradient id="ember" x1="128" y1="128" x2="896" y2="896" gradientUnits="userSpaceOnUse"><stop stop-color="#CF4A21"/><stop offset="1" stop-color="#EAA32D"/></linearGradient></defs>
+  <rect x="48" y="48" width="928" height="928" rx="232" fill="url(#ember)"/>
+  <path d="M239 580c0-151 122-273 273-273s273 122 273 273" stroke="#FFFCF5" stroke-width="82" stroke-linecap="round"/>
+  <circle cx="512" cy="665" r="89" fill="#FFFCF5"/>
+</svg>

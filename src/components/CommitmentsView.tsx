@@ -1,140 +1,200 @@
-import { AlertTriangle, CheckCircle2, Circle, ExternalLink, Handshake } from "lucide-react";
+import {
+  AlertTriangle,
+  CheckCircle2,
+  Circle,
+  ExternalLink,
+  Handshake,
+  RefreshCw,
+} from "lucide-react";
 import { useEffect, useState } from "react";
-import { COMMITMENTS } from "../lib/data";
 import { getBackend } from "../lib/backend";
+import type { Commitment } from "../lib/types";
 
 interface Props {
   onOpenMeeting: (id: string) => void;
 }
 
 export function CommitmentsView({ onOpenMeeting }: Props) {
-  const [items, setItems] = useState(COMMITMENTS);
+  const [items, setItems] = useState<Commitment[]>([]);
   const [filter, setFilter] = useState<"open" | "all">("open");
-
-  // Real ledger when running on the Rust backend.
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
+  const [pending, setPending] = useState<string[]>([]);
+  const [revision, setRevision] = useState(0);
   useEffect(() => {
-    if (getBackend().mode === "tauri") {
-      getBackend()
-        .listCommitments()
-        .then((rows) => rows.length > 0 && setItems(rows))
-        .catch(() => {});
+    let active = true;
+    getBackend()
+      .listCommitments()
+      .then((rows) => {
+        if (active) setItems(rows);
+      })
+      .catch(() => {
+        if (active)
+          setError("Your commitments could not be loaded. Please try again.");
+      })
+      .finally(() => {
+        if (active) setLoading(false);
+      });
+    return () => {
+      active = false;
+    };
+  }, [revision]);
+  const toggle = async (item: Commitment) => {
+    const status = item.status === "kept" ? "open" : "kept";
+    setPending((ids) => [...ids, item.id]);
+    setError("");
+    try {
+      await getBackend().markCommitment(item.id, status);
+      setItems((prev) =>
+        prev.map((c) => (c.id === item.id ? { ...c, status } : c)),
+      );
+    } catch {
+      setError("That commitment could not be saved. Please try again.");
+    } finally {
+      setPending((ids) => ids.filter((id) => id !== item.id));
     }
-  }, []);
-
-  const overdue = items.filter((c) => c.status === "overdue").length;
-  const open = items.filter((c) => c.status === "open").length;
-  const kept = items.filter((c) => c.status === "kept").length;
-  const shown = items.filter((c) => filter === "all" || c.status !== "kept");
-
-  const markKept = (id: string) => {
-    setItems((prev) => prev.map((c) => (c.id === id ? { ...c, status: "kept" as const } : c)));
-    getBackend().markCommitment(id, "kept").catch(() => {});
   };
-
+  const shown = items.filter(
+    (item) => filter === "all" || item.status !== "kept",
+  );
   return (
-    <div className="scrollbar-thin paper-texture flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-2xl px-8 pb-16 pt-10">
-        <div className="flex items-end justify-between">
+    <div className="scrollbar-thin paper-texture min-h-0 flex-1 overflow-y-auto">
+      <div className="mx-auto max-w-3xl px-5 pb-24 pt-10 sm:px-8">
+        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
+          Keep track of what comes next
+        </p>
+        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
           <div>
-            <h1 className="font-display text-[32px]">Commitments</h1>
-            <p className="mt-1 max-w-md text-[13.5px] leading-relaxed text-muted-foreground">
-              Every promise anyone made in any meeting — extracted on-device, tracked across your whole
-              library, and resurfaced when it's due.
+            <h1 className="font-display text-[36px]">Commitments</h1>
+            <p className="mt-2 max-w-md text-[13px] leading-relaxed text-muted-foreground">
+              Promises recorded in your meetings, with their source close at
+              hand.
             </p>
           </div>
           <div className="flex gap-1 rounded-xl border border-border bg-card p-1">
-            {(["open", "all"] as const).map((f) => (
+            {(["open", "all"] as const).map((value) => (
               <button
-                key={f}
-                onClick={() => setFilter(f)}
-                className={`rounded-lg px-3 py-1 text-[12px] font-semibold capitalize ${
-                  filter === f ? "bg-foreground text-background" : "text-muted-foreground"
-                }`}
+                key={value}
+                aria-pressed={filter === value}
+                onClick={() => setFilter(value)}
+                className={`rounded-lg px-3 py-2 text-xs font-semibold capitalize ${filter === value ? "bg-foreground text-background" : "text-muted-foreground"}`}
               >
-                {f}
+                {value}
               </button>
             ))}
           </div>
         </div>
-
-        {/* score strip */}
-        <div className="mt-6 grid grid-cols-3 gap-3">
-          {[
-            { n: open, label: "open", cls: "text-foreground" },
-            { n: overdue, label: "overdue", cls: "text-destructive" },
-            { n: kept, label: "kept", cls: "text-emerald-700 dark:text-emerald-400" },
-          ].map((s) => (
-            <div key={s.label} className="rounded-2xl border border-border bg-card p-4 text-center shadow-sm">
-              <div className={`font-display text-[28px] leading-none ${s.cls}`}>{s.n}</div>
-              <div className="mt-1 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground">
-                {s.label}
+        {error && (
+          <div
+            role="alert"
+            className="mt-5 flex items-center justify-between gap-3 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive"
+          >
+            <span>{error}</span>
+            <button
+              aria-label="Reload commitments"
+              onClick={() => {
+                setLoading(true);
+                setError("");
+                setRevision((r) => r + 1);
+              }}
+              className="rounded-lg p-2"
+            >
+              <RefreshCw size={14} />
+            </button>
+          </div>
+        )}
+        <div className="mt-7 grid grid-cols-3 gap-3">
+          {(["open", "overdue", "kept"] as const).map((status) => (
+            <div
+              key={status}
+              className="rounded-2xl border border-border bg-card p-4 text-center"
+            >
+              <div
+                className={`font-display text-[30px] ${status === "overdue" ? "text-destructive" : "text-foreground"}`}
+              >
+                {loading
+                  ? "—"
+                  : items.filter((c) => c.status === status).length}
+              </div>
+              <div className="mt-1 text-[10px] font-semibold uppercase tracking-wider text-muted-foreground">
+                {status}
               </div>
             </div>
           ))}
         </div>
-
-        <div className="mt-6 space-y-2">
-          {shown.map((c, i) => (
-            <div
-              key={c.id}
-              className={`animate-rise flex items-center gap-3 rounded-2xl border px-4 py-3.5 shadow-sm ${
-                c.status === "overdue"
-                  ? "border-destructive/40 bg-destructive/5"
-                  : c.status === "kept"
-                    ? "border-border bg-card opacity-70"
-                    : "border-border bg-card"
-              }`}
-              style={{ animationDelay: `${i * 40}ms` }}
-            >
-              <button onClick={() => markKept(c.id)} title="Mark kept">
-                {c.status === "kept" ? (
-                  <CheckCircle2 size={19} className="text-emerald-600" />
-                ) : c.status === "overdue" ? (
-                  <AlertTriangle size={19} className="text-destructive" />
-                ) : (
-                  <Circle size={19} className="text-muted-foreground transition-colors hover:text-primary" />
-                )}
-              </button>
-              <div className="min-w-0 flex-1">
-                <div className={`text-[13.5px] ${c.status === "kept" ? "text-muted-foreground line-through" : ""}`}>
-                  {c.text}
-                </div>
-                <div className="mt-0.5 flex items-center gap-1.5 text-[11px] text-muted-foreground">
-                  <Handshake size={11} />
-                  <span>
-                    {c.owner} · promised in “{c.madeIn}” · {c.ageDays}d ago
-                  </span>
-                  <button
-                    onClick={() => onOpenMeeting(c.meetingId)}
-                    className="text-muted-foreground transition-colors hover:text-primary"
-                    title="Open source meeting"
+        {loading ? (
+          <p
+            role="status"
+            className="py-12 text-center text-sm text-muted-foreground"
+          >
+            Loading commitments…
+          </p>
+        ) : shown.length === 0 ? (
+          <div className="mt-6 rounded-2xl border border-dashed border-border py-12 text-center">
+            <Handshake size={28} className="mx-auto text-primary" />
+            <h2 className="mt-4 text-base font-semibold">
+              {items.length ? "No open commitments" : "No commitments yet"}
+            </h2>
+            <p className="mt-2 text-sm text-muted-foreground">
+              {items.length
+                ? "Switch to All to review the promises you’ve kept."
+                : "Commitments saved with your meetings will appear here."}
+            </p>
+          </div>
+        ) : (
+          <div className="mt-6 space-y-3">
+            {shown.map((item) => (
+              <div
+                key={item.id}
+                className={`flex items-start gap-3 rounded-2xl border bg-card p-4 ${item.status === "overdue" ? "border-destructive/30" : "border-border"}`}
+              >
+                <button
+                  role="checkbox"
+                  aria-checked={item.status === "kept"}
+                  aria-label={`${item.status === "kept" ? "Reopen" : "Mark kept"}: ${item.text}`}
+                  disabled={pending.includes(item.id)}
+                  onClick={() => void toggle(item)}
+                  className="rounded-lg p-1"
+                >
+                  {item.status === "kept" ? (
+                    <CheckCircle2 size={19} className="text-primary" />
+                  ) : item.status === "overdue" ? (
+                    <AlertTriangle size={19} className="text-destructive" />
+                  ) : (
+                    <Circle size={19} className="text-muted-foreground" />
+                  )}
+                </button>
+                <div className="min-w-0 flex-1">
+                  <p
+                    className={`text-[13px] leading-relaxed ${item.status === "kept" ? "text-muted-foreground line-through" : ""}`}
                   >
-                    <ExternalLink size={11} />
+                    {item.text}
+                  </p>
+                  <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
+                    <span>{item.owner}</span>
+                    {item.due && (
+                      <span
+                        className={
+                          item.status === "overdue" ? "text-destructive" : ""
+                        }
+                      >
+                        · Due {item.due}
+                      </span>
+                    )}
+                    <span>· {new Date(item.madeOn).toLocaleDateString()}</span>
+                  </div>
+                  <button
+                    onClick={() => onOpenMeeting(item.meetingId)}
+                    className="mt-2 flex max-w-full items-center gap-1.5 text-[10px] text-muted-foreground hover:text-primary"
+                  >
+                    <span className="truncate">{item.madeIn}</span>
+                    <ExternalLink size={11} className="shrink-0" />
                   </button>
                 </div>
               </div>
-              {c.due && (
-                <span
-                  className={`shrink-0 rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
-                    c.status === "overdue"
-                      ? "bg-destructive/15 text-destructive"
-                      : c.status === "kept"
-                        ? "bg-emerald-500/10 text-emerald-700 dark:text-emerald-400"
-                        : "bg-primary/10 text-primary"
-                  }`}
-                >
-                  {c.status === "overdue" ? "overdue · " : ""}
-                  {c.due}
-                </span>
-              )}
-            </div>
-          ))}
-        </div>
-
-        <p className="mt-6 text-center text-[11.5px] text-muted-foreground">
-          Open Granola detects commitments with the on-device model — phrases like “I'll have it by Friday” — and never
-          shames anyone publicly. This ledger is yours alone.
-        </p>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

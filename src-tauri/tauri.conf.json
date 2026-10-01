@@ -4,9 +4,9 @@
   "version": "0.1.0",
   "identifier": "app.opengranola",
   "build": {
-    "beforeDevCommand": "npm run dev",
-    "devUrl": "http://localhost:1420",
-    "beforeBuildCommand": "npm run build",
+    "beforeDevCommand": "npm run desktop:dev",
+    "devUrl": "http://127.0.0.1:1420",
+    "beforeBuildCommand": "npm run desktop:build",
     "frontendDist": "../dist"
   },
   "app": {
@@ -15,27 +15,22 @@
         "title": "Open Granola",
         "width": 1280,
         "height": 820,
-        "minWidth": 980,
+        "minWidth": 640,
         "minHeight": 640,
         "titleBarStyle": "Overlay",
         "hiddenTitle": true,
-        "trafficLightPosition": { "x": 14, "y": 18 }
-      },
-      {
-        "title": "Open Granola — Live Capture",
-        "label": "capture",
-        "width": 860,
-        "height": 300,
-        "alwaysOnTop": true,
-        "decorations": false,
-        "transparent": true,
-        "skipTaskbar": true,
-        "visible": false
+        "trafficLightPosition": {
+          "x": 14,
+          "y": 18
+        }
       }
     ],
     "security": {
-      "csp": "default-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self' ipc: http://ipc.localhost",
-      "capabilities": ["main-capability"]
+      "csp": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; frame-ancestors 'none'",
+      "devCsp": "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src ipc: http://ipc.localhost http://127.0.0.1:1420 ws://127.0.0.1:1420; object-src 'none'; base-uri 'none'; form-action 'none'; frame-src 'none'; frame-ancestors 'none'",
+      "capabilities": [
+        "main-capability"
+      ]
     }
   },
   "plugins": {
@@ -43,24 +38,43 @@
   },
   "bundle": {
     "active": true,
-    "targets": ["dmg", "msi", "appimage", "deb"],
+    "externalBin": [
+      "binaries/open-granola-inference"
+    ],
+    "targets": [
+      "dmg",
+      "msi",
+      "appimage",
+      "deb"
+    ],
     "category": "Productivity",
     "shortDescription": "Local-first meeting notes. Nothing leaves your machine.",
-    "longDescription": "Open Granola captures meetings without a bot, transcribes on-device with Whisper, and enhances notes with a local LLM. No cloud, no accounts, no data retention.",
+    "longDescription": "Open Granola is a local meeting notebook with on-device transcription and local model support. Notes stay in your local library until you delete them or a retention policy removes them.",
     "macOS": {
       "entitlements": "entitlements.plist",
       "minimumSystemVersion": "14.4",
-      "info": {
-        "NSMicrophoneUsageDescription": "Open Granola captures your microphone to transcribe meetings on-device. Audio is never uploaded or stored by default.",
-        "NSSystemAudioUsageDescription": "Open Granola captures system audio to transcribe meetings on-device. Audio is never uploaded or stored by default."
-      }
+      "infoPlist": "Info.plist"
     },
     "windows": {
       "certificateThumbprint": null,
-      "nsis": { "installMode": "perMachine" }
+      "nsis": {
+        "installMode": "perMachine"
+      }
     },
     "linux": {
-      "deb": { "depends": ["libpipewire-0.3-0", "libwebkit2gtk-4.1-0"] }
-    }
+      "deb": {
+        "depends": [
+          "libpipewire-0.3-0",
+          "libwebkit2gtk-4.1-0"
+        ]
+      }
+    },
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
   }
 }

@@ -1,72 +1,40 @@
-# Open Granola Privacy Policy & Data Handling Statement
+# Privacy and data handling
 
-**Effective:** v0.1.0 · **Scope:** the Open Granola desktop application, all platforms
+This statement describes the source in this repository. Open Granola is an early desktop prototype; platform capture, inference, and packaging still require testing before a production release.
 
-## The one-paragraph version
+## Where your data lives
 
-Open Granola collects nothing, transmits nothing, retains nothing off your device, and cannot do otherwise:
-the application contains no network client code, and on macOS the operating system independently
-denies the process outbound network access. There are no accounts, no servers, no analytics, no
-crash-report beacons, no update checks, and no third-party SDKs with their own data practices.
-Everything — audio, transcripts, notes, embeddings, settings — lives in a single folder on your
-device that you can inspect, export, or destroy at will.
+The desktop app stores notes, transcripts, action items, commitments, recipes, settings, and any stored embedding data in `<app-data>/library/opengranola.db`. SQLite may also create `-wal` and `-shm` sidecar files there. This database is **not encrypted by the app**. Use your operating system's disk encryption and account controls for protection at rest.
 
-## What data exists, and where
+Raw capture audio is held in memory. The current app does not implement encrypted audio recording or cloud storage. Stopping capture releases the audio buffers; that is not a guarantee against OS swap, crash dumps, or memory forensics.
 
-| Data | Location | Lifetime |
-|---|---|---|
-| Raw meeting audio | RAM only (ring buffer) | Dropped when you press Stop, unless you opt in to encrypted local audio |
-| Opt-in audio files | `<app-data>/library/audio/*.enc` (AES-256-GCM, key in OS keychain) | Until you delete them or retention purge runs |
-| Transcripts, notes, action items | `<app-data>/library/opengranola.db` (SQLite) | Until you delete them or retention purge runs |
-| Search embeddings | Same DB (sqlite-vec) | Same |
-| Settings & templates | Same DB / `<app-data>/library/` | Same |
-| Model files (Whisper, LLM, embed) | `<app-data>/library/models/` | Until you delete them |
+Models are manually installed under `<app-data>/library/models/`. There is no in-app model download or updater. Model files are separate from meeting data.
 
-`<app-data>` = `~/Library/Application Support/app.opengranola` (macOS), `%APPDATA%/app.opengranola`
-(Windows), `~/.local/share/app.opengranola` (Linux).
+Default app-data locations:
 
-## The one network exception
+- macOS: `~/Library/Application Support/app.opengranola` (a sandboxed bundle may use its container)
+- Windows: `%APPDATA%/app.opengranola`
+- Linux: `~/.local/share/app.opengranola`
 
-Downloading AI models on first run opens an HTTPS connection to the model host (Hugging Face). This
-requires you to explicitly toggle **Airlock off** in Settings, and it is the only feature in the app
-capable of opening a socket. You can avoid it entirely by copying GGUF model files into
-`library/models/` from any other source. After models are in place, Open Granola functions 100% offline,
-forever.
+On Unix, the application library directory and database are restricted to the current user. On Windows, access follows the user profile's filesystem permissions. Backups or sync software you configure can copy this directory independently of the app.
 
-## How the guarantee is enforced (verify it yourself)
+## Network behavior and its limits
 
-1. **Compile time** — there is no HTTP/WebSocket/gRPC dependency in `src-tauri/Cargo.toml`.
-   `.github/workflows/airlock.yml` fails CI if one ever appears.
-2. **Kernel/sandbox time** — `src-tauri/entitlements.plist` omits
-   `com.apple.security.network.client`, and `src-tauri/src/airlock.rs` loads a seatbelt profile
-   `(deny network*)` at startup. On Linux, the Flatpak manifest uses `--unshare=network`.
-3. **Runtime test** — `airlock::tests::outbound_tcp_is_impossible` proves a TCP connect fails from
-   within the running process.
-4. **Your own tools** — run `lsof -i -P | grep -i open-granola` (macOS/Linux) or Microsoft TCPView
-   (Windows) at any time. You will see zero connections.
+The application provides no upload, cloud sync, analytics, account, or remote inference feature. Its production webview Content Security Policy restricts connection requests to Tauri's local IPC transport. Capabilities grant only backend event subscription; no HTTP, shell, or filesystem store plugin is exposed to frontend code.
 
-## Retention & deletion
+Release macOS builds verify that an existing signed App Sandbox has no network entitlements, or install a process sandbox that denies network access for an unsigned build. Startup fails if the policy cannot be established. The signing configuration requests App Sandbox without network entitlements; release testing must verify the signed bundle. A sandbox on the Rust process alone does not prove the behavior of every webview helper process, which is why the webview policy and release verification both matter.
 
-- **Default:** raw audio exists only in memory during capture and is dropped at Stop.
-- **Auto-purge:** you choose a retention window (e.g. 90 days); expired meetings are deleted and the
-  database is vacuumed so deletion is physical.
-- **Purge library:** Settings → "Delete everything" zero-fills the database file before unlinking
-  it, then removes the model cache on confirmation.
+Windows and Linux currently have **no implemented OS network block**. They rely on the application code and webview policy. Development builds permit the local frontend server and do not install the process network block. A source scan or lack of an HTTP client does not prove that a process or its dependencies cannot open sockets. The app does not measure lifetime network traffic.
 
-## What Open Granola never does
+## Retention and deletion
 
-- No account creation, sign-in, or device fingerprinting
-- No telemetry, analytics, A/B testing, or crash reporting
-- No training on your data (there is nowhere to send it)
-- No cloud sync, no "anonymous usage statistics", no third-party trackers
-- No sale, sharing, or processing of personal data by anyone — there is no "anyone"
+- With retention disabled, your library stays until you clear it. A retention period applies to existing and newly created/imported meetings.
+- Expired meetings are removed with their transcripts, actions, commitments, embeddings, and search entries. Retention is checked when the database opens and during normal desktop use.
+- **Purge library** clears all library tables, including recipes and settings. It keeps the database usable and leaves manually installed model files in place.
+- Deletion uses SQLite foreign-key cascades, secure deletion, FTS index cleanup, database compaction, and a checked WAL truncation. If another reader prevents log cleanup, the operation reports an error rather than claiming cleanup finished.
 
-## For compliance reviewers
+These operations remove data from the live application database. They **cannot guarantee forensic erasure** from SSD wear-leveling, filesystem snapshots, swap, exports, or independent backups. An app cannot erase copies it does not control.
 
-Open Granola's architecture makes most data-processing questions moot: there is no processor and no
-transfer. For HIPAA/GDPR/SOC 2 evaluations, the relevant artifacts are `PRIVACY.md` (this file),
-`docs/ARCHITECTURE.md`, the Airlock source, and reproducible builds (planned). Questions:
-privacy@opengranola.dev.
+## Review and reporting
 
-*This document describes the software as shipped. If you build Open Granola from modified source, those
-modifications are your own responsibility — which is exactly the point of Apache-2.0.*
+Read [SECURITY.md](SECURITY.md) for the threat model, implemented checks, and vulnerability reporting. There is no compliance certification or independent security audit claimed for this prototype. Review the code and your deployment environment before using it for sensitive meetings.

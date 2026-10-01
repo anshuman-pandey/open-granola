@@ -98,12 +98,17 @@
     background-image: linear-gradient(120deg, hsl(16 90% 62%), hsl(38 92% 58%));
   }
   .paper-texture {
-    background-image: radial-gradient(
+    background-image:
+      radial-gradient(
         circle at 20% 0%,
         hsl(34 88% 55% / 0.05),
         transparent 40%
       ),
-      radial-gradient(circle at 90% 10%, hsl(14 78% 47% / 0.05), transparent 35%);
+      radial-gradient(
+        circle at 90% 10%,
+        hsl(14 78% 47% / 0.05),
+        transparent 35%
+      );
   }
   .scrollbar-thin::-webkit-scrollbar {
     width: 6px;
@@ -160,4 +165,70 @@
 
 .rec-dot {
   animation: pulse-rec 1.4s ease-in-out infinite;
+}
+
+@layer base {
+  html,
+  body,
+  #root {
+    width: 100%;
+    height: 100%;
+    min-width: 320px;
+  }
+  body {
+    margin: 0;
+  }
+  button,
+  input,
+  select,
+  textarea {
+    font: inherit;
+  }
+  button {
+    -webkit-tap-highlight-color: transparent;
+  }
+  button:not(:disabled),
+  summary,
+  select {
+    cursor: pointer;
+  }
+  button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+  }
+  :where(button, a, input, select, textarea, summary):focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 3px;
+  }
+  input::placeholder {
+    color: hsl(var(--muted-foreground));
+  }
+  ::selection {
+    background: hsl(var(--primary) / 0.2);
+  }
+  .font-display {
+    font-family: Georgia, "Times New Roman", serif;
+    font-weight: 400;
+  }
+}
+
+#workspace[data-capturing="true"] {
+  padding-bottom: min(270px, calc(25dvh + 90px));
+}
+
+@media (max-width: 767px) {
+  #root > div > main {
+    padding-top: 56px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

@@ -4,8 +4,8 @@ dist/
 
 # Rust
 src-tauri/target/
-src-tauri/Cargo.lock
 src-tauri/gen/
+src-tauri/binaries/
 
 # Local models & library data (never commit)
 **/models/*.gguf
@@ -21,3 +21,14 @@ Thumbs.db
 .vscode/*
 !.vscode/extensions.json
 *.log
+
+# Local test/build outputs
+coverage/
+playwright-report/
+test-results/
+*.tsbuildinfo
+
+# Local credentials
+.env
+.env.*
+!.env.example

@@ -1,7 +1,7 @@
 {
   "$schema": "../gen/schemas/desktop-schema.json",
   "identifier": "main-capability",
-  "description": "Capabilities for the main window. Note: deliberately grants NO http/fs-network scopes — the Airlock applies to the webview too.",
-  "windows": ["main", "capture"],
-  "permissions": ["core:default", "core:event:default", "store:default"]
+  "description": "Local application windows may subscribe to backend events. No filesystem store, event emission, shell, or HTTP plugin commands are granted.",
+  "windows": ["main"],
+  "permissions": ["core:event:allow-listen", "core:event:allow-unlisten"]
 }

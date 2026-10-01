@@ -1,18 +1,8 @@
-//! Open Granola — local-first meeting notes.
-//!
-//! Design law, in order:
-//! 1. NO network. There is no http client in this crate. Airlock (see `airlock.rs`)
-//!    additionally asks the OS to deny outbound connections at runtime.
-//! 2. Raw audio lives in memory only, unless the user explicitly opts in to
-//!    encrypted local audio retention.
-//! 3. Every model runs on-device: whisper.cpp (transcription), llama.cpp
-//!    (enhancement/chat), nomic-embed (semantic search index).
-//! 4. The user can delete everything, truly, with one call: `storage::purge_all`.
-
 mod airlock;
 mod audio;
 mod calendar;
 mod commands;
+mod inference;
 mod llm;
 mod storage;
 mod transcribe;
@@ -21,45 +11,76 @@ use std::path::PathBuf;
 use std::sync::Arc;
 
 use parking_lot::Mutex;
-use tauri::Manager;
+use tauri::{Emitter, Manager};
 
-/// Shared application state. All heavy resources (model contexts) are loaded
-/// lazily and kept behind `parking_lot` mutexes — the lock order is documented
-/// at each field to prevent inference-time deadlocks.
+/// Library mutations and model calls acquire capture_gate before inner locks.
+/// Never hold the database lock during inference or while joining capture.
 pub struct AppState {
     pub data_dir: PathBuf,
     pub db: Mutex<storage::Db>,
     pub session: Mutex<Option<audio::CaptureSession>>,
-    pub whisper: Mutex<Option<transcribe::WhisperEngine>>,
+    pub pending_capture: Mutex<Option<audio::CapturedMeeting>>,
+    pub capture_gate: tokio::sync::Mutex<()>,
     pub llm: Mutex<Option<llm::LocalLlm>>,
-    /// Cumulative counter shown in Settings: bytes sent over any socket.
-    /// It is hard-wired to zero and exists so the UI can make the claim
-    /// "0 bytes sent — ever" honestly.
-    pub bytes_sent: u64,
+    pub airlock: airlock::AirlockStatus,
 }
 
 pub fn run() {
     env_logger::init();
-    airlock::engage(); // before anything else touches the network stack
+    let airlock = airlock::engage().expect("could not apply network policy");
 
     tauri::Builder::default()
-        .plugin(tauri_plugin_store::Builder::new().build())
-        .setup(|app| {
+        .setup(move |app| {
             let data_dir = app.path().app_data_dir()?.join("library");
             std::fs::create_dir_all(&data_dir)?;
+            #[cfg(unix)]
+            {
+                use std::os::unix::fs::PermissionsExt;
+                std::fs::set_permissions(&data_dir, std::fs::Permissions::from_mode(0o700))?;
+            }
+            std::fs::create_dir_all(data_dir.join("models"))?;
             let db = storage::Db::open(&data_dir.join("opengranola.db"))?;
-            app.manage(Arc::new(AppState {
+            let state = Arc::new(AppState {
                 data_dir,
                 db: Mutex::new(db),
                 session: Mutex::new(None),
-                whisper: Mutex::new(None),
+                pending_capture: Mutex::new(None),
+                capture_gate: tokio::sync::Mutex::new(()),
                 llm: Mutex::new(None),
-                bytes_sent: 0,
-            }));
+                airlock,
+            });
+            app.manage(state.clone());
+            let app_handle = app.handle().clone();
+            tauri::async_runtime::spawn(async move {
+                let mut interval = tokio::time::interval(std::time::Duration::from_secs(3600));
+                interval.tick().await;
+                loop {
+                    interval.tick().await;
+                    let _gate = state.capture_gate.lock().await;
+                    let db_state = state.clone();
+                    let result = tauri::async_runtime::spawn_blocking(move || {
+                        db_state.db.lock().enforce_retention()
+                    })
+                    .await;
+                    match result {
+                        Ok(Ok(count)) if count > 0 => {
+                            let _ = app_handle.emit("library-changed", ());
+                        }
+                        Ok(Err(e)) => {
+                            let _ = app_handle.emit("library-changed", ());
+                            log::error!("retention failed: {e}");
+                        }
+                        Err(e) => log::error!("retention worker failed: {e}"),
+                        _ => {}
+                    }
+                }
+            });
             Ok(())
         })
         .invoke_handler(tauri::generate_handler![
             commands::start_capture,
+            commands::cancel_capture,
+            commands::list_action_items,
             commands::stop_capture_and_enhance,
             commands::list_meetings,
             commands::get_meeting,
