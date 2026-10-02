@@ -35,7 +35,7 @@ webbrowser = "1"
 
 # --- microphone capture ---
 cpal = "0.15"
-rubato = "0.16"          # resampling to 16 kHz mono for whisper
+rubato = "5.0"          # resampling to 16 kHz mono for whisper
 ringbuf = "0.5.2"
 
 # --- on-device inference ---
