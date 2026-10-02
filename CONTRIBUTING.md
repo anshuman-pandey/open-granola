@@ -1,6 +1,6 @@
 # Contributing to Open Granola
 
-Keep meeting data local. Features must state their limitations and fail visibly when a model, permission or platform feature is unavailable.
+Keep local processing as the default and make every optional remote destination explicit. Features must state their limitations and fail visibly when a model, permission or platform feature is unavailable.
 
 ## Join in
 
@@ -22,7 +22,7 @@ See the [README](README.md) for model filenames and supported behavior.
 
 ## Engineering rules
 
-1. Do not add application network clients, remote assets, analytics, accounts or cloud inference. Build tooling can download dependencies; that is distinct from application runtime behavior. Changes to these boundaries require an explicit product and security decision.
+1. Runtime networking belongs only in the reviewed native `providers.rs` and `auth.rs` modules. Preserve endpoint validation, off-device consent, redirect/proxy blocking, bounded responses and credential isolation. Keep the renderer CSP restricted to app IPC. Do not add analytics, hidden uploads, remote assets or silent cloud fallbacks. Any new destination needs an explicit product and security review.
 2. Every data-bearing table must participate in retention and full-library deletion. Add regression tests for schema, migration, FTS and deletion changes. Do not promise physical erasure from SSDs or backups.
 3. Persist raw transcripts before enhancement. Use transactions for multi-table writes. Do not trust renderer-provided timestamps, model output structure or imported JSON.
 4. Surface errors to the user and preserve recovery paths. Do not display sample data, canned answers or fixed network counters as real desktop results.

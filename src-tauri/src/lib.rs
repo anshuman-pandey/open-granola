@@ -1,9 +1,11 @@
 mod airlock;
 mod audio;
+mod auth;
 mod calendar;
 mod commands;
 mod inference;
 mod llm;
+mod providers;
 mod storage;
 mod transcribe;
 
@@ -17,11 +19,13 @@ use tauri::{Emitter, Manager};
 /// Never hold the database lock during inference or while joining capture.
 pub struct AppState {
     pub data_dir: PathBuf,
+    _instance_lock: std::fs::File,
     pub db: Mutex<storage::Db>,
     pub session: Mutex<Option<audio::CaptureSession>>,
     pub pending_capture: Mutex<Option<audio::CapturedMeeting>>,
     pub capture_gate: tokio::sync::Mutex<()>,
     pub llm: Mutex<Option<llm::LocalLlm>>,
+    pub providers: Mutex<providers::ProviderManager>,
     pub airlock: airlock::AirlockStatus,
 }
 
@@ -38,10 +42,18 @@ pub fn run() {
                 use std::os::unix::fs::PermissionsExt;
                 std::fs::set_permissions(&data_dir, std::fs::Permissions::from_mode(0o700))?;
             }
+            // One native process per library also serializes rotating OAuth tokens.
+            let mut lock_options = std::fs::OpenOptions::new();
+            lock_options.read(true).write(true).create(true).truncate(false);
+            #[cfg(unix)] { use std::os::unix::fs::OpenOptionsExt; lock_options.mode(0o600); }
+            let instance_lock = lock_options.open(data_dir.join("instance.lock"))?;
+            instance_lock.try_lock().map_err(|_| anyhow::anyhow!("OpenGranola is already using this library. Close the other instance before starting another."))?;
             std::fs::create_dir_all(data_dir.join("models"))?;
             let db = storage::Db::open(&data_dir.join("opengranola.db"))?;
             let state = Arc::new(AppState {
+                providers: Mutex::new(providers::ProviderManager::load(&data_dir)?),
                 data_dir,
+                _instance_lock: instance_lock,
                 db: Mutex::new(db),
                 session: Mutex::new(None),
                 pending_capture: Mutex::new(None),
@@ -96,6 +108,15 @@ pub fn run() {
             commands::mark_commitment,
             commands::run_recipe,
             commands::import_granola_export,
+            commands::regenerate_summary,
+            commands::get_provider_settings,
+            commands::save_provider_settings,
+            commands::test_provider_connection,
+            auth::start_chatgpt_sign_in,
+            auth::get_chatgpt_auth_status,
+            auth::cancel_chatgpt_sign_in,
+            auth::disconnect_chatgpt,
+            auth::list_chatgpt_models,
         ])
         .run(tauri::generate_context!())
         .expect("error while running open-granola");

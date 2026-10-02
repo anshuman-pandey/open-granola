@@ -61,6 +61,20 @@ CREATE TABLE IF NOT EXISTS embeddings (
     vector BLOB NOT NULL
 );
 CREATE TABLE IF NOT EXISTS settings (key TEXT PRIMARY KEY, value TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS summary_runs (
+    id TEXT PRIMARY KEY,
+    meeting_id TEXT NOT NULL REFERENCES meetings(id) ON DELETE CASCADE,
+    provider TEXT NOT NULL,
+    model TEXT NOT NULL,
+    endpoint TEXT NOT NULL,
+    off_device INTEGER NOT NULL,
+    status TEXT NOT NULL CHECK(status IN ('running','completed','failed')),
+    error TEXT,
+    started_at TEXT NOT NULL,
+    completed_at TEXT
+);
+CREATE INDEX IF NOT EXISTS idx_summary_runs_meeting ON summary_runs(meeting_id,started_at);
+
 "#;
 
 // Version 0 shipped without foreign keys or FTS maintenance. Remove orphaned
@@ -140,7 +154,7 @@ impl Db {
             "PRAGMA foreign_keys=ON; PRAGMA secure_delete=ON; PRAGMA journal_mode=WAL; PRAGMA temp_store=MEMORY;",
         )?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 1 {
+        if version > 2 {
             bail!("This library was created by a newer Open Granola version");
         }
         let tx = conn.unchecked_transaction()?;
@@ -148,6 +162,7 @@ impl Db {
         if version == 0 {
             tx.execute_batch(MIGRATION_V1)?;
         }
+        tx.execute_batch("PRAGMA user_version = 2; UPDATE summary_runs SET status='failed', error='The app closed before this summary finished. Retry from the saved transcript.', completed_at=datetime('now') WHERE status='running';")?;
         // SQLite's ordinary secure_delete pragma alone does not clear deleted
         // FTS terms. This option is supported by our bundled SQLite (>=3.42).
         tx.execute_batch("INSERT INTO segments_fts(segments_fts,rank) VALUES('secure-delete',1);")?;
@@ -232,6 +247,144 @@ impl Db {
 mod tests {
     use super::*;
     use rusqlite::params;
+
+    fn seed_history(db: &Db, meeting_id: &str, status: &str) {
+        db.conn.execute("INSERT INTO summary_runs(id,meeting_id,provider,model,endpoint,off_device,status,error,started_at,completed_at) VALUES(?1,?2,'openai','test-model','https://api.openai.com/v1',1,?3,?4,'2099-01-01',?5)",
+            params![format!("{meeting_id}-{status}"),meeting_id,status,if status=="failed" {Some("Original failure")} else {None},if status=="running" {None} else {Some("2099-01-01T01:00:00Z")}]).unwrap();
+    }
+
+    #[test]
+    fn processing_history_cascades_for_policy_changes_scheduled_retention_and_purge() {
+        let mut db = memory_db();
+        seed(&db, "expired", "2000-01-01");
+        seed_history(&db, "expired", "failed");
+        seed(&db, "retained", "2099-01-01");
+        seed_history(&db, "retained", "completed");
+        assert_eq!(db.set_retention_policy(90).unwrap(), 1);
+        assert_eq!(count(&db, "summary_runs"), 1);
+        let owner: String = db
+            .conn
+            .query_row("SELECT meeting_id FROM summary_runs", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(owner, "retained");
+
+        // Newly saved historical imports receive the existing retention policy
+        // and are removed by the periodic cleanup path as well.
+        seed(&db, "new-expired", "2000-01-01");
+        seed_history(&db, "new-expired", "running");
+        assert_eq!(db.enforce_retention().unwrap(), 1);
+        assert_eq!(count(&db, "summary_runs"), 1);
+        db.purge_all().unwrap();
+        assert_eq!(count(&db, "summary_runs"), 0);
+        assert_eq!(count(&db, "meetings"), 0);
+    }
+
+    #[test]
+    fn reopening_marks_only_interrupted_summary_attempts_failed() {
+        let dir =
+            std::env::temp_dir().join(format!("open-granola-interrupted-{}", uuid::Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let path = dir.join("library.db");
+        let db = Db::open(&path).unwrap();
+        seed(&db, "meeting", "2099-01-01");
+        db.conn
+            .execute(
+                "UPDATE meetings SET summary='Preserved prior summary' WHERE id='meeting'",
+                [],
+            )
+            .unwrap();
+        for status in ["running", "completed", "failed"] {
+            seed_history(&db, "meeting", status);
+        }
+        drop(db);
+        let db = Db::open(&path).unwrap();
+        let interrupted: (String, String, Option<String>) = db
+            .conn
+            .query_row(
+                "SELECT status,error,completed_at FROM summary_runs WHERE id='meeting-running'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .unwrap();
+        assert_eq!(interrupted.0, "failed");
+        assert!(interrupted.1.contains("app closed"));
+        assert!(interrupted.2.is_some());
+        let completed: (String, Option<String>, String) = db
+            .conn
+            .query_row(
+                "SELECT status,error,completed_at FROM summary_runs WHERE id='meeting-completed'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .unwrap();
+        assert_eq!(
+            completed,
+            ("completed".into(), None, "2099-01-01T01:00:00Z".into())
+        );
+        let previous_error: String = db
+            .conn
+            .query_row(
+                "SELECT error FROM summary_runs WHERE id='meeting-failed'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(previous_error, "Original failure");
+        let summary: String = db
+            .conn
+            .query_row(
+                "SELECT summary FROM meetings WHERE id='meeting'",
+                [],
+                |row| row.get(0),
+            )
+            .unwrap();
+        assert_eq!(summary, "Preserved prior summary");
+        assert_eq!(matches(&db, "confidentialneedle"), 1);
+        drop(db);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn version_one_library_migrates_to_two_without_losing_notes_actions_or_search() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        conn.execute_batch(MIGRATION_V1).unwrap();
+        // Recreate the previously released schema: v1 has the maintained FTS
+        // index and retention triggers but no processing-history table.
+        conn.execute_batch("DROP TABLE summary_runs; PRAGMA user_version=1;")
+            .unwrap();
+        let legacy = Db { conn };
+        seed(&legacy, "legacy-meeting", "2099-01-01");
+        legacy
+            .conn
+            .execute(
+                "UPDATE action_items SET done=1 WHERE id='legacy-meeting'",
+                [],
+            )
+            .unwrap();
+        let db = Db::initialize(legacy.conn).unwrap();
+        let version: i64 = db
+            .conn
+            .query_row("PRAGMA user_version", [], |row| row.get(0))
+            .unwrap();
+        assert_eq!(version, 2);
+        assert_eq!(count(&db, "meetings"), 1);
+        assert_eq!(count(&db, "summary_runs"), 0);
+        assert_eq!(matches(&db, "confidentialneedle"), 1);
+        let action: (String, i64) = db
+            .conn
+            .query_row("SELECT id,done FROM action_items", [], |row| {
+                Ok((row.get(0)?, row.get(1)?))
+            })
+            .unwrap();
+        assert_eq!(action, ("legacy-meeting".into(), 1));
+        seed_history(&db, "legacy-meeting", "completed");
+        db.conn
+            .execute("DELETE FROM meetings WHERE id='legacy-meeting'", [])
+            .unwrap();
+        assert_eq!(count(&db, "summary_runs"), 0);
+        assert_eq!(matches(&db, "confidentialneedle"), 0);
+    }
 
     fn memory_db() -> Db {
         Db::initialize(Connection::open_in_memory().unwrap()).unwrap()

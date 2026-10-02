@@ -31,3 +31,17 @@ test('network check permits isolated Rust tests but checks production airlock co
   assert.throws(() => validateSource('TcpStream::connect("127.0.0.1");\n#[cfg(test)]\nmod tests {}', 'airlock.rs'));
   assert.throws(() => validateSource('window.fetch("https://example.com")', 'backend.ts'));
 });
+
+test('only reviewed native provider paths may own guarded HTTP clients', () => {
+  const guarded = 'let client = reqwest::blocking::Client::builder().no_proxy().redirect(reqwest::redirect::Policy::none());';
+  assert.doesNotThrow(() => validateSource(guarded, '/repo/src-tauri/src/providers.rs'));
+  assert.doesNotThrow(() => validateSource(guarded, '/repo/src-tauri/src/auth.rs'));
+  assert.throws(() => validateSource(guarded, '/repo/src/providers.rs'));
+  assert.throws(() => validateSource(guarded, '/repo/src-tauri/src/providers 2.rs'));
+  assert.throws(() => validateSource(guarded.replace('.no_proxy()', ''), '/repo/src-tauri/src/providers.rs'));
+  assert.throws(() => validateSource(`${guarded}\nfetch("https://example.com")`, '/repo/src-tauri/src/auth.rs'));
+});
+
+test('a test-only field cannot hide later production networking', () => {
+  assert.throws(() => validateSource('#[cfg(test)]\nmock: bool,\nfn send() { TcpStream::connect("127.0.0.1"); }\n#[cfg(test)]\nmod tests {}', 'storage.rs'));
+});

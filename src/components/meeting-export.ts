@@ -17,6 +17,13 @@ export function meetingMarkdown(
     meeting.summary || "No summary available.",
     "",
   ];
+  if (meeting.processingHistory?.length) {
+    lines.push("## Summary processing history", "", "Destinations recorded for summary attempts. Failed attempts may still have sent text. A local endpoint may forward requests according to its own configuration.", "");
+    for (const run of meeting.processingHistory) {
+      lines.push(`- ${run.started_at}: ${run.status}; ${run.provider}; model: ${run.model}; destination: ${run.endpoint || "built-in local model"}; ${run.off_device ? "remote text processing" : "local processing route"}`);
+    }
+    lines.push("");
+  }
   if (meeting.chapters.length) {
     lines.push("## Chapters", "");
     meeting.chapters.forEach((c) =>

@@ -428,6 +428,14 @@ export default function App() {
               (item) => item.meetingId === activeMeeting.id,
             )}
             onToggleAction={toggleAction}
+            onSummaryAttempt={async () => {
+              const generation = libraryGeneration.current;
+              const updated = await backend.getMeeting(activeMeeting.id);
+              if (generation !== libraryGeneration.current) return;
+              setDetail((previous) => previous?.id === updated.meeting.id ? updated.meeting : previous);
+              setMeetings((previous) => previous.map((item) => item.id === updated.meeting.id ? updated.meeting : item));
+              setActionItems((previous) => [...previous.filter((item) => item.meetingId !== activeMeeting.id), ...updated.actionItems]);
+            }}
             askFn={
               backend.mode === "tauri"
                 ? (question) => backend.ask(question, activeMeeting.id)

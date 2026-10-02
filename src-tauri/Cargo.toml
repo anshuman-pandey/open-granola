@@ -25,6 +25,13 @@ anyhow = "1"
 log = "0.4"
 env_logger = "0.11"
 parking_lot = "0.12"
+reqwest = { version = "0.13.5", default-features = false, features = ["blocking", "json", "rustls", "form", "query"] }
+keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
+base64 = "0.22"
+sha2 = "0.10"
+# Use the AWS-LC backend to avoid the RSA crate affected by RUSTSEC-2023-0071.
+jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
+webbrowser = "1"
 
 # --- microphone capture ---
 cpal = "0.15"
@@ -56,5 +63,7 @@ strip = true
 
 [workspace]
 members = ["inference-worker"]
-default-members = [".", "inference-worker"]
+# The desktop hook builds the worker explicitly with its own backend flags.
+# Building it again through Tauri discards those flags and duplicates the build.
+default-members = ["."]
 resolver = "2"

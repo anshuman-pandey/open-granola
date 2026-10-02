@@ -5,146 +5,146 @@
 <h1 align="center">Open Granola</h1>
 
 <p align="center">
-  <strong>Your meetings, remembered. Nothing leaves your machine.</strong>
+  <strong>Local transcripts. Your choice of AI for meeting notes.</strong><br/>
+  An Apache-2.0 desktop meeting notebook built with Tauri, React and Rust.
 </p>
 
 <p align="center">
-  Free, open-source (Apache-2.0) AI meeting notes for <strong>macOS · Windows · Linux</strong>.<br/>
-  Bot-free capture · on-device Whisper · local LLM notes · zero cloud · zero accounts · zero data retention.
-</p>
-
-<p align="center">
-  <a href="#install">Install</a> ·
-  <a href="#why-open-granola">Why Open Granola</a> ·
-  <a href="#how-it-works">How it works</a> ·
+  <a href="#try-the-preview">Try the preview</a> ·
+  <a href="#models-and-connections">Models</a> ·
   <a href="docs/ARCHITECTURE.md">Architecture</a> ·
   <a href="PRIVACY.md">Privacy</a> ·
-  <a href="CONTRIBUTING.md">Contribute</a>
+  <a href="docs/COMPETITIVE_RESEARCH.md">Research and priorities</a>
 </p>
 
----
+**Development preview.** Open Granola records your microphone, transcribes with local Whisper, and turns the transcript into notes using a local model or a provider you connect. Your library stays in a local SQLite database. Cloud summaries send transcript text to the selected provider.
 
-Open Granola is the meeting notepad for people who read the privacy policy first. It captures any call
-(Zoom, Meet, Teams, Webex, huddles, in-person) **without a bot joining**, transcribes it with
-**whisper.cpp on your own hardware**, and turns it into chapters, decisions and action items with a
-**local LLM** (llama.cpp). There is no Open Granola server. There is no account. There is no telemetry.
-There isn't even a network stack in the binary — we call that **Airlock**, and you can verify it
-yourself in about 40 lines of source.
+System-audio capture is not implemented: this build does not record the remote side of a call through headphones. Real microphone/model sessions, provider accounts and packaged releases still need end-to-end testing on the intended hardware. The browser preview uses labeled sample meetings.
 
-> *Granola's workflow, everyone's source code. Your meetings stay yours.*
+## What is implemented
 
-> **Development preview:** this overview includes planned capabilities. For verified implementation status and current limits, see the [overhaul report](docs/OVERHAUL.md) and [privacy model](PRIVACY.md).
+- **Microphone transcription:** local `whisper.cpp`, timestamped transcript segments and a visible live transcript.
+- **Summary provider selection:** built-in Qwen, LM Studio, OpenAI API, Claude API, custom OpenAI-compatible endpoints and experimental Sign in with ChatGPT.
+- **Connection test:** a synthetic text request checks the selected summarizer without sending a meeting. It does not test microphone capture or Whisper.
+- **Recovery for saved meetings:** the transcript is saved before summarization. A failed summary can be retried without recording again. Existing action IDs and completion state are preserved when notes are regenerated.
+- **Processing details:** saved meetings record the configured model/provider route and summary status so later settings changes do not obscure how the note was generated.
+- **Local library:** keyword search, questions over retrieved text, actions, commitments, Markdown recipes, JSON import and Markdown export.
+- **Retention controls:** remove expired meetings or purge the local library. See the limits in [Privacy](PRIVACY.md).
 
-## Why Open Granola
+Generated notes and commitments need review. Speaker identification, semantic/vector search, calendar integration, direct imports from named meeting services, encrypted audio playback and native system-audio capture are not implemented.
 
-Granola proved that bot-free capture is the right idea. It also uploads your audio, trains on your
-data unless you opt out (org-wide opt-out costs $35/user/mo), caps the free tier's history, skips
-Linux entirely, and offers no help while the meeting is actually happening. Open Granola keeps the idea and
-removes the business model:
+## Models and connections
 
-| | **Open Granola** | Granola |
+Transcription and summarization perform different jobs. **Local Whisper is currently required for recording with every summary provider.** This release does not provide a cloud transcription API.
+
+| Summary route | Setup | What Open Granola sends |
 |---|---|---|
-| Price | **Free, forever** | $0–35/user/mo |
-| Audio & AI processing | **100% on-device** | Cloud |
-| Trains on your data | **Impossible (no network)** | Opt-out; org-wide = Enterprise |
-| Data retention | **None — audio shredded post-transcript** | Server-side, tier-dependent |
-| Works offline | **Yes, fully** | No |
-| Live assist during the call | **On-device recall, facts, follow-ups** | Yes — in their cloud |
-| Mobile capture | Companion via local pairing (roadmap) | iOS + Android apps |
-| Speaker diarization | **On-device, free** | Cloud, degrades past 3 people |
-| Linux | **First-class** | No |
-| Audio playback to verify lines | **Optional, encrypted, local** | Not available |
-| License | **Apache-2.0** | Proprietary |
+| Built-in local Qwen | Install `qwen3-4b-q4.gguf` | No provider request |
+| LM Studio | Start its OpenAI-compatible server; use `http://127.0.0.1:1234/v1` and the loaded model ID | Text to a server on this device |
+| OpenAI API | Your API key and supported model ID | Text to OpenAI; API billing applies |
+| Claude API | Your Anthropic API key and model ID | Text to Anthropic; API billing applies |
+| OpenAI-compatible | A compatible base URL, model ID and optional key; for example a local Ollama server | Text to the configured server |
+| ChatGPT plan — experimental | **Continue with ChatGPT**, authorize eligible plan usage, then select a model | Text to OpenAI using the authorized plan |
 
-## Features
+The ChatGPT route uses the [official sign-in flow for open-source/local apps](https://developers.openai.com/siwc/token-sharing-open-source). It does not grant access to your existing ChatGPT conversations. Eligibility and model availability depend on the account and provider. This integration has not yet been verified end to end with a real account. It supports text requests here; [the preview does not support audio transcription](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations).
 
-- 🎙️ **Bot-free capture** — system audio + mic, per-platform native loopback (CoreAudio process-tap / WASAPI loopback / PipeWire). Nobody in the call sees anything.
-- ⚡ **Streaming on-device transcription** — Whisper Large v3 Turbo or NVIDIA Parakeet, 99 languages, with custom vocabulary for your names, numbers and jargon.
-- 🧠 **Local AI notes** — an embedded GGUF model (Qwen3-4B default) writes the summary, chapters, decisions and action items with owners and due dates the moment you stop.
-- 💡 **Live assist** — during the meeting, a private panel surfaces recall from past notes, relevant facts, and suggested follow-up questions. Only you see it.
-- 🔍 **Semantic search + chat** — every meeting is embedded into a local sqlite-vec index. Ask “what did Vesper say about compliance?” and get answers with timestamps.
-- 🗞️ **Pre-meeting Briefs** — before each call, Open Granola writes a private brief: what happened last time with these people, which commitments are riding on this meeting, and three things worth raising. All from local RAG.
-- 🤝 **Commitment ledger** — every promise anyone makes (“I'll have it by Friday”) is extracted, tracked across meetings, and resurfaced when due. Nobody else builds this at any price.
-- 📖 **Recipes** — shareable Markdown prompt packs (objection miner, board-update extractor…) that run on your local model. Publish them with a PR.
-- 📥 **Importers** — one-click migration from Granola, Otter, Fireflies and read.ai exports. Switching costs: deleted.
-- 📅 **Calendar-aware** — reads your local calendar (EventKit / ICS / CalDAV cache) to auto-title notes and prompt capture. Google and Outlook treated equally — no account needed.
-- ✅ **Action items that travel** — auto-export to Markdown, Obsidian, Notion (local API token), Todoist or clipboard after every meeting.
-- 🗂️ **Templates** — product sync, 1:1, sales discovery, interview, standup, board update — or your own Markdown.
-- 🔐 **Airlock** — one build flag removes the network stack; the macOS sandbox additionally denies outbound sockets below the process. See [`src-tauri/src/airlock.rs`](src-tauri/src/airlock.rs).
-- 🗑️ **Real deletion** — audio dies at transcription by default; retention auto-purge *shreds* notes, transcripts and embeddings (with `VACUUM`, so it's physical).
+Claude is connected with an API key; this app has no Claude consumer-account login. OpenAI API keys and ChatGPT plan sign-in are separate routes.
 
-## Install
+### Connect a summarizer
 
-Build from source below. Packaged builds will be listed under
-[**Releases**](https://github.com/anshuman-pandey/open-granola/releases) when available:
+1. Open **Settings → Models & connections** in the desktop app.
+2. Choose a provider and enter its exact model ID. For a custom server, enter the API base URL it documents.
+3. For ChatGPT, connect your account and use **Load available models**, or enter a model ID supported by your account. For an off-device destination, enable the setting that permits sending text to it. This also covers relevant saved notes used by the assistant and recipes.
+4. Save the settings, then run **Test connection**.
+5. Record a short microphone session and verify its transcript and notes before using a longer session.
 
-| Platform | Package |
-|---|---|
-| macOS (Apple Silicon + Intel) | `Open Granola.dmg` |
-| Windows | `Open Granola.msi` |
-| Linux | `Open Granola.AppImage` / `opengranola.deb` / Flatpak |
+Remote endpoints require HTTPS; unencrypted HTTP is accepted only for literal loopback addresses such as `127.0.0.1`. Use the literal address shown above for LM Studio. Custom compatibility must be tested: an OpenAI-compatible label does not guarantee every endpoint supports the same request fields. There is no automatic switch from local to cloud processing when a model fails.
 
-Install trusted `whisper-large-v3-turbo.bin` and `qwen3-4b-q4.gguf` model files manually
-in the model directory shown in Settings. Automatic model downloading is not implemented.
-Model files have their own licenses.
+Keys are handled in native code and stored in the OS credential store when available. If that store cannot save them, the app uses session-only memory and shows that status. Credentials are not saved in the meeting database or browser storage. A server running locally may itself forward requests; its configuration determines what happens after Open Granola sends it text.
 
-### Build from source
+## Try the preview
 
-```bash
-git clone https://github.com/anshuman-pandey/open-granola.git && cd open-granola
+### Browser workspace
+
+```sh
+git clone https://github.com/anshuman-pandey/open-granola.git
+cd open-granola
 npm ci
-npm run dev              # browser demo with sample meetings
-npm run tauri dev        # dev build
-npm run tauri build      # release bundles in src-tauri/target/release/bundle
+npm run dev
 ```
 
-Prereqs: Rust ≥ 1.98, Node 24 LTS (minimum 22.12), CMake, libclang, a C/C++ compiler,
-and the [Tauri platform deps](https://v2.tauri.app/start/prerequisites/).
-On Linux: `libpipewire-0.3-dev`, `libwebkit2gtk-4.1-dev`, `libasound2-dev`.
+The browser workspace demonstrates sample meetings. It does not record audio, run native inference or save provider credentials.
 
-## How it works
+### Desktop development build
 
-```
-mic ──┐                                  ┌─► streaming transcript (UI)
-      ├─► mix → 16 kHz mono ring buffer ─┤
-system┘   (RAM only — never on disk)     │   whisper.cpp windows (2 s / 500 ms stride)
-                                         └─► spectral clustering → speaker labels
-stop ─► transcript ─► llama.cpp ─► structured notes (summary · chapters · decisions · actions)
-     ─► nomic-embed ─► sqlite-vec index ─► semantic search + chat + live-assist recall
-audio ─► shredded (default) or encrypted-at-rest (opt-in)
+Install Rust **1.98 or later**, Node **22.12 or later** (Node 24 LTS recommended), CMake, libclang, a C/C++ compiler and the [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/). Linux also needs the ALSA, WebKitGTK and configured PipeWire development dependencies. The macOS bundle targets macOS 14.4 or later. Platform build configuration is not a claim of completed hardware QA.
+
+```sh
+npm ci
+npm run tauri dev
 ```
 
-Full details in [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md).
+The Tauri hooks build the local inference helper before starting the app. For a release bundle:
 
-## The privacy model (the short version)
+```sh
+npm run tauri build
+```
 
-1. **No network code exists in the app.** CI rejects any PR that adds an HTTP/WebSocket dependency.
-2. **The OS enforces it too.** The macOS build ships without the `network.client` entitlement and
-   loads a seatbelt profile denying outbound sockets at launch.
-3. **Audio is deleted when transcription finishes.** Keeping encrypted local audio is opt-in.
-4. **One-click purge** zero-fills the database file before unlinking it.
-5. **Apache-2.0** — audit every line, or pay someone to. ([PRIVACY.md](PRIVACY.md))
+Build output is under `src-tauri/target/release/bundle`. Signing, notarization and install/upgrade testing are separate release work. Publish verified assets under [Releases](https://github.com/anshuman-pandey/open-granola/releases) when ready; this README does not promise a prebuilt installer.
 
-## Roadmap
+### Install local models
 
-- [x] Bot-free capture on macOS / Windows / Linux
-- [x] Streaming Whisper + on-device diarization
-- [x] Local LLM enhancement, chat, semantic search
-- [x] Live assist (recall, facts, follow-ups)
-- [x] Pre-meeting Briefs + cross-meeting commitment ledger
-- [x] Recipes + Granola/Otter/Fireflies importers
-- [ ] Push-to-talk dictation in any app
-- [ ] Local speaker identification ("that was Priya", trained on-device)
-- [ ] SIEM-friendly signed audit export
-- [ ] iOS/Android companion via local Wi-Fi pairing (still no cloud)
+Settings shows the actual model directory: `<app-data>/library/models/`.
 
-## Contributing
+- Install a compatible Whisper model as **`whisper-large-v3-turbo.bin`** to record audio.
+- Install a compatible GGUF model as **`qwen3-4b-q4.gguf`** only if using the built-in summarizer.
+- For LM Studio or a cloud summarizer, Whisper is still required, but the built-in Qwen file is not.
 
-We'd love your help — see [CONTRIBUTING.md](CONTRIBUTING.md). Good first issues are labeled, and the
-rule is simple: **no PR may add a network dependency, an account system, or telemetry.** Everything
-else is negotiable.
+Model installation is manual. The app does not download, resume downloads or verify publisher checksums for you. Obtain models from a trusted publisher and check their format and license. Missing or invalid files produce setup errors.
+
+## How a meeting is processed
+
+```text
+Microphone → local Whisper → saved local transcript
+                                  ↓
+                    selected local/server/cloud model
+                                  ↓
+                         notes, actions, commitments
+```
+
+Notes, transcripts and processing details are stored locally without app-level database encryption. If summarization fails after the transcript is committed, retry the saved meeting. A crash while capture is still in memory is not recoverable by that feature. Audio is held in RAM rather than intentionally written to a recording file.
+
+## Privacy in plain terms
+
+- Local models are the default. Off-device text processing requires provider configuration and consent.
+- Native networking is enabled for providers and ChatGPT sign-in. This build is **not an OS-enforced network air gap**.
+- The webview is restricted to bundled assets and local app IPC. Provider requests run in native code.
+- The app implements no telemetry or Open Granola cloud-sync service. Connected providers have their own data policies.
+- Deleting local records does not erase provider-held data, exported files, OS snapshots or backups.
+
+Read [PRIVACY.md](PRIVACY.md) and [SECURITY.md](SECURITY.md) for storage, credential, network and deletion details.
+
+## Next priorities
+
+The [competitive review](docs/COMPETITIVE_RESEARCH.md) examined ten large related repositories plus seven closer/adjacent products. The priorities follow recurring user problems, rather than the number of features in a competitor's README:
+
+1. Verify a complete fresh-install microphone workflow with real models and provider accounts; improve model setup and packaging.
+2. Implement and test system audio, device changes, signal freshness and long recordings on a defined platform matrix.
+3. Link decisions and actions to transcript passages, with review before treating an AI inference as a confirmed commitment.
+4. Add vocabulary corrections, explicit language selection and recoverable long-meeting processing.
+5. Explore selective text sharing and scoped agent access after the core record is dependable.
+
+These are planned capabilities. Research and automated tests do not establish that the app works for your meeting setup.
+
+## Development checks
+
+```sh
+npm run check
+cargo test --manifest-path src-tauri/Cargo.toml
+```
+
+Native tests require the platform build prerequisites. Review the [architecture](docs/ARCHITECTURE.md), [security policy](SECURITY.md) and [contribution guide](CONTRIBUTING.md) before changing capture, credentials or data handling.
 
 ## License
 
-[Apache-2.0](LICENSE) © Open Granola contributors. Use it, fork it, ship it in your company, sell support
-for it — just keep the license notice.
+[Apache-2.0](LICENSE). Model files and third-party providers have their own licenses and terms.

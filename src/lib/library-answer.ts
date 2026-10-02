@@ -76,7 +76,7 @@ export function sampleLibraryAnswer(
               `${meeting.title}\n${/decisi|decid/i.test(question) ? meeting.decisions.map((decision) => `• ${decision}`).join("\n") || "No decisions saved." : meeting.summary || "Open the note to read its transcript."}`,
           )
           .join("\n\n")
-      : "No matching sample notes found. Try a meeting name or ask about open action items. The desktop app uses your local model to answer free-form questions.",
+      : "No matching sample notes found. Try a meeting name or ask about open action items. The desktop app uses your selected model provider to answer free-form questions.",
     sources: selected,
   };
 }

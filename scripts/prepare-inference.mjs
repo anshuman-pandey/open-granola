@@ -42,6 +42,9 @@ const features = (process.env.OPEN_GRANOLA_INFERENCE_FEATURES || '').split(',').
 if (features.some((feature) => !['metal', 'cuda'].includes(feature)) || features.length > 1) {
   throw new Error('OPEN_GRANOLA_INFERENCE_FEATURES must be empty, metal, or cuda');
 }
+// llama.cpp's CMake defaults enable Metal on macOS even when Rust default
+// features are disabled. Keep the native backend aligned with our opt-ins.
+buildEnvironment.GGML_METAL = features.includes('metal') ? 'ON' : 'OFF';
 const metadata = JSON.parse(run(cargo, ['metadata', '--manifest-path', join(native, 'Cargo.toml'), '--no-deps', '--format-version', '1'], true));
 const build = ['build', '--manifest-path', join(native, 'inference-worker/Cargo.toml'), '--locked'];
 if (release) build.push('--release');
