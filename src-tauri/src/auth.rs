@@ -506,6 +506,9 @@ fn exchange(attempt: &Attempt, query: &str) -> Result<(String, Claims, Credentia
 }
 
 fn request_target(stream: &mut TcpStream) -> Result<String> {
+    // Windows can preserve the listener's nonblocking mode on accepted sockets.
+    // Read the callback with bounded blocking I/O while its headers arrive.
+    stream.set_nonblocking(false)?;
     stream.set_read_timeout(Some(Duration::from_secs(2)))?;
     stream.set_write_timeout(Some(Duration::from_secs(2)))?;
     let mut bytes = Vec::new();
@@ -1086,6 +1089,28 @@ pub async fn disconnect_chatgpt(
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn callback_waits_for_headers_on_an_initially_nonblocking_socket() {
+        let listener = TcpListener::bind("127.0.0.1:0").unwrap();
+        let mut client = TcpStream::connect(listener.local_addr().unwrap()).unwrap();
+        let (mut stream, _) = listener.accept().unwrap();
+        // Explicitly reproduce Windows inheritance on every test platform.
+        stream.set_nonblocking(true).unwrap();
+        let (ready_tx, ready_rx) = std::sync::mpsc::channel();
+        let reader = std::thread::spawn(move || {
+            ready_tx.send(()).unwrap();
+            request_target(&mut stream)
+        });
+        ready_rx.recv_timeout(Duration::from_secs(2)).unwrap();
+        std::thread::sleep(Duration::from_millis(50));
+        client
+            .write_all(b"GET /auth/callback?state=synthetic HTTP/1.1\r\n")
+            .unwrap();
+        std::thread::sleep(Duration::from_millis(10));
+        client.write_all(b"Host: 127.0.0.1\r\n\r\n").unwrap();
+        assert_eq!(reader.join().unwrap().unwrap(), "state=synthetic");
+    }
 
     #[test]
     fn model_catalog_uses_account_slugs_visibility_and_server_order() {
