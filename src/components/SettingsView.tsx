@@ -12,6 +12,7 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getBackend } from "../lib/backend";
+import { ProviderSettings } from "./ProviderSettings";
 import {
   Dialog,
   DialogContent,
@@ -211,6 +212,7 @@ export function SettingsView({
             {error}
           </p>
         )}
+        <ProviderSettings onSaved={() => void refresh()} />
         <Section
           title="Privacy & storage"
           description="Your workspace, on your device."
@@ -285,8 +287,8 @@ export function SettingsView({
                 key: "whisper",
               },
               {
-                label: "Meeting summaries & assistant",
-                detail: "Local language model file",
+                label: "Built-in summary model",
+                detail: "Optional when another summary provider is selected",
                 key: "llm",
               },
             ].map((model) => (

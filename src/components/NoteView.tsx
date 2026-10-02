@@ -18,6 +18,7 @@ import { useEffect, useId, useRef, useState } from "react";
 import { getBackend } from "../lib/backend";
 import { fmtTs } from "../hooks/useLiveSession";
 import type { ActionItem, ChatMessage, Meeting } from "../lib/types";
+import { ProcessingHistory } from "./ProcessingHistory";
 import { Avatar, AvatarStack } from "./Avatar";
 import { downloadMarkdown, meetingMarkdown } from "./meeting-export";
 
@@ -26,6 +27,7 @@ interface Props {
   actionItems?: ActionItem[];
   onToggleAction: (id: string, done: boolean) => Promise<void> | void;
   askFn?: (q: string) => Promise<string>;
+  onSummaryAttempt?: () => Promise<void>;
 }
 
 function demoAnswer(question: string, meeting: Meeting, items: ActionItem[]) {
@@ -46,6 +48,7 @@ export function NoteView({
   actionItems = [],
   onToggleAction,
   askFn,
+  onSummaryAttempt,
 }: Props) {
   const demo = getBackend().mode === "demo";
   const [tab, setTab] = useState<"notes" | "transcript">("notes");
@@ -156,7 +159,7 @@ export function NoteView({
           {
             id: `a-${sequence}`,
             role: "assistant",
-            text: "I couldn’t answer this question. Check that a local model is configured in Settings, then try again.",
+            text: "I couldn’t answer this question. Check the selected model provider in Settings, then try again.",
           },
         ]);
     } finally {
@@ -291,6 +294,7 @@ export function NoteView({
             </button>
           </div>
         </header>
+        <ProcessingHistory meeting={meeting} onAttempt={onSummaryAttempt} />
         {error && (
           <div
             role="alert"

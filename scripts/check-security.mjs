@@ -58,11 +58,21 @@ export function validateCapabilities(capabilities) {
 // exhaustive code audit, or proof that transitive dependencies cannot network.
 export function validateSource(source, filename) {
   const production = filename.endsWith('.rs')
-    ? source.split(/#\[cfg\((?:test\)|all\(test\b)/)[0]
+    ? source.split(/#\[cfg\([^\]]*\btest\b[^\]]*\)\]\s*mod\s+tests\b/)[0]
     : source;
   const withoutCommentLines = production.replace(/^\s*\/\/.*$/gm, '');
   const networkCall = /\b(?:fetch\s*\(|XMLHttpRequest\b|WebSocket\s*\(|EventSource\s*\(|sendBeacon\s*\(|(?:TcpStream|TcpSocket)::connect|(?:UdpSocket|TcpListener)::bind|(?:reqwest|ureq|hyper)::)/;
-  if (networkCall.test(withoutCommentLines)) throw new Error(`Unreviewed networking in ${filename}`);
+  const reviewedProvider = /(?:^|\/)src-tauri\/src\/(?:providers|auth)\.rs$/.test(filename.replaceAll('\\', '/'));
+  if (reviewedProvider) {
+    // Reviewed native modules own HTTP. Keep browser networking and other HTTP
+    // implementations forbidden; runtime endpoint/consent tests cover routing.
+    if (!production.includes('.no_proxy()') || !production.includes('reqwest::redirect::Policy::none()')) {
+      throw new Error(`Provider transport must disable proxies and redirects: ${filename}`);
+    }
+    if (/\b(?:fetch\s*\(|XMLHttpRequest|WebSocket|EventSource|sendBeacon|ureq::|hyper::)/.test(withoutCommentLines)) {
+      throw new Error(`Unreviewed provider transport in ${filename}`);
+    }
+  } else if (networkCall.test(withoutCommentLines)) throw new Error(`Unreviewed networking in ${filename}`);
 }
 
 function files(directory) {
@@ -91,7 +101,11 @@ export function checkRepository(directory = root) {
     if (/\.(?:rs|[jt]sx?)$/.test(path) && !/\.(?:test|spec)\./.test(path)) validateSource(readFileSync(path, 'utf8'), path);
   }
   const entitlements = readFileSync(join(directory, 'src-tauri/entitlements.plist'), 'utf8');
-  if (/<key>com\.apple\.security\.network\./.test(entitlements)) throw new Error('Network entitlement added');
+  const entitlementKeys = [...entitlements.matchAll(/<key>([^<]+)<\/key>/g)].map((match) => match[1]);
+  if (!sameMembers(entitlementKeys, ['com.apple.security.device.audio-input', 'com.apple.security.device.microphone', 'com.apple.security.app-sandbox', 'com.apple.security.network.client', 'com.apple.security.network.server', 'com.apple.security.files.user-selected.read-write'])) throw new Error('Unreviewed application entitlement');
+  for (const key of ['com.apple.security.network.client', 'com.apple.security.network.server']) {
+    if (!entitlements.includes(`<key>${key}</key>\n    <true/>`)) throw new Error('Provider networking entitlement missing');
+  }
   if (!/<key>com\.apple\.security\.app-sandbox<\/key>\s*<true\s*\/>/.test(entitlements)) throw new Error('App Sandbox must be enabled');
   const helperEntitlements = readFileSync(join(directory, 'src-tauri/inference-worker/entitlements.plist'), 'utf8');
   const helperKeys = [...helperEntitlements.matchAll(/<key>([^<]+)<\/key>/g)].map((match) => match[1]);

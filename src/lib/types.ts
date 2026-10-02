@@ -23,6 +23,17 @@ export interface ActionItem {
   meetingTitle: string;
 }
 
+export interface SummaryRun {
+  provider: string;
+  model: string;
+  endpoint: string;
+  off_device: boolean;
+  status: "running" | "completed" | "failed";
+  error: string | null;
+  started_at: string;
+  completed_at: string | null;
+}
+
 export interface Meeting {
   id: string;
   title: string;
@@ -36,6 +47,7 @@ export interface Meeting {
   tags: string[];
   template: string;
   starred?: boolean;
+  processingHistory?: SummaryRun[];
 }
 
 export interface ChatMessage {

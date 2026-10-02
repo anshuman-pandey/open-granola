@@ -1,12 +1,13 @@
 //! Tauri commands — the IPC surface the React frontend calls.
-//! Every command is local; the frontend's CSP forbids anything else.
+//! Provider connections stay in native code; the renderer cannot call APIs.
 
 use std::sync::Arc;
 use tauri::{AppHandle, Emitter, State};
 use uuid::Uuid;
 
 use crate::audio::CaptureSession;
-use crate::llm::{EnhancedNote, LocalLlm};
+use crate::llm::{EnhancedNote, LocalLlm, NoteModel};
+use crate::providers::{Provider, ProviderConfig, ProviderStatus};
 use crate::storage::Db;
 use crate::transcribe::Segment;
 use crate::AppState;
@@ -85,16 +86,9 @@ pub async fn stop_capture_and_enhance(
             .map_err(|e| e.to_string())?;
         state.pending_capture.lock().take();
         // Failures from here preserve the already-committed raw note.
-        let enhanced = with_llm(&state, |llm| llm.enhance(&captured.transcript, &template_md));
+        let enhanced = enhance_saved(&state, &id, &captured.transcript, &template_md, true);
         let enhanced_ok = enhanced.is_ok();
-        match enhanced {
-            Ok(note) => {
-                if let Err(e) = update_enhancement(&state.db.lock(), &id, &note) {
-                    let _ = app.emit("capture-warning", format!("Transcript saved; enhancement could not be saved: {e}"));
-                }
-            }
-            Err(e) => { let _ = app.emit("capture-warning", format!("Transcript saved; {e}")); }
-        }
+        if let Err(e) = enhanced { let _ = app.emit("capture-warning", format!("Transcript saved; {e}")); }
         if let Ok(commitments) = if enhanced_ok { with_llm(&state, |llm| llm.extract_commitments(&captured.transcript)) } else { Ok(Vec::new()) } {
             let db = state.db.lock();
             if let Ok(tx) = db.conn().unchecked_transaction() {
@@ -109,10 +103,14 @@ pub async fn stop_capture_and_enhance(
     }).await.map_err(|e| e.to_string())?
 }
 
-fn with_llm<T>(
+pub(crate) fn with_llm<T>(
     state: &AppState,
-    run: impl FnOnce(&LocalLlm) -> anyhow::Result<T>,
+    run: impl FnOnce(&NoteModel<'_>) -> anyhow::Result<T>,
 ) -> Result<T, String> {
+    let provider = state.providers.lock();
+    if provider.config().provider != Provider::Local {
+        return run(&NoteModel::new(&*provider)).map_err(|e| e.to_string());
+    }
     let mut model = state.llm.lock();
     if model.is_none() {
         *model = Some(
@@ -120,7 +118,67 @@ fn with_llm<T>(
                 .map_err(|e| format!("{e:#}"))?,
         );
     }
-    run(model.as_ref().expect("model initialized")).map_err(|e| e.to_string())
+    run(&NoteModel::new(model.as_ref().expect("model initialized"))).map_err(|e| e.to_string())
+}
+
+#[tauri::command]
+pub async fn get_provider_settings(
+    state: State<'_, Arc<AppState>>,
+) -> Result<ProviderStatus, String> {
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || Ok(state.providers.lock().status()))
+        .await
+        .map_err(|_| "Could not read provider settings".to_string())?
+}
+
+#[tauri::command]
+pub async fn save_provider_settings(
+    state: State<'_, Arc<AppState>>,
+    config: ProviderConfig,
+    api_key: Option<String>,
+    clear_api_key: Option<bool>,
+) -> Result<ProviderStatus, String> {
+    let _gate = state.capture_gate.lock().await;
+    if state.session.lock().is_some() || state.pending_capture.lock().is_some() {
+        return Err("Stop or discard the recording before changing model providers".into());
+    }
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let status = state
+            .providers
+            .lock()
+            .save(config, api_key, clear_api_key.unwrap_or(false))
+            .map_err(|e| e.to_string())?;
+        // Drop old local prompt buffers and release model memory on switching.
+        *state.llm.lock() = None;
+        Ok(status)
+    })
+    .await
+    .map_err(|_| "Could not update provider settings".to_string())?
+}
+
+#[derive(serde::Serialize)]
+pub struct ConnectionTestResult {
+    ok: bool,
+    message: String,
+}
+
+#[tauri::command]
+pub async fn test_provider_connection(
+    state: State<'_, Arc<AppState>>,
+) -> Result<ConnectionTestResult, String> {
+    let _gate = state.capture_gate.lock().await;
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        with_llm(&state, |model| model.test_connection())?;
+        Ok(ConnectionTestResult {
+            ok: true,
+            message: "Connection succeeded using synthetic test text. No meeting data was sent."
+                .into(),
+        })
+    })
+    .await
+    .map_err(|_| "Could not finish the connection test".to_string())?
 }
 
 fn persist_meeting(
@@ -143,7 +201,13 @@ fn persist_meeting(
     Ok(())
 }
 
-fn update_enhancement(db: &Db, id: &str, note: &EnhancedNote) -> anyhow::Result<()> {
+fn update_enhancement(
+    db: &Db,
+    id: &str,
+    note: &EnhancedNote,
+    run_id: &str,
+    update_actions: bool,
+) -> anyhow::Result<()> {
     let tx = db.conn().unchecked_transaction()?;
     tx.execute(
         "UPDATE meetings SET title=?1,summary=?2,chapters_json=?3,decisions_json=?4 WHERE id=?5",
@@ -155,14 +219,108 @@ fn update_enhancement(db: &Db, id: &str, note: &EnhancedNote) -> anyhow::Result<
             id
         ],
     )?;
-    for a in &note.action_items {
+    for a in note.action_items.iter().filter(|_| update_actions) {
         tx.execute(
             "INSERT INTO action_items(id,meeting_id,text,owner,due) VALUES(?1,?2,?3,?4,?5)",
             rusqlite::params![Uuid::new_v4().to_string(), id, a.text, a.owner, a.due],
         )?;
     }
+    tx.execute(
+        "UPDATE summary_runs SET status='completed',completed_at=?1 WHERE id=?2",
+        rusqlite::params![chrono::Utc::now().to_rfc3339(), run_id],
+    )?;
     tx.commit()?;
     Ok(())
+}
+
+/// Each attempt records its chosen route before inference. A failed attempt may
+/// have reached that route, so this is processing history, not an egress audit.
+fn enhance_saved(
+    state: &AppState,
+    id: &str,
+    transcript: &[Segment],
+    template: &str,
+    update_actions: bool,
+) -> Result<(), String> {
+    if transcript
+        .iter()
+        .all(|segment| segment.text.trim().is_empty())
+    {
+        return Err("This meeting has no transcript to summarize".into());
+    }
+    let config = state.providers.lock().config().clone();
+    let run_id = Uuid::new_v4().to_string();
+    let provider = serde_json::to_value(config.provider).map_err(|e| e.to_string())?;
+    state.db.lock().conn().execute("INSERT INTO summary_runs(id,meeting_id,provider,model,endpoint,off_device,status,started_at) VALUES(?1,?2,?3,?4,?5,?6,'running',?7)",
+        rusqlite::params![run_id,id,provider.as_str().unwrap_or("unknown"),config.model,config.base_url,config.sends_transcript_off_device(),chrono::Utc::now().to_rfc3339()]).map_err(|e|e.to_string())?;
+    let result = with_llm(state, |model| model.enhance(transcript, template)).and_then(|note| {
+        update_enhancement(&state.db.lock(), id, &note, &run_id, update_actions).map_err(|_| {
+            "Summary generated but could not be saved. The previous note is intact.".to_string()
+        })
+    });
+    if let Err(ref error) = result {
+        // Provider errors are already redacted. Bound the persisted diagnostic.
+        let detail: String = error.chars().take(1000).collect();
+        state
+            .db
+            .lock()
+            .conn()
+            .execute(
+                "UPDATE summary_runs SET status='failed',error=?1,completed_at=?2 WHERE id=?3",
+                rusqlite::params![detail, chrono::Utc::now().to_rfc3339(), run_id],
+            )
+            .map_err(|_| {
+                "Summary failed and its status could not be saved. The transcript is intact."
+                    .to_string()
+            })?;
+    }
+    result
+}
+
+#[tauri::command]
+pub async fn regenerate_summary(
+    state: State<'_, Arc<AppState>>,
+    meeting_id: String,
+    expected_config: ProviderConfig,
+) -> Result<(), String> {
+    validate_text(&meeting_id, 128, "Meeting id", false)?;
+    let _gate = state.capture_gate.lock().await;
+    if state.session.lock().is_some() || state.pending_capture.lock().is_some() {
+        return Err("Finish the current recording before regenerating a summary".into());
+    }
+    if state.providers.lock().config() != &expected_config.validated().map_err(|e| e.to_string())? {
+        return Err("The provider changed. Review the selected destination and try again.".into());
+    }
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || {
+        let (template,transcript,update_actions)={
+            let db=state.db.lock();
+            let template:Option<String>=db.conn().query_row("SELECT template FROM meetings WHERE id=?1",[&meeting_id],|row|row.get(0)).map_err(|_|"Meeting was not found".to_string())?;
+            let mut statement=db.conn().prepare("SELECT start_ms,end_ms,speaker,text FROM segments WHERE meeting_id=?1 ORDER BY start_ms,rowid").map_err(|e|e.to_string())?;
+            let transcript=statement.query_map([&meeting_id],|row|Ok(Segment{start_ms:nonnegative_ms(row,0)?,end_ms:nonnegative_ms(row,1)?,speaker:row.get(2)?,text:row.get(3)?,final_:true})).map_err(|e|e.to_string())?.collect::<Result<Vec<_>,_>>().map_err(|e|e.to_string())?;
+            (template.unwrap_or_default(),transcript,!db.conn().query_row("SELECT EXISTS(SELECT 1 FROM action_items WHERE meeting_id=?1)",[&meeting_id],|row|row.get::<_,bool>(0)).map_err(|e|e.to_string())?)
+        };
+        // Keep action item IDs and completion state stable during retries.
+        enhance_saved(&state,&meeting_id,&transcript,&template,update_actions)
+    }).await.map_err(|_|"Summary worker did not finish; the saved transcript is intact".to_string())?
+}
+
+fn nonnegative_ms(row: &rusqlite::Row<'_>, column: usize) -> rusqlite::Result<u64> {
+    u64::try_from(row.get::<_, i64>(column)?).map_err(|error| {
+        rusqlite::Error::FromSqlConversionFailure(
+            column,
+            rusqlite::types::Type::Integer,
+            Box::new(error),
+        )
+    })
+}
+
+fn summary_history(db: &Db, meeting_id: &str) -> rusqlite::Result<Vec<serde_json::Value>> {
+    let mut statement=db.conn().prepare("SELECT provider,model,endpoint,off_device,status,error,started_at,completed_at FROM summary_runs WHERE meeting_id=?1 ORDER BY rowid DESC LIMIT 20")?;
+    let rows=statement.query_map([meeting_id],|row|Ok(serde_json::json!({
+        "provider":row.get::<_,String>(0)?,"model":row.get::<_,String>(1)?,"endpoint":row.get::<_,String>(2)?,"off_device":row.get::<_,bool>(3)?,"status":row.get::<_,String>(4)?,"error":row.get::<_,Option<String>>(5)?,"started_at":row.get::<_,String>(6)?,"completed_at":row.get::<_,Option<String>>(7)?
+    })))?;
+    rows.collect()
 }
 
 fn validate_text(value: &str, max: usize, label: &str, allow_empty: bool) -> Result<(), String> {
@@ -254,6 +412,7 @@ pub async fn get_meeting(
         "meeting": meeting,
         "segments": segments,
         "action_items": actions,
+        "processing_history": summary_history(&db,&id).map_err(|e|e.to_string())?,
     }))
 }
 
@@ -765,6 +924,191 @@ fn import_notes(db: &Db, notes: &[ImportNote]) -> anyhow::Result<usize> {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    fn saved_note_fixture(db: &Db) -> Vec<Segment> {
+        let note = EnhancedNote {
+            title: "Original title".into(),
+            summary: "Previously approved summary".into(),
+            chapters: vec![],
+            decisions: vec!["Keep the launch date".into()],
+            action_items: vec![],
+        };
+        let transcript = vec![Segment {
+            start_ms: 1234,
+            end_ms: 4567,
+            speaker: 2,
+            text: "I already sent the launch checklist.".into(),
+            final_: true,
+        }];
+        persist_meeting(
+            db,
+            "retry-meeting",
+            &note,
+            &transcript,
+            "2099-01-01T12:00:00Z",
+            5,
+            "Decisions and next steps",
+        )
+        .unwrap();
+        db.conn().execute_batch("INSERT INTO action_items(id,meeting_id,text,owner,due,done) VALUES('existing-action','retry-meeting','Send launch checklist','Sam','Friday',1);").unwrap();
+        transcript
+    }
+
+    fn preserved_meeting_children(db: &Db) -> (Vec<serde_json::Value>, Vec<serde_json::Value>) {
+        let segments = db
+            .conn()
+            .prepare("SELECT id,meeting_id,start_ms,end_ms,speaker,text FROM segments ORDER BY id")
+            .unwrap()
+            .query_map([], |row| {
+                Ok(serde_json::json!([
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, i64>(2)?,
+                    row.get::<_, i64>(3)?,
+                    row.get::<_, i64>(4)?,
+                    row.get::<_, String>(5)?
+                ]))
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        let actions = db
+            .conn()
+            .prepare("SELECT id,meeting_id,text,owner,due,done FROM action_items ORDER BY id")
+            .unwrap()
+            .query_map([], |row| {
+                Ok(serde_json::json!([
+                    row.get::<_, String>(0)?,
+                    row.get::<_, String>(1)?,
+                    row.get::<_, String>(2)?,
+                    row.get::<_, Option<String>>(3)?,
+                    row.get::<_, Option<String>>(4)?,
+                    row.get::<_, i64>(5)?
+                ]))
+            })
+            .unwrap()
+            .collect::<Result<Vec<_>, _>>()
+            .unwrap();
+        (segments, actions)
+    }
+
+    #[test]
+    fn summary_retry_updates_note_and_history_without_replacing_transcript_or_actions() {
+        let db = Db::open(std::path::Path::new(":memory:")).unwrap();
+        saved_note_fixture(&db);
+        let before = preserved_meeting_children(&db);
+        db.conn().execute_batch("INSERT INTO summary_runs(id,meeting_id,provider,model,endpoint,off_device,status,started_at) VALUES('retry-run','retry-meeting','lm_studio','test-model','http://127.0.0.1:1234/v1',0,'running','2099-01-01T12:30:00Z');").unwrap();
+        let regenerated = EnhancedNote {
+            title: "Better title".into(),
+            summary: "The checklist was already sent.".into(),
+            chapters: vec![crate::llm::Chapter {
+                title: "Launch".into(),
+                timestamp: "00:01".into(),
+                body: "Checklist delivered.".into(),
+            }],
+            decisions: vec!["Keep the launch date".into()],
+            // Regeneration must not replace an action the user completed or
+            // append another copy of what a different model extracts.
+            action_items: vec![crate::llm::ActionItem {
+                text: "A newly proposed action".into(),
+                owner: Some("Pat".into()),
+                due: None,
+            }],
+        };
+        update_enhancement(&db, "retry-meeting", &regenerated, "retry-run", false).unwrap();
+        assert_eq!(preserved_meeting_children(&db), before);
+        let result: (String, String, String) = db
+            .conn()
+            .query_row(
+                "SELECT title,summary,chapters_json FROM meetings WHERE id='retry-meeting'",
+                [],
+                |row| Ok((row.get(0)?, row.get(1)?, row.get(2)?)),
+            )
+            .unwrap();
+        assert_eq!(result.0, regenerated.title);
+        assert_eq!(result.1, regenerated.summary);
+        assert_eq!(
+            serde_json::from_str::<serde_json::Value>(&result.2).unwrap()[0]["timestamp"],
+            "00:01"
+        );
+        let history = summary_history(&db, "retry-meeting").unwrap();
+        assert_eq!(history.len(), 1);
+        assert_eq!(history[0]["status"], "completed");
+        assert!(history[0]["completed_at"].as_str().is_some());
+        assert_eq!(history[0]["off_device"], false);
+        assert!(history[0]["error"].is_null());
+    }
+
+    #[test]
+    fn failed_summary_retry_keeps_previous_note_and_records_failure() {
+        let dir = std::env::temp_dir().join(format!("open-granola-retry-{}", Uuid::new_v4()));
+        std::fs::create_dir_all(&dir).unwrap();
+        let db = Db::open(std::path::Path::new(":memory:")).unwrap();
+        let transcript = saved_note_fixture(&db);
+        let before = preserved_meeting_children(&db);
+        let state = AppState {
+            providers: parking_lot::Mutex::new(
+                crate::providers::ProviderManager::load(&dir).unwrap(),
+            ),
+            _instance_lock: std::fs::File::create(dir.join("instance.lock")).unwrap(),
+            data_dir: dir.clone(),
+            db: parking_lot::Mutex::new(db),
+            session: parking_lot::Mutex::new(None),
+            pending_capture: parking_lot::Mutex::new(None),
+            capture_gate: tokio::sync::Mutex::new(()),
+            llm: parking_lot::Mutex::new(None),
+            airlock: crate::airlock::engage().unwrap(),
+        };
+        // The selected local model is intentionally absent; no provider or
+        // credential-store access is necessary to reproduce a real failure.
+        let error =
+            enhance_saved(&state, "retry-meeting", &transcript, "Meeting", false).unwrap_err();
+        assert!(!error.is_empty());
+        {
+            let db = state.db.lock();
+            assert_eq!(preserved_meeting_children(&db), before);
+            let note: (String, String) = db
+                .conn()
+                .query_row(
+                    "SELECT title,summary FROM meetings WHERE id='retry-meeting'",
+                    [],
+                    |row| Ok((row.get(0)?, row.get(1)?)),
+                )
+                .unwrap();
+            assert_eq!(
+                note,
+                (
+                    "Original title".into(),
+                    "Previously approved summary".into()
+                )
+            );
+            let history = summary_history(&db, "retry-meeting").unwrap();
+            assert_eq!(history.len(), 1);
+            assert_eq!(history[0]["provider"], "local");
+            assert_eq!(history[0]["status"], "failed");
+            assert_eq!(history[0]["off_device"], false);
+            assert!(history[0]["completed_at"].as_str().is_some());
+            assert!(!history[0]["error"].as_str().unwrap().is_empty());
+        }
+        drop(state);
+        std::fs::remove_dir_all(dir).unwrap();
+    }
+
+    #[test]
+    fn processing_history_is_scoped_and_returns_the_latest_twenty_attempts() {
+        let db = Db::open(std::path::Path::new(":memory:")).unwrap();
+        saved_note_fixture(&db);
+        db.conn().execute_batch("INSERT INTO meetings(id,title,started_at,duration_s) VALUES('other','Other private meeting','2099-01-01',1);").unwrap();
+        for index in 0..25 {
+            db.conn().execute("INSERT INTO summary_runs(id,meeting_id,provider,model,endpoint,off_device,status,started_at) VALUES(?1,'retry-meeting','local',?1,'',0,'completed','2099-01-01')",[format!("run-{index}")]).unwrap();
+        }
+        db.conn().execute_batch("INSERT INTO summary_runs(id,meeting_id,provider,model,endpoint,off_device,status,started_at) VALUES('private-other-run','other','openai','other-model','https://api.openai.com/v1',1,'failed','2099-01-01');").unwrap();
+        let history = summary_history(&db, "retry-meeting").unwrap();
+        assert_eq!(history.len(), 20);
+        assert_eq!(history[0]["model"], "run-24");
+        assert_eq!(history[19]["model"], "run-5");
+        assert!(history.iter().all(|run| run["model"] != "other-model"));
+    }
     #[test]
     fn import_rejects_invalid_shapes_and_ranges() {
         for json in [
@@ -845,7 +1189,7 @@ mod tests {
             }],
             ..raw.clone()
         };
-        assert!(update_enhancement(&db, "meeting", &enhanced).is_err());
+        assert!(update_enhancement(&db, "meeting", &enhanced, "test-run", true).is_err());
         let title: String = db
             .conn()
             .query_row("SELECT title FROM meetings WHERE id='meeting'", [], |r| {

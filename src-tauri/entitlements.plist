@@ -2,13 +2,17 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-    <!-- Microphone + system audio capture. Note: NO network entitlements. -->
+    <!-- Microphone capture. -->
     <key>com.apple.security.device.audio-input</key>
     <true/>
     <key>com.apple.security.device.microphone</key>
     <true/>
-    <!-- Signed release bundles request the App Sandbox and omit both network
-         client/server entitlements. Validate the signed artifact at release. -->
+    <!-- Native providers need outbound connections. Sign-in binds only to
+         a random 127.0.0.1 port; server permission supports that callback. -->
+    <key>com.apple.security.network.client</key>
+    <true/>
+    <key>com.apple.security.network.server</key>
+    <true/>
     <key>com.apple.security.app-sandbox</key>
     <true/>
     <!-- Import/export files explicitly selected by the user. -->

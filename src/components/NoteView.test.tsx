@@ -156,8 +156,20 @@ describe("meeting details", () => {
     expect(checkbox).toHaveAttribute("aria-checked", "false");
   });
 
-  it("exports source transcript, participant names, decisions and checkbox state", () => {
-    const markdown = meetingMarkdown(meeting, [
+  it("exports source transcript, decisions, checkbox state and summary provenance", () => {
+    const markdown = meetingMarkdown({
+      ...meeting,
+      processingHistory: [{
+        provider: "lm_studio",
+        model: "reviewed-local-model",
+        endpoint: "http://127.0.0.1:1234/v1",
+        off_device: false,
+        status: "completed",
+        error: null,
+        started_at: "2026-09-30T11:00:00Z",
+        completed_at: "2026-09-30T11:00:06Z",
+      }],
+    }, [
       {
         id: "action",
         text: "Ship release",
@@ -173,6 +185,7 @@ describe("meeting details", () => {
     expect(markdown).toContain("- [x] Ship release (You · Friday)");
     expect(markdown).toContain("01:00 · Speaker 2");
     expect(markdown).toContain("01:15 · Unknown speaker");
+    expect(markdown).toContain("- 2026-09-30T11:00:00Z: completed; lm_studio; model: reviewed-local-model; destination: http://127.0.0.1:1234/v1; local processing route");
     expect(markdown).toContain("The release is ready.");
   });
 });

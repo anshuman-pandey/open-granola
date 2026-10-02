@@ -1,6 +1,4 @@
-//! Local LLM: note enhancement, source-grounded library questions and recipes.
-//! Runs through an isolated local llama.cpp worker. Models are GGUF files in the local
-//! library directory. The current model filename is qwen3-4b-q4.gguf.
+//! Shared note prompts and parsers for local and explicitly selected providers.
 
 use anyhow::{bail, Context, Result};
 use serde::{Deserialize, Serialize};
@@ -36,16 +34,24 @@ pub struct LocalLlm {
     engine: parking_lot::Mutex<crate::inference::LocalInference>,
 }
 
+pub trait Completion {
+    fn complete(&self, system: &str, user: &str, max_tokens: usize) -> Result<String>;
+}
+
+pub struct NoteModel<'a> {
+    completion: &'a dyn Completion,
+}
+
 const ENHANCE_SYSTEM: &str = "\
-You are Open Granola, a meeting-notes engine running entirely on the user's device. \
-Given a diarized transcript, produce STRICT JSON with keys: title, summary, \
+You are Open Granola, a meeting-notes engine. \
+Given a timestamped transcript, produce STRICT JSON with keys: title, summary, \
 chapters[{title,timestamp,body}], decisions[], action_items[{text,owner,due}]. \
-Rules: prefer concrete facts and exact numbers; never invent content; keep \
+Rules: speaker labels may be unknown; never infer a person from a numeric label. Prefer concrete facts and exact numbers; never invent content; keep \
 chapter bodies under 45 words; timestamps as mm:ss; action items must have an \
 owner if any speaker volunteered or was assigned. Output JSON only.";
 
 const COMMITMENTS_SYSTEM: &str = "\
-You are Open Granola's commitment extractor. From a diarized transcript, find every \
+You are Open Granola's commitment extractor. From a transcript with possibly unidentified speakers, find every \
 explicit promise, offer, or assignment — phrases like \"I'll have it by Friday\", \
 \"I can take that\", \"send me X and I'll review\". Emit STRICT JSON: an array \
 {text, owner, due, evidence}. Rules: owner = the speaker who volunteered or was \
@@ -60,13 +66,33 @@ impl LocalLlm {
             engine: parking_lot::Mutex::new(crate::inference::LocalInference::load(model_path)?),
         })
     }
+}
 
-    fn completion(&self, system: &str, user: &str, max_tokens: usize) -> Result<String> {
+impl Completion for LocalLlm {
+    fn complete(&self, system: &str, user: &str, max_tokens: usize) -> Result<String> {
         let mut engine = self.engine.lock();
         if !engine.is_available() {
             *engine = crate::inference::LocalInference::load(&self.model_path)?;
         }
         engine.complete(system, user, max_tokens)
+    }
+}
+
+impl<'a> NoteModel<'a> {
+    pub fn new(completion: &'a dyn Completion) -> Self {
+        Self { completion }
+    }
+
+    pub fn test_connection(&self) -> Result<()> {
+        let output = self.completion.complete(
+            "This is a connection test. Reply with a short greeting.",
+            "Hello from OpenGranola. This is synthetic test text; no meeting data is included.",
+            128,
+        )?;
+        if output.trim().is_empty() {
+            bail!("The model returned an empty response");
+        }
+        Ok(())
     }
 
     /// Turn a finished transcript into structured notes (the "enhance" step).
@@ -82,7 +108,7 @@ impl LocalLlm {
             ));
         }
         let user = format!("Template:\n{template_md}\n\nTranscript:\n{text}");
-        let raw = self.completion(ENHANCE_SYSTEM, &user, 1200)?;
+        let raw = self.completion.complete(ENHANCE_SYSTEM, &user, 1200)?;
         let json = extract_json(&raw)?;
         serde_json::from_str(&json).context("enhancement produced invalid JSON")
     }
@@ -93,7 +119,7 @@ impl LocalLlm {
             "Answer ONLY from the supplied excerpts, citing their bracketed labels exactly. Summaries have no transcript timestamp. If the answer is absent, say so; the excerpts may be incomplete. Context:\n{}\n\nQ: {question}",
             context_chunks.join("\n---\n")
         );
-        self.completion(
+        self.completion.complete(
             "You are Open Granola's librarian. Be precise; cite sources.",
             &user,
             600,
@@ -107,7 +133,7 @@ impl LocalLlm {
         for s in transcript {
             text.push_str(&format!("Speaker {}: {}\n", s.speaker, s.text));
         }
-        let raw = self.completion(COMMITMENTS_SYSTEM, &text, 900)?;
+        let raw = self.completion.complete(COMMITMENTS_SYSTEM, &text, 900)?;
         serde_json::from_str(&extract_json(&raw)?)
             .context("model returned invalid structured output")
     }
@@ -115,7 +141,7 @@ impl LocalLlm {
     /// Run a recipe (shareable markdown prompt pack) over a meeting or library.
     pub fn run_recipe(&self, recipe_prompt: &str, context: &[String]) -> Result<String> {
         let user = format!("{recipe_prompt}\n\nMaterial:\n{}", context.join("\n---\n"));
-        self.completion(
+        self.completion.complete(
             "Follow the user's recipe exactly. Ground every claim in the material.",
             &user,
             900,

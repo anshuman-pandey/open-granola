@@ -1,14 +1,25 @@
 # Privacy and data handling
 
-This statement describes the source in this repository. Open Granola is an early desktop prototype; platform capture, inference, and packaging still require testing before a production release.
+This statement describes the source in this repository. Open Granola is a development preview. Real-model capture, provider accounts and packaged builds require further end-to-end testing.
 
-## Where your data lives
+## Processing choices
 
-The desktop app stores notes, transcripts, action items, commitments, recipes, settings, and any stored embedding data in `<app-data>/library/opengranola.db`. SQLite may also create `-wal` and `-shm` sidecar files there. This database is **not encrypted by the app**. Use your operating system's disk encryption and account controls for protection at rest.
+Microphone audio is transcribed locally with Whisper. There is no cloud transcription route in the current app. Summaries, library questions, recipes and commitment extraction use the selected text model:
 
-Raw capture audio is held in memory. The current app does not implement encrypted audio recording or cloud storage. Stopping capture releases the audio buffers; that is not a guarantee against OS swap, crash dumps, or memory forensics.
+| Choice | Data sent by Open Granola |
+|---|---|
+| Built-in local model | No provider request |
+| LM Studio / literal loopback server | Prompt and relevant text to the server on this computer |
+| Cloud or remote custom provider | Prompt, transcript and/or relevant saved notes to the configured provider |
+| Experimental ChatGPT sign-in | Authentication data to OpenAI; authorized text requests to OpenAI |
 
-Models are manually installed under `<app-data>/library/models/`. There is no in-app model download or updater. Model files are separate from meeting data.
+Remote text processing requires explicit provider selection and the off-device setting. A failed local model does not trigger an automatic cloud fallback. A loopback server can forward text to other services; inspect its own configuration and policies. Provider retention and processing terms apply to text sent off-device.
+
+The [official ChatGPT sign-in integration](https://developers.openai.com/siwc/token-sharing-open-source) requests permission for eligible plan usage. It does not give Open Granola access to existing ChatGPT conversations. Real-account end-to-end validation is still pending.
+
+## Local storage
+
+The desktop app stores meetings, transcripts, actions, commitments, recipes, processing details, settings and any embedding placeholders in `<app-data>/library/opengranola.db`. SQLite can create `-wal` and `-shm` sidecars. The database is **not encrypted by the app**. Protection at rest depends on the operating system's account permissions and disk encryption.
 
 Default app-data locations:
 
@@ -16,25 +27,37 @@ Default app-data locations:
 - Windows: `%APPDATA%/app.opengranola`
 - Linux: `~/.local/share/app.opengranola`
 
-On Unix, the application library directory and database are restricted to the current user. On Windows, access follows the user profile's filesystem permissions. Backups or sync software you configure can copy this directory independently of the app.
+Use the directory shown in Settings for the running build. Models are manually installed under `library/models/` and are separate from meeting data. There is no in-app model downloader.
 
-## Network behavior and its limits
+Raw capture audio and the live transcript remain in memory until the meeting is saved. The app does not implement stored audio playback or encrypted audio recording. Releasing RAM is not a guarantee against swap, crash dumps or memory forensics. A crash or power loss before persistence can lose the live session. Transcript-preserving retry applies to a meeting already saved in SQLite.
 
-The application provides no upload, cloud sync, analytics, account, or remote inference feature. Its production webview Content Security Policy restricts connection requests to Tauri's local IPC transport. Capabilities grant only backend event subscription; no HTTP, shell, or filesystem store plugin is exposed to frontend code.
+On Unix the library directory and database are restricted to the current user. On Windows access follows the user's filesystem permissions. Backup and synchronization software can copy these files independently of the app.
 
-Release macOS builds verify that an existing signed App Sandbox has no network entitlements, or install a process sandbox that denies network access for an unsigned build. Startup fails if the policy cannot be established. The signing configuration requests App Sandbox without network entitlements; release testing must verify the signed bundle. A sandbox on the Rust process alone does not prove the behavior of every webview helper process, which is why the webview policy and release verification both matter.
+## Credentials and account data
 
-Windows and Linux currently have **no implemented OS network block**. They rely on the application code and webview policy. Development builds permit the local frontend server and do not install the process network block. A source scan or lack of an HTTP client does not prove that a process or its dependencies cannot open sockets. The app does not measure lifetime network traffic.
+API keys and ChatGPT tokens are handled in native code. The renderer receives status and account labels, not token values. The preferred store is the OS credential store; if a write fails, the app can keep credentials only in process memory and shows session-only storage. The user may need to reconnect after restarting.
+
+Non-secret provider settings live in `library/providers.json`. ChatGPT registration/account labels live in `library/chatgpt-accounts.json`; credentials are not put in those JSON files. API keys are scoped to the selected provider and API base URL. Changing a route does not authorize sending its old key to an unrelated endpoint.
+
+The library purge and meeting retention policy do **not** delete these provider configuration files or OS-stored credentials. Clear keys or disconnect the ChatGPT account in Models & connections separately. Review authorized app access in ChatGPT settings if remote revocation cannot be confirmed.
+
+## Network boundary
+
+This build permits native network requests for the configured provider and optional ChatGPT authentication. The production webview's Content Security Policy limits its connections to local Tauri IPC; provider keys and HTTP requests stay out of frontend browser APIs. Custom commands still form a security boundary and need validation.
+
+There is **no blanket OS network-denial policy**. The macOS entitlement configuration permits outbound provider traffic and the local sign-in callback listener; Windows and Linux also allow configured native networking. The historical `airlock` module reports this application policy rather than claiming an enforced air gap. The app does not measure lifetime network traffic.
+
+Provider requests disable automatic proxy discovery and redirects. Remote custom endpoints require HTTPS, while literal loopback addresses may use HTTP. These controls reduce accidental routing errors; they do not prove how a selected server handles text after receipt. A provider that requires an enterprise proxy or custom authentication mechanism may need further integration.
 
 ## Retention and deletion
 
-- With retention disabled, your library stays until you clear it. A retention period applies to existing and newly created/imported meetings.
-- Expired meetings are removed with their transcripts, actions, commitments, embeddings, and search entries. Retention is checked when the database opens and during normal desktop use.
-- **Purge library** clears all library tables, including recipes and settings. It keeps the database usable and leaves manually installed model files in place.
-- Deletion uses SQLite foreign-key cascades, secure deletion, FTS index cleanup, database compaction, and a checked WAL truncation. If another reader prevents log cleanup, the operation reports an error rather than claiming cleanup finished.
+- With retention disabled, the library remains until cleared. A retention period applies to existing and newly created/imported meetings.
+- Expired meetings are removed with their dependent transcripts, actions, commitments, embeddings and search entries. The policy is checked when the database opens and during desktop use.
+- **Purge library** clears database library tables, including recipes and database settings. It retains the schema, manually installed model files, provider JSON configuration and credentials stored separately.
+- Local deletion uses foreign-key cascades, SQLite secure deletion, FTS cleanup, compaction and a checked WAL truncation. If cleanup is blocked, the operation reports an error.
 
-These operations remove data from the live application database. They **cannot guarantee forensic erasure** from SSD wear-leveling, filesystem snapshots, swap, exports, or independent backups. An app cannot erase copies it does not control.
+This removes data from the live application database. It does not guarantee forensic erasure from SSDs, snapshots, swap, exports or backups. It also cannot delete requests already received by an external provider.
 
 ## Review and reporting
 
-Read [SECURITY.md](SECURITY.md) for the threat model, implemented checks, and vulnerability reporting. There is no compliance certification or independent security audit claimed for this prototype. Review the code and your deployment environment before using it for sensitive meetings.
+The source implements no telemetry or Open Granola cloud-sync service. This is not a compliance certification or an independent security audit. [SECURITY.md](SECURITY.md) describes implemented controls, limits and vulnerability reporting.

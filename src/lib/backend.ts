@@ -11,6 +11,15 @@
  */
 import type { ActionItem, Brief, Commitment, Meeting, Person } from "./types";
 import { ACTION_ITEMS, BRIEF, COMMITMENTS, MEETINGS } from "./data";
+import { DEMO_PROVIDER_STATUS } from "./provider-types";
+import type {
+  ChatgptAuthStatus,
+  ChatgptModel,
+  ProviderConfig,
+  ProviderStatus,
+  ProviderTestResult,
+  SaveProviderSettings,
+} from "./provider-types";
 
 export interface SearchHit {
   id: string;
@@ -50,6 +59,15 @@ export interface Backend {
   runRecipe(prompt: string, meetingId?: string): Promise<string>;
   importGranola(json: string): Promise<number>;
   modelStatus(): Promise<Record<string, unknown>>;
+  getProviderSettings(): Promise<ProviderStatus>;
+  saveProviderSettings(settings: SaveProviderSettings): Promise<ProviderStatus>;
+  testProviderConnection(): Promise<ProviderTestResult>;
+  chatgptAuthStatus(): Promise<ChatgptAuthStatus>;
+  chatgptModels(): Promise<ChatgptModel[]>;
+  startChatgptSignIn(options: { allowRemote: boolean; accountId?: string | null }): Promise<void>;
+  cancelChatgptSignIn(): Promise<void>;
+  disconnectChatgpt(): Promise<void>;
+  summarizeMeeting(meetingId: string, expectedConfig: ProviderConfig): Promise<void>;
   setRetention(days: number): Promise<void>;
   purgeAll(): Promise<void>;
 }
@@ -92,6 +110,35 @@ const demoBackend: Backend = {
     embed: false,
     demo: true,
   }),
+  getProviderSettings: async () => structuredClone(DEMO_PROVIDER_STATUS),
+  saveProviderSettings: async () => {
+    throw new Error("Connect models in the desktop app. This browser preview does not save credentials.");
+  },
+  testProviderConnection: async () => {
+    throw new Error("Connection checks require the desktop app.");
+  },
+  chatgptAuthStatus: async () => ({
+    state: "signed_out",
+    detail: "Sign in from the desktop app.",
+    credential_storage: "none",
+    accounts: [],
+    active_account_id: null,
+  }),
+  startChatgptSignIn: async () => {
+    throw new Error("Sign in from the desktop app.");
+  },
+  chatgptModels: async () => {
+    throw new Error("Load account models in the desktop app.");
+  },
+  cancelChatgptSignIn: async () => {
+    throw new Error("Sign in from the desktop app.");
+  },
+  disconnectChatgpt: async () => {
+    throw new Error("Manage your connection in the desktop app.");
+  },
+  summarizeMeeting: async () => {
+    throw new Error("Generate summaries in the desktop app.");
+  },
   setRetention: async () => {},
   purgeAll: async () => {},
 };
@@ -128,6 +175,7 @@ interface RemoteMeetingRow {
 
 interface RemoteGetMeeting {
   id: string;
+  processing_history?: Meeting["processingHistory"];
   meeting: {
     title: string;
     started_at: string;
@@ -265,6 +313,7 @@ const tauriBackend: Backend = {
   async getMeeting(id) {
     const raw = await tauriInvoke<RemoteGetMeeting>("get_meeting", { id });
     const meeting = adaptMeeting(raw.id, raw.meeting, raw.segments);
+    meeting.processingHistory = raw.processing_history ?? [];
     const actionItems: ActionItem[] = raw.action_items.map((a) => ({
       id: a.id,
       text: a.text,
@@ -424,6 +473,24 @@ const tauriBackend: Backend = {
     tauriInvoke<number>("import_granola_export", { json }),
 
   modelStatus: () => tauriInvoke("model_status"),
+
+  getProviderSettings: () => tauriInvoke("get_provider_settings"),
+
+  saveProviderSettings: ({ config, apiKey, clearApiKey }) =>
+    tauriInvoke("save_provider_settings", {
+      config,
+      apiKey: apiKey ?? null,
+      clearApiKey: clearApiKey ?? false,
+    }),
+
+  testProviderConnection: () => tauriInvoke("test_provider_connection"),
+
+  chatgptAuthStatus: () => tauriInvoke("get_chatgpt_auth_status"),
+  chatgptModels: () => tauriInvoke("list_chatgpt_models"),
+  startChatgptSignIn: ({ allowRemote, accountId }) => tauriInvoke("start_chatgpt_sign_in", { allowRemote, accountId: accountId ?? null }),
+  cancelChatgptSignIn: () => tauriInvoke("cancel_chatgpt_sign_in"),
+  disconnectChatgpt: () => tauriInvoke("disconnect_chatgpt"),
+  summarizeMeeting: (meetingId, expectedConfig) => tauriInvoke("regenerate_summary", { meetingId, expectedConfig }),
 
   setRetention: (days) => tauriInvoke("set_retention_policy", { days }),
 

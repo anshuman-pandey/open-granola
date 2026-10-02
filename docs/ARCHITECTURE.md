@@ -2,9 +2,9 @@
 
 ## Runtime boundary
 
-The React workspace uses one `Backend` interface. Browser mode is an in-memory sample workspace. Tauri mode invokes the Rust core; an empty or failing desktop library never falls back to samples. List queries load up to 1,000 recent meetings and 5,000 action items; selecting a meeting loads that transcript separately. Search uses a debounced, cancellable result lifecycle.
+The React workspace uses one `Backend` interface. Browser mode is an in-memory sample workspace; it cannot record audio or save credentials. Tauri mode invokes the Rust core. An empty or failing desktop library never falls back to samples. List queries load up to 1,000 recent meetings and 5,000 actions; selecting a meeting loads its transcript separately. Search uses a debounced, cancellable result lifecycle.
 
-The production webview loads bundled assets under a restrictive CSP and receives only the event subscription permissions it needs. Custom IPC commands validate inputs. There is no shell, filesystem plugin or HTTP plugin exposed to the renderer. The framework and OS webview still contain networking functionality; the application does not claim otherwise.
+The production webview loads bundled assets under an IPC-only connection policy and receives event subscription permissions. There is no generic HTTP, shell or filesystem plugin exposed to the renderer. Native commands validate input and own provider traffic. Networking is permitted in native code: this is not a process-wide air gap.
 
 ## Capture and persistence
 
@@ -14,33 +14,62 @@ flowchart LR
   Audio --> Buffer[Bounded audio buffer]
   Buffer --> Resample[16 kHz mono]
   Resample --> Whisper[Local Whisper]
-  Whisper --> Events[Live segment events]
-  Whisper --> Transcript[Backend transcript]
+  Whisper --> Events[Live transcript events]
+  Whisper --> Transcript[Native transcript]
   Transcript --> Raw[Transactional raw note save]
-  Raw --> LLM[Optional local enhancement]
-  LLM --> Notes[Notes and actions]
+  Raw --> Route{Selected text provider}
+  Route --> Local[Local inference helper]
+  Route --> Server[LM Studio or custom server]
+  Route --> Cloud[OpenAI, Claude or ChatGPT]
+  Local --> Result[Notes and processing status]
+  Server --> Result
+  Cloud --> Result
 ```
 
-Capture startup loads the model and validates microphone access before reporting success. A capture gate serializes startup, stop, cancel and destructive data operations. The audio stream stays on its owner thread. Stop joins the worker after draining buffered input, preserves actual timestamps, and persists the native transcript. The frontend never reconstructs timing from line positions.
+Capture startup loads Whisper and validates microphone access before reporting success. A gate serializes capture startup, stop, cancel and destructive operations. The audio stream stays on its owner thread. Stop drains buffered input, joins the worker and persists the authoritative native transcript with its timestamps. The frontend is not the storage source.
 
-Raw notes are saved before LLM inference. A missing model or invalid response leaves the transcript intact. If persistence fails, the pending capture remains in native memory for retry; the UI offers retry or explicit discard. This does not survive process exit or power loss. Raw audio is not intentionally written to disk, but RAM disposal is not a cryptographic erasure guarantee.
+System loopback and speaker identification are not implemented. All current transcript segments belong to one unidentified microphone source. Device changes, complete call capture and platform-specific recording behavior need real-hardware validation.
 
-## Inference
+The raw note is committed before summary inference. Failure afterward leaves it available. If the initial database save fails, pending capture stays in native memory for retry or discard; that memory does not survive process exit or power loss. Audio is not intentionally written to disk.
 
-Whisper runs in the application process; llama.cpp runs in a persistent adjacent helper executable. The helper uses bounded newline-delimited JSON through private stdin/stdout pipes, with a 180-second timeout and kill/wait cleanup on failure. No shell or socket is used. The helper inherits the macOS application network sandbox; its standalone executable does not claim OS isolation. Signed macOS packaging must preserve its sandbox-inheritance entitlements.
+## Text providers
 
-Whisper and llama.cpp read model files installed manually under the app's `library/models` directory. CPU inference is the default; Metal/CUDA are explicit feature flags. LLM prompts use the model's chat template, bounded context and generation, batched evaluation and explicit sampling. Structured output is parsed and validated before it enters the database.
+`providers.rs` owns non-secret provider configuration, API-key storage and transport. The `Completion` interface lets the note-generation layer use built-in inference, LM Studio, an OpenAI-compatible server, the OpenAI API, the Anthropic API or the separate ChatGPT sign-in transport. The same selected provider also serves library questions, recipes and commitment extraction.
 
-Library questions retrieve matching FTS passages, optionally scoped to one meeting. This is lexical retrieval. Semantic embeddings, diarization and system audio capture are planned, not implemented. Context limits produce actionable errors rather than silent transcript truncation.
+Provider selection is explicit. Off-device routes require consent. Remote endpoints require HTTPS; LM Studio uses a literal loopback HTTP address. The client disables redirects and automatic proxy discovery, uses timeouts and response-size bounds, and validates completion shape/finish status. Local inference does not fail over to a cloud service. Compatibility with a custom endpoint still needs a real test.
 
-## Storage
+The connection test sends a synthetic text prompt to the saved summary configuration. It verifies that route only; it is not an end-to-end recording test or a guarantee that a long transcript fits the model context.
 
-SQLite stores meetings, segments, actions, commitments, recipes, embeddings placeholders and settings. Foreign keys are enabled. FTS5 triggers track segment inserts, edits and deletes. Migration removes historical orphan rows and rebuilds the search index. Multi-row imports and note saves use transactions.
+Meeting processing details record the requested provider/model, configured destination and summary outcome for that meeting. They do not independently verify a server’s actual model or forwarding behavior. A saved summary can be retried against its stored transcript without recapture. Regeneration preserves existing action IDs and completion state. The processing record describes app behavior; it does not prove the truth of generated text or an external provider's handling of it.
 
-Retention applies to future inserts as well as existing meetings. Expiry is enforced on startup and periodically while running. Deletion removes related content, rebuilds the FTS index, reclaims pages and truncates the WAL without overwriting a live database. Purge clears all user tables but retains the schema and installed model files. OS backups and snapshots remain outside the app's control.
+## Local inference
 
-## Privacy and delivery
+Whisper runs in the application process. `llama.cpp` runs in an adjacent helper executable to avoid native GGML symbol collisions. Private stdin/stdout pipes carry bounded newline-delimited JSON. Requests have a 180-second deadline; timeout or invalid transport output kills and reaps the worker. The app invokes a fixed helper path without a shell or PATH lookup.
 
-See [PRIVACY.md](../PRIVACY.md) and [SECURITY.md](../SECURITY.md) for the threat boundary, platform enforcement and reporting process. Static CI policy checks protect CSP, permissions and first-party network behavior. Native tests exercise database and capture utilities; the macOS sandbox test runs in a child process. Dependency audits and OS build matrices complement these checks.
+Whisper and the built-in Qwen model read manually installed files under `library/models/`. CPU inference is the default; Metal/CUDA are explicit opt-ins. The helper uses the model's chat template, bounded context and generation, batched evaluation and explicit sampling. Structured note output is parsed before persistence. Context-limit failures surface errors rather than silently dropping part of the input.
 
-Shipping requires real-model transcription tests, packaged microphone permissions, platform-specific QA, and maintainer signing credentials. A passing typecheck is not evidence that system audio, model quality or cross-platform packaging works.
+Library questions retrieve FTS passages, optionally scoped to one meeting. This is keyword retrieval. Vector embeddings, semantic retrieval and calendar integration are not implemented.
+
+## ChatGPT authentication
+
+`auth.rs` implements the official open-source/local-app flow: browser authorization, a random-port loopback callback, PKCE/state/nonce checks, ID-token verification, registered account metadata, credential refresh and disconnect. Secrets remain in native memory or the OS credential store. The renderer receives account labels and connection status.
+
+An exclusive library lock permits one native app instance per library, preventing competing refreshes of rotating tokens. The settings screen can fetch the active account’s model catalog on request.
+
+The ChatGPT plan route uses eligible text Responses requests. It does not retrieve existing ChatGPT conversations or transcribe audio. Its eligibility and limits differ from an API-key route. Real-account end-to-end validation is pending; see the [official overview](https://developers.openai.com/siwc/token-sharing-open-source) and [preview limits](https://developers.openai.com/siwc/token-sharing-open-source/preview-limitations).
+
+## Storage and deletion
+
+SQLite stores meetings, segments, actions, commitments, recipes, processing metadata and settings. Foreign keys are enabled. FTS5 triggers track segment inserts, edits and deletes. Migration repairs historical orphan rows and rebuilds the index. Multi-row imports and note saves are transactional.
+
+Retention applies to future inserts and existing meetings. Expiry is enforced on startup and periodically while running. Deletion removes dependent content, rebuilds FTS, compacts the database and checks WAL truncation. Purge retains the schema and model files. Provider configuration and credentials live outside the database and are managed separately.
+
+The database is not encrypted by the app. OS backups, snapshots and provider-held requests are beyond a local purge's control.
+
+## Delivery and verification
+
+Static regression checks cover the webview policy, capability grants, signing entitlements and the native modules allowed to contain provider networking. They are not a proof of network isolation. Native tests cover storage, capture utilities, transport parsing and related control flow; mocked providers do not establish external account compatibility.
+
+A release needs real microphone/model sessions, provider/account tests, install/upgrade checks and platform-specific packaging QA. macOS signing must preserve the helper's sandbox-inheritance entitlements. Those entitlements now inherit an app that permits provider networking; they do not make the helper air-gapped.
+
+See [Privacy](../PRIVACY.md), [Security](../SECURITY.md) and the [competitive priorities](COMPETITIVE_RESEARCH.md).

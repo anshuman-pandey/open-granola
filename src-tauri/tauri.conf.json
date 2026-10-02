@@ -48,7 +48,7 @@
       "deb"
     ],
     "category": "Productivity",
-    "shortDescription": "Local-first meeting notes. Nothing leaves your machine.",
+    "shortDescription": "Local meeting transcripts with a choice of AI models.",
     "longDescription": "Open Granola is a local meeting notebook with on-device transcription and local model support. Notes stay in your local library until you delete them or a retention policy removes them.",
     "macOS": {
       "entitlements": "entitlements.plist",
