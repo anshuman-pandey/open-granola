@@ -29,7 +29,8 @@ reqwest = { version = "0.13.5", default-features = false, features = ["blocking"
 keyring = { version = "3", features = ["apple-native", "windows-native", "linux-native"] }
 base64 = "0.22"
 sha2 = "0.10"
-jsonwebtoken = { version = "10", features = ["rust_crypto"] }
+# Use the AWS-LC backend to avoid the RSA crate affected by RUSTSEC-2023-0071.
+jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
 webbrowser = "1"
 
 # --- microphone capture ---
