@@ -39,6 +39,64 @@ beforeEach(() => {
 });
 
 describe("desktop library isolation", () => {
+  it("answers the home Ask prompt across the real library", async () => {
+    backend.ask.mockResolvedValue("The team decided to ship the first phase.");
+    render(<App />);
+    await waitFor(() =>
+      expect(
+        screen.queryByText("Loading your library…"),
+      ).not.toBeInTheDocument(),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "What did we decide?" }),
+    );
+    expect(backend.ask).toHaveBeenCalledExactlyOnceWith("What did we decide?");
+    expect(
+      await screen.findByText("The team decided to ship the first phase."),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("dialog", { name: "Ask your meetings" }),
+    ).toBeInTheDocument();
+  });
+
+  it("clears an open assistant and ignores its pending answer after library deletion", async () => {
+    let resolveAnswer!: (answer: string) => void;
+    backend.ask.mockReturnValueOnce(
+      new Promise<string>((resolve) => {
+        resolveAnswer = resolve;
+      }),
+    );
+    let changed!: () => void;
+    backend.onLibraryChanged.mockImplementationOnce(
+      async (callback: () => void) => {
+        changed = callback;
+        return vi.fn();
+      },
+    );
+    render(<App />);
+    await waitFor(() =>
+      expect(
+        screen.queryByText("Loading your library…"),
+      ).not.toBeInTheDocument(),
+    );
+    await userEvent.click(
+      screen.getByRole("button", { name: "What did we decide?" }),
+    );
+    expect(
+      screen.getByRole("dialog", { name: "Ask your meetings" }),
+    ).toBeInTheDocument();
+    await act(async () => {
+      changed();
+    });
+    await act(async () => {
+      resolveAnswer("This answer belongs to deleted notes.");
+    });
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(
+      screen.queryByText("This answer belongs to deleted notes."),
+    ).not.toBeInTheDocument();
+  });
+
   it("never substitutes demo meetings for an empty desktop library", async () => {
     render(<App />);
     await waitFor(() =>

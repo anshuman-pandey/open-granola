@@ -78,6 +78,8 @@
   }
   .font-display {
     font-family: "Instrument Serif", Georgia, serif;
+    font-weight: 400;
+    letter-spacing: -0.025em;
   }
   .font-mono2 {
     font-family: "JetBrains Mono", ui-monospace, monospace;
@@ -206,9 +208,43 @@
   ::selection {
     background: hsl(var(--primary) / 0.2);
   }
-  .font-display {
-    font-family: Georgia, "Times New Roman", serif;
-    font-weight: 400;
+}
+
+@layer components {
+  .workspace-page {
+    @apply mx-auto w-full max-w-[1180px] px-5 pb-16 pt-7 sm:px-8 lg:px-10 lg:pt-9;
+  }
+  .surface-card {
+    @apply rounded-2xl border border-border/80 bg-card;
+    box-shadow:
+      0 2px 3px hsl(26 18% 11% / 0.025),
+      0 8px 24px hsl(26 18% 11% / 0.025);
+  }
+  .section-eyebrow {
+    @apply text-[10px] font-semibold uppercase tracking-[0.14em] text-muted-foreground;
+  }
+  .button-primary {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl px-4 py-2 text-[13px] font-semibold text-white transition duration-150 disabled:cursor-not-allowed disabled:opacity-50;
+    background: linear-gradient(115deg, #bd4418, #c44816);
+    box-shadow:
+      0 1px 2px hsl(16 60% 24% / 0.15),
+      inset 0 1px 0 rgb(255 255 255 / 0.15);
+  }
+  .button-primary:hover:not(:disabled) {
+    filter: brightness(1.03);
+    box-shadow: 0 3px 8px hsl(16 60% 24% / 0.16);
+  }
+  .button-primary:active:not(:disabled) {
+    transform: translateY(1px);
+  }
+  .button-secondary {
+    @apply inline-flex min-h-10 items-center justify-center gap-2 rounded-xl border border-border bg-card px-4 py-2 text-[13px] font-medium transition-colors hover:bg-secondary disabled:cursor-not-allowed disabled:opacity-50;
+  }
+  .dark .surface-card {
+    box-shadow: 0 2px 12px rgb(0 0 0 / 0.12);
+  }
+  .demo-notice {
+    @apply flex min-h-8 shrink-0 flex-wrap items-center justify-center gap-x-2 border-b border-border/70 bg-secondary/45 px-5 py-1.5 text-[10px] text-muted-foreground;
   }
 }
 

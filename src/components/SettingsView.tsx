@@ -1,9 +1,11 @@
 import {
   AlertCircle,
+  CheckCircle2,
   Cpu,
   FileUp,
   Folder,
   HardDrive,
+  Loader2,
   RefreshCw,
   Shield,
   Trash2,
@@ -19,20 +21,29 @@ import {
 
 function Section({
   title,
+  description,
   icon,
   children,
 }: {
   title: string;
+  description: string;
   icon: ReactNode;
   children: ReactNode;
 }) {
   return (
-    <section className="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-      <h2 className="flex items-center gap-2 border-b border-border px-5 py-4 text-sm font-semibold">
-        {icon}
-        {title}
-      </h2>
-      <div className="space-y-4 p-5">{children}</div>
+    <section className="surface-card overflow-hidden">
+      <div className="flex items-center gap-3 border-b border-border px-5 py-5 sm:px-6">
+        <span className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/5">
+          {icon}
+        </span>
+        <div>
+          <h2 className="text-sm font-semibold">{title}</h2>
+          <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            {description}
+          </p>
+        </div>
+      </div>
+      <div className="space-y-5 p-5 sm:p-6">{children}</div>
     </section>
   );
 }
@@ -55,9 +66,14 @@ export function SettingsView({
   const [confirmText, setConfirmText] = useState("");
   const [retention, setRetention] = useState("90");
   const fileRef = useRef<HTMLInputElement>(null);
+  const confirmationTrigger = useRef<HTMLButtonElement>(null);
   const capabilities =
     status?.capabilities && typeof status.capabilities === "object"
       ? (status.capabilities as Record<string, unknown>)
+      : {};
+  const airlock =
+    status?.airlock && typeof status.airlock === "object"
+      ? (status.airlock as Record<string, unknown>)
       : {};
 
   useEffect(() => {
@@ -66,7 +82,12 @@ export function SettingsView({
     backend
       .modelStatus()
       .then((value) => {
-        if (active) setStatus(value);
+        if (active) {
+          setStatus(value);
+          if (typeof value.retention_days === "number") {
+            setRetention(String(value.retention_days));
+          }
+        }
       })
       .catch(() => {
         if (active)
@@ -85,7 +106,11 @@ export function SettingsView({
     setLoading(true);
     setError("");
     try {
-      setStatus(await backend.modelStatus());
+      const value = await backend.modelStatus();
+      setStatus(value);
+      if (typeof value.retention_days === "number") {
+        setRetention(String(value.retention_days));
+      }
     } catch {
       setError("Couldn’t read desktop readiness. Please try again.");
     } finally {
@@ -119,6 +144,7 @@ export function SettingsView({
   const apply = async () => {
     setBusy(true);
     setError("");
+    setNotice("");
     try {
       if (confirmation === "purge") {
         await backend.purgeAll();
@@ -146,20 +172,20 @@ export function SettingsView({
 
   return (
     <div className="scrollbar-thin paper-texture min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-3xl space-y-6 px-5 pb-24 pt-10 sm:px-8">
+      <div className="workspace-page mx-auto max-w-4xl space-y-6 px-5 pb-24 pt-10 sm:px-8">
         <div>
-          <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-            Make yourself at home
-          </p>
-          <h1 className="font-display mt-2 text-[36px]">Settings</h1>
-          <p className="mt-2 text-[13px] text-muted-foreground">
+          <p className="section-eyebrow">Make yourself at home</p>
+          <h1 className="font-display mt-3 text-[40px] leading-tight tracking-tight sm:text-[48px]">
+            Settings
+          </h1>
+          <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
             Know what’s running, where your notes live, and what’s available.
           </p>
         </div>
         {demo && (
-          <div className="flex gap-3 rounded-xl border border-primary/20 bg-primary/5 p-4">
+          <div className="flex gap-3 rounded-2xl border border-primary/20 bg-primary/5 p-4 sm:p-5">
             <AlertCircle size={17} className="mt-0.5 shrink-0 text-primary" />
-            <p className="text-xs leading-relaxed">
+            <p className="text-xs leading-relaxed text-muted-foreground">
               <strong className="font-semibold">
                 You’re exploring the browser demo.
               </strong>{" "}
@@ -171,49 +197,58 @@ export function SettingsView({
         {notice && (
           <p
             role="status"
-            className="rounded-xl border border-border bg-secondary p-4 text-xs leading-relaxed"
+            className="flex items-start gap-2 rounded-xl border border-border bg-secondary p-4 text-xs leading-relaxed"
           >
+            <CheckCircle2 size={16} className="shrink-0 text-primary" />
             {notice}
           </p>
         )}
-        {error && (
+        {error && !confirmation && (
           <p
             role="alert"
-            className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs leading-relaxed text-destructive"
+            className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs leading-relaxed text-destructive dark:text-red-400"
           >
             {error}
           </p>
         )}
         <Section
           title="Privacy & storage"
+          description="Your workspace, on your device."
           icon={<Shield size={16} className="text-primary" />}
         >
           <div>
-            <h3 className="text-[13px] font-semibold">A local workspace</h3>
-            <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+            <h3 className="text-[13px] font-semibold">Local by design</h3>
+            <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
               The desktop app stores notes and transcripts in its local
               database. Local storage is not a claim of encryption; your device
               and backups still control who can access those files.
             </p>
           </div>
-          <div className="grid gap-4 border-t border-border pt-4 sm:grid-cols-2">
+          <div className="grid gap-5 border-t border-border pt-5 sm:grid-cols-2">
             <div>
               <h3 className="text-[13px] font-semibold">Network mode</h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              {!demo && typeof airlock.os_enforced === "boolean" && (
+                <p className="mt-2 inline-flex rounded-md bg-secondary px-2 py-1 text-[10px] font-medium text-muted-foreground">
+                  {airlock.os_enforced
+                    ? "OS network block active"
+                    : airlock.mode === "development"
+                      ? "Development mode"
+                      : "Application policy"}
+                </p>
+              )}
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                 {demo
                   ? "This page is a browser preview. No network telemetry is measured here."
-                  : status?.airlock === true
-                    ? "Airlock build enabled. This is an application build setting, not an operating-system firewall or a traffic meter."
-                    : status?.airlock === false
-                      ? "Airlock is not enabled in this build. Review your desktop configuration before recording."
-                      : "Waiting for desktop status. Network usage is not measured in this interface."}
+                  : typeof airlock.detail === "string"
+                    ? airlock.detail
+                    : "Waiting for desktop status. Network usage is not measured in this interface."}
               </p>
             </div>
             <div>
               <h3 className="text-[13px] font-semibold">
                 Recording responsibly
               </h3>
-              <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
+              <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                 Let everyone in the conversation know before recording. Verify
                 important details in transcripts and AI summaries.
               </p>
@@ -222,6 +257,7 @@ export function SettingsView({
         </Section>
         <Section
           title="Desktop readiness"
+          description="Check the models and features available to you."
           icon={<Cpu size={16} className="text-primary" />}
         >
           <div className="flex items-center justify-between gap-3">
@@ -233,10 +269,10 @@ export function SettingsView({
                   : "Based on the desktop app’s latest status."}
             </p>
             <button
-              disabled={demo || loading}
+              disabled={demo || loading || busy}
               onClick={() => void refresh()}
               aria-label="Refresh desktop readiness"
-              className="rounded-lg border border-border p-2 text-muted-foreground"
+              className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-secondary"
             >
               <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
             </button>
@@ -256,7 +292,7 @@ export function SettingsView({
             ].map((model) => (
               <div
                 key={model.key}
-                className="flex items-center justify-between gap-4 py-3"
+                className="flex flex-wrap items-center justify-between gap-3 py-4"
               >
                 <div>
                   <p className="text-[13px] font-medium">{model.label}</p>
@@ -265,8 +301,11 @@ export function SettingsView({
                   </p>
                 </div>
                 <span
-                  className={`shrink-0 rounded-full px-2.5 py-1 text-[10px] font-semibold ${!demo && status?.[model.key] === true ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}
+                  className={`flex shrink-0 items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[10px] font-semibold ${!demo && status?.[model.key] === true ? "bg-primary/10 text-primary" : "bg-secondary text-muted-foreground"}`}
                 >
+                  {!demo && !loading && status?.[model.key] === true && (
+                    <CheckCircle2 size={12} />
+                  )}
                   {demo
                     ? "Desktop only"
                     : loading
@@ -310,6 +349,7 @@ export function SettingsView({
         </Section>
         <Section
           title="Import your notes"
+          description="Bring your existing conversations with you."
           icon={<FileUp size={16} className="text-primary" />}
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
@@ -336,14 +376,16 @@ export function SettingsView({
             <button
               disabled={demo || busy}
               onClick={() => fileRef.current?.click()}
-              className="shrink-0 rounded-xl border border-border px-4 py-2.5 text-xs font-semibold"
+              className="button-secondary shrink-0 gap-2"
             >
+              <FileUp size={15} />
               {busy ? "Working…" : "Choose JSON export"}
             </button>
           </div>
         </Section>
         <Section
           title="Library retention"
+          description="Choose how long your conversations stay."
           icon={<HardDrive size={16} className="text-primary" />}
         >
           <p className="text-xs leading-relaxed text-muted-foreground">
@@ -361,28 +403,33 @@ export function SettingsView({
             </label>
             <select
               id="retention-policy"
-              disabled={demo || busy}
+              disabled={demo || busy || loading}
               value={retention}
               onChange={(e) => setRetention(e.target.value)}
-              className="rounded-lg border border-border bg-background px-3 py-2 text-xs"
+              className="min-h-11 rounded-xl border border-border bg-background px-3 py-2 text-xs"
             >
               <option value="0">Forever</option>
               <option value="30">30 days</option>
               <option value="90">90 days</option>
               <option value="365">1 year</option>
+              {!["0", "30", "90", "365"].includes(retention) && (
+                <option value={retention}>{retention} days</option>
+              )}
             </select>
             <button
-              disabled={demo || busy}
-              onClick={() => {
+              disabled={demo || busy || loading}
+              onClick={(event) => {
+                confirmationTrigger.current = event.currentTarget;
                 setConfirmation("retention");
                 setConfirmText("");
+                setError("");
               }}
-              className="rounded-lg border border-border px-3 py-2 text-xs font-semibold"
+              className="button-secondary"
             >
               Review change
             </button>
           </div>
-          <div className="flex flex-wrap items-center justify-between gap-4 border-t border-border pt-4">
+          <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-destructive/15 bg-destructive/[0.025] p-4">
             <div>
               <h3 className="text-[13px] font-semibold">
                 Delete meeting library
@@ -393,11 +440,13 @@ export function SettingsView({
             </div>
             <button
               disabled={demo || busy}
-              onClick={() => {
+              onClick={(event) => {
+                confirmationTrigger.current = event.currentTarget;
                 setConfirmation("purge");
                 setConfirmText("");
+                setError("");
               }}
-              className="flex items-center gap-2 rounded-xl border border-destructive/30 px-3 py-2 text-xs font-semibold text-destructive"
+              className="flex min-h-11 items-center gap-2 rounded-xl border border-destructive/30 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:text-red-400"
             >
               <Trash2 size={14} />
               Delete library
@@ -413,40 +462,64 @@ export function SettingsView({
             if (!open && !busy) setConfirmation(null);
           }}
         >
-          <DialogContent>
-            <DialogTitle>
+          <DialogContent
+            showCloseButton={!busy}
+            className="max-h-[calc(100dvh-2rem)] overflow-y-auto rounded-2xl p-5 sm:p-6"
+            aria-busy={busy}
+            onCloseAutoFocus={(event) => {
+              event.preventDefault();
+              confirmationTrigger.current?.focus();
+            }}
+          >
+            <span className="flex h-11 w-11 items-center justify-center rounded-xl bg-destructive/10 text-destructive dark:text-red-400">
+              {confirmation === "purge" ? (
+                <Trash2 size={20} />
+              ) : (
+                <HardDrive size={20} />
+              )}
+            </span>
+            <DialogTitle className="pr-5 text-xl leading-snug">
               {confirmation === "purge"
                 ? "Delete your meeting library?"
                 : "Change note retention?"}
             </DialogTitle>
-            <DialogDescription>
+            <DialogDescription className="text-sm leading-relaxed">
               {confirmation === "purge"
-                ? "This permanently deletes saved meetings, transcripts, action items, and commitments. Export anything you want to keep before continuing."
+                ? "This permanently deletes saved meetings, transcripts, action items, and commitments, and resets library settings. Export anything you want to keep before continuing."
                 : Number(retention)
                   ? `Notes older than ${retention} days may be permanently deleted. Export anything you want to keep before applying this policy.`
                   : "Notes will be kept until you delete them. Previously deleted notes cannot be recovered."}
             </DialogDescription>
             {(confirmation === "purge" || Number(retention) > 0) && (
               <label className="space-y-2 text-xs">
-                <span>Type DELETE to confirm</span>
+                <span>
+                  Type <strong className="font-semibold">DELETE</strong> to
+                  confirm
+                </span>
                 <input
                   autoComplete="off"
+                  autoCapitalize="off"
+                  spellCheck={false}
+                  disabled={busy}
                   value={confirmText}
                   onChange={(e) => setConfirmText(e.target.value)}
-                  className="block h-10 w-full rounded-lg border border-border bg-background px-3"
+                  className="block h-11 w-full rounded-xl border border-border bg-card px-3 font-mono text-sm"
                 />
               </label>
             )}
             {error && (
-              <p role="alert" className="text-xs text-destructive">
+              <p
+                role="alert"
+                className="text-xs text-destructive dark:text-red-400"
+              >
                 {error}
               </p>
             )}
-            <div className="flex justify-end gap-2">
+            <div className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
               <button
                 disabled={busy}
                 onClick={() => setConfirmation(null)}
-                className="rounded-lg border border-border px-4 py-2 text-xs font-semibold"
+                className="button-secondary justify-center"
               >
                 Cancel
               </button>
@@ -457,8 +530,9 @@ export function SettingsView({
                     confirmText !== "DELETE")
                 }
                 onClick={() => void apply()}
-                className="rounded-lg bg-destructive px-4 py-2 text-xs font-semibold text-destructive-foreground"
+                className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-4 py-2 text-xs font-semibold transition-colors ${confirmation === "purge" || Number(retention) > 0 ? "bg-destructive text-destructive-foreground hover:bg-destructive/90" : "bg-primary text-primary-foreground hover:bg-primary/90"}`}
               >
+                {busy && <Loader2 size={14} className="animate-spin" />}
                 {busy
                   ? "Applying…"
                   : confirmation === "purge"

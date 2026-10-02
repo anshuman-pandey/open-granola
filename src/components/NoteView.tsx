@@ -2,6 +2,7 @@ import {
   Check,
   CheckCircle2,
   Circle,
+  Clock3,
   Copy,
   Download,
   ListChecks,
@@ -10,9 +11,10 @@ import {
   Search,
   Send,
   Sparkles,
+  ArrowUpRight,
   X,
 } from "lucide-react";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { getBackend } from "../lib/backend";
 import { fmtTs } from "../hooks/useLiveSession";
 import type { ActionItem, ChatMessage, Meeting } from "../lib/types";
@@ -58,8 +60,13 @@ export function NoteView({
   const [draft, setDraft] = useState("");
   const [thinking, setThinking] = useState(false);
   const request = useRef(0);
+  const viewId = useId();
   const chatEnd = useRef<HTMLDivElement>(null);
-  const transcriptRef = useRef<HTMLDivElement>(null);
+  const assistantInput = useRef<HTMLTextAreaElement>(null);
+  const assistantTrigger = useRef<HTMLButtonElement>(null);
+  const wasChatOpen = useRef(false);
+  const tabButtons = useRef<Record<string, HTMLButtonElement | null>>({});
+  const segmentElements = useRef(new Map<string, HTMLDivElement>());
   const items = actionItems.filter((a) => a.meetingId === meeting.id);
   const shownSegments = meeting.transcript.filter((t) =>
     t.text.toLowerCase().includes(query.toLowerCase()),
@@ -75,11 +82,17 @@ export function NoteView({
     chatEnd.current?.scrollIntoView({ behavior: "auto", block: "nearest" });
   }, [chat, thinking]);
   useEffect(() => {
-    if (tab === "transcript" && highlight)
-      transcriptRef.current
-        ?.querySelector(`[data-segment-id="${CSS.escape(highlight)}"]`)
-        ?.scrollIntoView({ behavior: "auto", block: "center" });
+    if (tab === "transcript" && highlight) {
+      const segment = segmentElements.current.get(highlight);
+      segment?.scrollIntoView({ behavior: "auto", block: "center" });
+      segment?.focus({ preventScroll: true });
+    }
   }, [tab, highlight]);
+  useEffect(() => {
+    if (chatOpen) assistantInput.current?.focus();
+    else if (wasChatOpen.current) assistantTrigger.current?.focus();
+    wasChatOpen.current = chatOpen;
+  }, [chatOpen]);
 
   const copy = async () => {
     try {
@@ -152,28 +165,36 @@ export function NoteView({
   };
 
   return (
-    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden">
+    <div className="flex min-h-0 min-w-0 flex-1 overflow-hidden [overflow-wrap:anywhere]">
       <div
         className={`${chatOpen ? "hidden xl:flex" : "flex"} min-w-0 flex-1 flex-col overflow-hidden`}
       >
-        <header className="border-b border-border bg-card/60 px-5 pb-4 pt-6 sm:px-7">
-          <div className="flex flex-wrap items-center justify-between gap-2">
-            <p className="text-[11px] text-muted-foreground">
-              {new Date(meeting.date).toLocaleDateString(undefined, {
-                month: "long",
-                day: "numeric",
-                year: "numeric",
-              })}{" "}
-              <span className="mx-1">·</span> {meeting.durationMin} min
-            </p>
+        <header className="shrink-0 border-b border-border/80 bg-card/45 px-5 pb-4 pt-6 sm:px-8 sm:pt-8 lg:px-10">
+          <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted-foreground">
+              <time dateTime={meeting.date}>
+                {new Date(meeting.date).toLocaleDateString(undefined, {
+                  month: "long",
+                  day: "numeric",
+                  year: "numeric",
+                })}
+              </time>
+              <span className="flex items-center gap-1.5">
+                <Clock3 size={12} aria-hidden="true" />
+                {meeting.durationMin} min
+              </span>
+              <span className="rounded-full border border-border/70 bg-secondary/60 px-2.5 py-0.5 text-[10px] font-medium text-secondary-foreground">
+                {meeting.template}
+              </span>
+            </div>
             <div className="flex items-center gap-1">
               <button
                 onClick={copy}
                 aria-label="Copy meeting as Markdown"
                 title="Copy Markdown"
-                className="rounded-lg p-2 text-muted-foreground hover:bg-secondary"
+                className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:min-h-0 sm:min-w-0"
               >
-                {copied ? <Check size={16} /> : <Copy size={16} />}
+                {copied ? <Check size={15} /> : <Copy size={15} />}
               </button>
               <button
                 onClick={() => {
@@ -183,31 +204,32 @@ export function NoteView({
                   );
                   setNotice("Markdown export downloaded.");
                 }}
-                className="flex items-center gap-1.5 rounded-lg border border-border px-3 py-2 text-xs font-medium"
+                className="flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-medium sm:min-h-0 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Download size={14} />
                 Export
               </button>
             </div>
           </div>
-          <h1 className="font-display mt-3 text-[28px] leading-tight sm:text-[34px]">
+          <h1 className="font-display mt-4 max-w-3xl text-[34px] leading-[1.08] tracking-[-0.025em] sm:text-[42px]">
             {meeting.title}
           </h1>
-          <div className="mt-3 flex flex-wrap items-center gap-3">
-            <AvatarStack people={meeting.participants} max={6} />
-            <span className="text-xs text-muted-foreground">
+          <div className="mt-4 flex items-start gap-3">
+            {meeting.participants.length > 0 && (
+              <div className="pt-0.5">
+                <AvatarStack people={meeting.participants} max={5} />
+              </div>
+            )}
+            <p className="min-w-0 text-[12px] leading-6 text-muted-foreground">
               {meeting.participants.map((p) => p.name).join(", ") ||
                 "No participants recorded"}
-            </span>
-            <span className="rounded-md bg-secondary px-2 py-1 text-[10px] text-secondary-foreground">
-              {meeting.template}
-            </span>
+            </p>
           </div>
-          <div className="mt-5 flex flex-wrap items-center gap-1">
+          <div className="mt-6 flex flex-wrap items-center gap-2">
             <div
               role="tablist"
               aria-label="Meeting content"
-              className="flex gap-1"
+              className="flex rounded-xl border border-border/60 bg-secondary/55 p-1"
             >
               {(
                 [
@@ -217,6 +239,9 @@ export function NoteView({
               ).map(([id, label, Icon]) => (
                 <button
                   key={id}
+                  ref={(element) => {
+                    tabButtons.current[id] = element;
+                  }}
                   role="tab"
                   aria-selected={tab === id}
                   tabIndex={tab === id ? 0 : -1}
@@ -237,17 +262,17 @@ export function NoteView({
                             ? "transcript"
                             : "notes";
                     setTab(next);
-                    document.getElementById(`tab-${next}`)?.focus();
+                    tabButtons.current[next]?.focus();
                   }}
-                  aria-controls={`meeting-${id}`}
-                  id={`tab-${id}`}
+                  aria-controls={`${viewId}-meeting-${id}`}
+                  id={`${viewId}-tab-${id}`}
                   onClick={() => setTab(id)}
-                  className={`flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold ${tab === id ? "bg-foreground text-background" : "text-muted-foreground hover:bg-secondary"}`}
+                  className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-medium sm:min-h-0 transition-colors ${tab === id ? "bg-card text-foreground shadow-sm ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"}`}
                 >
-                  <Icon size={14} />
+                  <Icon size={14} aria-hidden="true" />
                   {label}
                   {id === "transcript" && (
-                    <span className="ml-1 opacity-60">
+                    <span className="font-mono2 ml-1 text-[9px] text-muted-foreground">
                       {meeting.transcript.length}
                     </span>
                   )}
@@ -255,10 +280,13 @@ export function NoteView({
               ))}
             </div>
             <button
+              ref={assistantTrigger}
               onClick={() => setChatOpen(true)}
-              className="ml-auto flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold text-primary hover:bg-primary/5 xl:hidden"
+              aria-expanded={chatOpen}
+              aria-controls={`${viewId}-assistant`}
+              className="ml-auto flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-2.5 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/5 xl:hidden"
             >
-              <MessageCircle size={14} />
+              <MessageCircle size={14} aria-hidden="true" />
               Ask
             </button>
           </div>
@@ -280,48 +308,59 @@ export function NoteView({
           </div>
         )}
         <div
-          className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-6 sm:px-7"
+          className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-7 sm:px-8 sm:py-9 lg:px-10"
           role="tabpanel"
-          id={`meeting-${tab}`}
-          aria-labelledby={`tab-${tab}`}
+          tabIndex={0}
+          id={`${viewId}-meeting-${tab}`}
+          aria-labelledby={`${viewId}-tab-${tab}`}
         >
           {tab === "notes" ? (
-            <div className="mx-auto max-w-2xl space-y-7 pb-16">
-              <section className="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h2 className="flex items-center gap-2 text-[10px] font-bold uppercase tracking-wider text-primary">
-                  <Sparkles size={13} />
-                  {demo ? "Sample summary" : "Summary"}
+            <div className="mx-auto max-w-[720px] space-y-9 pb-16">
+              <section className="relative overflow-hidden rounded-2xl border border-border/80 bg-card px-5 py-6 shadow-[0_2px_6px_hsl(var(--foreground)/0.025)] sm:px-6">
+                <div
+                  className="absolute inset-y-6 left-0 w-[3px] rounded-r bg-primary/70"
+                  aria-hidden="true"
+                />
+                <h2 className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
+                  <Sparkles size={13} aria-hidden="true" />
+                  {demo ? "Sample summary" : "At a glance"}
                 </h2>
-                <p className="mt-3 whitespace-pre-wrap text-sm leading-relaxed">
+                <p className="mt-4 whitespace-pre-wrap text-[14px] leading-[1.85] text-foreground/90 sm:text-[15px]">
                   {meeting.summary ||
                     "No summary is available for this meeting. You can still read and export the transcript."}
                 </p>
               </section>
               {meeting.chapters.length > 0 && (
                 <section>
-                  <h2 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                    Conversation chapters
-                  </h2>
-                  <div className="space-y-3">
+                  <div className="mb-4 flex items-baseline justify-between gap-3">
+                    <h2 className="font-display text-[25px] leading-tight">
+                      The conversation
+                    </h2>
+                    <span className="text-[10px] text-muted-foreground">
+                      Jump to a moment
+                    </span>
+                  </div>
+                  <div className="divide-y divide-border/75 rounded-2xl border border-border/80 bg-card/65 px-4 sm:px-5">
                     {meeting.chapters.map((chapter, index) => (
                       <div
                         key={index}
-                        className="flex gap-3 rounded-2xl border border-border bg-card p-4"
+                        className="flex flex-col gap-2.5 py-5 sm:flex-row sm:gap-4"
                       >
                         <button
                           disabled={!meeting.transcript.length}
                           onClick={() => jumpTo(chapter.timestamp)}
                           title="Find this moment in transcript"
                           aria-label={`Find ${chapter.title} at ${chapter.timestamp} in transcript`}
-                          className="font-mono2 h-fit shrink-0 rounded-md bg-secondary px-2 py-1 text-[10px] text-secondary-foreground hover:bg-primary hover:text-primary-foreground"
+                          className="font-mono2 flex h-fit min-h-11 w-fit shrink-0 sm:min-h-0 items-center gap-1 rounded-md bg-secondary/80 px-2 py-1 text-[10px] text-secondary-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                         >
                           {chapter.timestamp}
+                          <ArrowUpRight size={10} aria-hidden="true" />
                         </button>
-                        <div>
-                          <h3 className="text-[13px] font-semibold">
+                        <div className="min-w-0">
+                          <h3 className="text-[13px] font-semibold leading-relaxed">
                             {chapter.title}
                           </h3>
-                          <p className="mt-1 text-[13px] leading-relaxed text-muted-foreground">
+                          <p className="mt-1.5 text-[13px] leading-[1.8] text-muted-foreground">
                             {chapter.body}
                           </p>
                         </div>
@@ -331,237 +370,360 @@ export function NoteView({
                 </section>
               )}
               <section>
-                <h2 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Decisions{" "}
-                  <span className="ml-1">{meeting.decisions.length}</span>
-                </h2>
+                <div className="mb-4 flex items-baseline gap-3">
+                  <h2 className="font-display text-[25px] leading-tight">
+                    Decisions
+                  </h2>
+                  <span className="text-[10px] text-muted-foreground">
+                    {meeting.decisions.length} recorded
+                  </span>
+                </div>
                 {meeting.decisions.length ? (
                   <ul className="space-y-2">
                     {meeting.decisions.map((decision, index) => (
                       <li
                         key={index}
-                        className="flex items-start gap-2.5 rounded-xl border border-primary/15 bg-primary/5 px-4 py-3"
+                        className="flex items-start gap-3 rounded-xl border border-primary/10 bg-primary/[0.035] px-4 py-3.5"
                       >
                         <CheckCircle2
                           size={16}
-                          className="mt-0.5 shrink-0 text-primary"
+                          className="mt-1 shrink-0 text-primary"
+                          aria-hidden="true"
                         />
-                        <span className="text-[13px] leading-relaxed">
+                        <span className="text-[13px] leading-[1.8]">
                           {decision}
                         </span>
                       </li>
                     ))}
                   </ul>
                 ) : (
-                  <p className="text-[13px] text-muted-foreground">
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
                     No decisions recorded in this note.
                   </p>
                 )}
               </section>
               <section>
-                <h2 className="mb-3 text-[10px] font-bold uppercase tracking-wider text-muted-foreground">
-                  Action items{" "}
-                  <span className="ml-1">
-                    {items.filter((a) => !a.done).length} open
+                <div className="mb-4 flex items-baseline gap-3">
+                  <h2 className="font-display text-[25px] leading-tight">
+                    Next steps
+                  </h2>
+                  <span className="text-[10px] text-muted-foreground">
+                    {items.filter((a) => !a.done).length} open action items
                   </span>
-                </h2>
+                </div>
                 {items.length ? (
-                  <div className="space-y-2">
+                  <div className="overflow-hidden rounded-2xl border border-border/80 bg-card/65">
                     {items.map((item) => (
                       <button
                         key={item.id}
                         role="checkbox"
                         aria-checked={item.done}
+                        aria-busy={pending.includes(item.id)}
                         disabled={pending.includes(item.id)}
                         onClick={() => void toggle(item)}
-                        className="flex w-full items-start gap-3 rounded-xl border border-border bg-card px-4 py-3 text-left"
+                        className="flex w-full items-start gap-3 border-b border-border/60 px-4 py-4 text-left transition-colors last:border-b-0 hover:bg-secondary/40 sm:px-5"
                       >
                         {item.done ? (
                           <CheckCircle2
                             size={17}
-                            className="mt-0.5 shrink-0 text-primary"
+                            className="mt-1 shrink-0 text-primary"
+                            aria-hidden="true"
                           />
                         ) : (
                           <Circle
                             size={17}
-                            className="mt-0.5 shrink-0 text-muted-foreground"
+                            className="mt-1 shrink-0 text-muted-foreground/70"
+                            aria-hidden="true"
                           />
                         )}
                         <span className="min-w-0 flex-1">
                           <span
-                            className={`block text-[13px] leading-relaxed ${item.done ? "text-muted-foreground line-through" : ""}`}
+                            className={`block text-[13px] leading-[1.8] ${item.done ? "text-muted-foreground line-through" : ""}`}
                           >
                             {item.text}
                           </span>
-                          <span className="mt-1 block text-[11px] text-muted-foreground">
+                          <span className="mt-1.5 block text-[11px] text-muted-foreground">
                             {item.owner}
                             {item.due ? ` · ${item.due}` : ""}
+                            {pending.includes(item.id) && (
+                              <span className="text-primary"> · Saving…</span>
+                            )}
                           </span>
                         </span>
                       </button>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-[13px] text-muted-foreground">
+                  <p className="text-[13px] leading-relaxed text-muted-foreground">
                     No action items recorded in this note.
                   </p>
                 )}
               </section>
+              <p className="flex items-center gap-2 border-t border-border/70 pt-5 text-[10px] leading-relaxed text-muted-foreground">
+                <ScrollText size={13} className="shrink-0" aria-hidden="true" />
+                {demo
+                  ? "Sample meeting · explore the transcript for context."
+                  : "Keep the transcript close. Review important details before sharing."}
+              </p>
             </div>
           ) : (
-            <div
-              ref={transcriptRef}
-              className="mx-auto max-w-2xl space-y-1 pb-16"
-            >
-              <div className="mb-4 flex items-center gap-2 rounded-xl border border-border bg-card px-3">
-                <Search size={14} className="text-muted-foreground" />
+            <div className="mx-auto max-w-[720px] pb-16">
+              <div className="mb-3 flex items-center gap-2.5 rounded-xl border border-border bg-card px-3.5 focus-within:border-primary/40">
+                <Search
+                  size={15}
+                  className="shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
                 <input
                   aria-label="Search this transcript"
                   value={query}
-                  onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Find words in this transcript…"
-                  className="h-11 min-w-0 flex-1 bg-transparent text-xs outline-none"
+                  onChange={(e) => {
+                    setQuery(e.target.value);
+                    setHighlight(null);
+                  }}
+                  placeholder="Find a word or phrase…"
+                  className="h-11 min-w-0 flex-1 bg-transparent text-[12px] outline-none"
                 />
-                <span className="text-[10px] text-muted-foreground">
-                  {shownSegments.length} segments
-                </span>
-              </div>
-              <p className="mb-4 px-1 text-[11px] text-muted-foreground">
-                {demo
-                  ? "Sample transcript. Speaker labels and timestamps are illustrative."
-                  : "Review transcripts for accuracy. Speaker labels may need verification."}
-              </p>
-              {shownSegments.length === 0 && (
-                <p className="py-10 text-center text-sm text-muted-foreground">
-                  {query
-                    ? "No matching transcript segments."
-                    : "No transcript saved for this meeting."}
-                </p>
-              )}
-              {shownSegments.map((segment) => {
-                const person = meeting.participants.find(
-                  (p) => p.id === segment.speakerId,
-                ) ?? {
-                  id: segment.speakerId,
-                  name: "Unknown speaker",
-                  initials: "?",
-                  color: "#777777",
-                };
-                return (
-                  <div
-                    key={segment.id}
-                    data-segment-id={segment.id}
-                    className={`flex gap-3 rounded-xl px-2 py-3 ${highlight === segment.id ? "bg-primary/10 ring-1 ring-primary/30" : "hover:bg-card"}`}
+                {query && (
+                  <button
+                    onClick={() => setQuery("")}
+                    aria-label="Clear transcript search"
+                    className="flex min-h-11 min-w-11 items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-secondary sm:min-h-0 sm:min-w-0"
                   >
-                    <span className="font-mono2 mt-1 shrink-0 text-[10px] text-muted-foreground">
-                      {fmtTs(segment.start)}
-                    </span>
-                    <Avatar person={person} size={24} />
-                    <div className="min-w-0">
-                      <p className="text-xs font-semibold">{person.name}</p>
-                      <p className="mt-1 text-[13px] leading-relaxed text-foreground/90">
-                        {segment.text}
-                      </p>
+                    <X size={13} />
+                  </button>
+                )}
+              </div>
+              <div className="mb-6 flex flex-wrap justify-between gap-2 text-[10px] leading-relaxed text-muted-foreground">
+                <p>
+                  {demo
+                    ? "Sample speakers and timestamps are illustrative."
+                    : "Review transcripts for accuracy. Speaker labels may need verification."}
+                </p>
+                <p role="status">
+                  {shownSegments.length}{" "}
+                  {query ? "matching segments" : "segments"}
+                </p>
+              </div>
+              {shownSegments.length === 0 && (
+                <div className="rounded-2xl border border-dashed border-border px-5 py-12 text-center">
+                  <ScrollText
+                    size={23}
+                    className="mx-auto mb-3 text-muted-foreground/60"
+                    aria-hidden="true"
+                  />
+                  <p className="text-sm text-muted-foreground">
+                    {query
+                      ? "No matching transcript segments."
+                      : "No transcript saved for this meeting."}
+                  </p>
+                  {query && (
+                    <button
+                      onClick={() => setQuery("")}
+                      className="mt-3 text-xs font-medium text-primary"
+                    >
+                      Clear search
+                    </button>
+                  )}
+                </div>
+              )}
+              <div className="space-y-1">
+                {shownSegments.map((segment) => {
+                  const person = meeting.participants.find(
+                    (p) => p.id === segment.speakerId,
+                  ) ?? {
+                    id: segment.speakerId,
+                    name: "Unknown speaker",
+                    initials: "?",
+                    color: "#777777",
+                  };
+                  return (
+                    <div
+                      key={segment.id}
+                      ref={(element) => {
+                        if (element)
+                          segmentElements.current.set(segment.id, element);
+                        else segmentElements.current.delete(segment.id);
+                      }}
+                      tabIndex={-1}
+                      data-segment-id={segment.id}
+                      aria-label={`${fmtTs(segment.start)}, ${person.name}`}
+                      className={`group flex gap-3 rounded-xl px-2 py-4 outline-offset-2 sm:gap-4 sm:px-3 ${highlight === segment.id ? "bg-primary/[0.06] ring-1 ring-primary/25" : "hover:bg-card/70"}`}
+                    >
+                      <div className="hidden pt-0.5 sm:block">
+                        <Avatar person={person} size={27} />
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="flex items-center gap-3">
+                          <p className="text-[12px] font-semibold">
+                            {person.name}
+                          </p>
+                          <span className="font-mono2 shrink-0 text-[10px] text-muted-foreground">
+                            {fmtTs(segment.start)}
+                          </span>
+                        </div>
+                        <p className="mt-2 whitespace-pre-wrap text-[13px] leading-[1.85] text-foreground/85">
+                          {segment.text}
+                        </p>
+                      </div>
                     </div>
-                  </div>
-                );
-              })}
+                  );
+                })}
+              </div>
             </div>
           )}
         </div>
       </div>
       <aside
+        id={`${viewId}-assistant`}
         aria-label="Meeting assistant"
-        className={`${chatOpen ? "flex" : "hidden xl:flex"} min-h-0 w-full shrink-0 flex-col border-l border-border bg-card/50 xl:w-[310px] 2xl:w-[350px]`}
+        onKeyDown={(event) => {
+          if (event.key === "Escape" && chatOpen) {
+            event.preventDefault();
+            setChatOpen(false);
+          }
+        }}
+        className={`${chatOpen ? "flex" : "hidden xl:flex"} min-h-0 w-full shrink-0 flex-col border-l border-border/80 bg-card/60 xl:w-[310px] 2xl:w-[330px]`}
       >
-        <div className="flex items-center gap-2.5 border-b border-border px-4 py-4">
-          <div className="flex h-8 w-8 items-center justify-center rounded-xl bg-primary/10 text-primary">
-            <Sparkles size={15} />
+        <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-5">
+          <div className="ember-gradient flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm">
+            <Sparkles size={15} aria-hidden="true" />
           </div>
-          <div>
-            <h2 className="text-[13px] font-semibold">Meeting assistant</h2>
-            <p className="mt-0.5 text-[10px] text-muted-foreground">
+          <div className="min-w-0">
+            <h2 className="text-[12px] font-semibold">Ask this meeting</h2>
+            <p className="mt-1 text-[10px] text-muted-foreground">
               {demo
-                ? "Demo · answers from sample notes"
-                : "Answers from your meeting library"}
+                ? "Demo · saved sample content"
+                : "Local answers · this meeting"}
             </p>
           </div>
           <button
             onClick={() => setChatOpen(false)}
             aria-label="Close meeting assistant"
-            className="ml-auto rounded-lg p-2 xl:hidden"
+            className="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-secondary xl:hidden"
           >
             <X size={17} />
           </button>
         </div>
         <div
-          className="scrollbar-thin min-h-0 flex-1 space-y-4 overflow-y-auto p-4"
+          className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-6"
           role="log"
           aria-live="polite"
           aria-label="Assistant conversation"
         >
-          <div className="rounded-2xl border border-border bg-card px-4 py-3 text-[12px] leading-relaxed text-muted-foreground">
-            {demo
-              ? "Explore the decisions and action items in this sample meeting. Demo replies use the saved note content."
-              : "Ask about your meetings. Verify important details against the source transcript."}
-          </div>
-          {chat.map((message) => (
-            <div
-              key={message.id}
-              className={`whitespace-pre-wrap rounded-2xl px-4 py-3 text-[12px] leading-relaxed ${message.role === "user" ? "ml-5 bg-foreground text-background" : "mr-2 border border-border bg-card"}`}
-            >
-              <span className="sr-only">
-                {message.role === "user" ? "You: " : "Assistant: "}
-              </span>
-              {message.text}
+          {chat.length === 0 ? (
+            <div className="pt-3">
+              <p className="font-display text-[28px] leading-[1.2] tracking-[-0.02em]">
+                A little clarity,
+                <br />
+                <span className="text-muted-foreground">
+                  whenever you need it.
+                </span>
+              </p>
+              <p className="mt-4 text-[12px] leading-[1.8] text-muted-foreground">
+                {demo
+                  ? "Revisit the decisions and next steps in this sample meeting. Replies use its saved note content."
+                  : "Ask a question about this meeting. Check important details against the source transcript."}
+              </p>
+              <div className="mt-6 space-y-2">
+                {["What was decided?", "What are the next steps?"].map(
+                  (question) => (
+                    <button
+                      key={question}
+                      disabled={thinking}
+                      onClick={() => void send(question)}
+                      className="flex w-full items-center justify-between gap-3 rounded-xl border border-border/80 bg-card px-3.5 py-3 text-left text-[11px] text-muted-foreground transition-colors hover:border-primary/30 hover:text-primary"
+                    >
+                      {question}
+                      <ArrowUpRight
+                        size={13}
+                        className="shrink-0"
+                        aria-hidden="true"
+                      />
+                    </button>
+                  ),
+                )}
+              </div>
             </div>
-          ))}
+          ) : (
+            <div className="space-y-5">
+              {chat.map((message) => (
+                <div key={message.id}>
+                  <p
+                    className={`mb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground ${message.role === "user" ? "text-right" : ""}`}
+                  >
+                    {message.role === "user" ? "You" : "Open Granola"}
+                  </p>
+                  <div
+                    className={`whitespace-pre-wrap rounded-2xl px-4 py-3.5 text-[12px] leading-[1.8] ${message.role === "user" ? "ml-4 rounded-tr-md bg-secondary/80" : "rounded-tl-md border border-border/80 bg-card"}`}
+                  >
+                    {message.text}
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
           {thinking && (
-            <p role="status" className="px-2 text-xs text-muted-foreground">
-              Finding an answer…
+            <p
+              role="status"
+              className="mt-5 flex items-center gap-2 text-xs text-muted-foreground"
+            >
+              <span
+                className="h-1.5 w-1.5 rounded-full bg-primary"
+                aria-hidden="true"
+              />
+              Reading this meeting…
             </p>
           )}
           <div ref={chatEnd} />
         </div>
-        <div className="space-y-3 border-t border-border p-3">
-          <div className="flex flex-wrap gap-1.5">
-            {["What was decided?", "What are the next steps?"].map(
-              (question) => (
-                <button
-                  key={question}
-                  disabled={thinking}
-                  onClick={() => void send(question)}
-                  className="rounded-full border border-border bg-background px-3 py-1.5 text-[10px] text-muted-foreground hover:border-primary/50 hover:text-primary"
-                >
-                  {question}
-                </button>
-              ),
-            )}
-          </div>
+        <div className="border-t border-border/80 p-4">
           <form
-            className="flex items-center gap-2 rounded-xl border border-border bg-background p-2 pl-3"
-            onSubmit={(e) => {
-              e.preventDefault();
+            className="rounded-xl border border-border bg-card p-3 shadow-sm focus-within:border-primary/40"
+            onSubmit={(event) => {
+              event.preventDefault();
               void send(draft);
             }}
           >
-            <input
+            <textarea
+              ref={assistantInput}
               value={draft}
               maxLength={4000}
-              onChange={(e) => setDraft(e.target.value)}
+              rows={2}
+              onChange={(event) => setDraft(event.target.value)}
+              onKeyDown={(event) => {
+                if (
+                  event.key === "Enter" &&
+                  !event.shiftKey &&
+                  !event.nativeEvent.isComposing
+                ) {
+                  event.preventDefault();
+                  void send(draft);
+                }
+              }}
               aria-label="Ask the meeting assistant"
-              placeholder="Ask about your notes…"
-              className="min-w-0 flex-1 bg-transparent text-xs outline-none"
+              placeholder="Ask about this meeting…"
+              className="block max-h-40 min-h-12 w-full resize-y bg-transparent text-[12px] leading-relaxed outline-none"
             />
-            <button
-              disabled={!draft.trim() || thinking}
-              type="submit"
-              aria-label="Send question"
-              className="rounded-lg bg-primary p-2 text-primary-foreground"
-            >
-              <Send size={14} />
-            </button>
+            <div className="mt-2 flex items-center justify-between gap-2">
+              <span className="text-[9px] text-muted-foreground">
+                {demo ? "Sample note replies" : "Processed on this device"}
+              </span>
+              <button
+                disabled={!draft.trim() || thinking}
+                type="submit"
+                aria-label="Send question"
+                className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary sm:h-8 sm:w-8 text-primary-foreground transition-colors hover:bg-primary/90"
+              >
+                <Send size={13} />
+              </button>
+            </div>
           </form>
+          <p className="mt-2.5 text-center text-[9px] leading-relaxed text-muted-foreground">
+            {demo
+              ? "Free-form answers need a desktop model."
+              : "Answers can be imperfect. Review the source."}
+          </p>
         </div>
       </aside>
     </div>
