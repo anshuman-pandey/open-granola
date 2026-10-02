@@ -1,4 +1,11 @@
-import { CheckCircle2, Circle, ExternalLink, ListChecks } from "lucide-react";
+import {
+  ArrowUpRight,
+  CalendarDays,
+  CheckCircle2,
+  Circle,
+  ListChecks,
+  Loader2,
+} from "lucide-react";
 import { useState } from "react";
 import type { ActionItem } from "../lib/types";
 
@@ -16,6 +23,7 @@ export function ActionItemsView({
   const [filter, setFilter] = useState<"open" | "all">("open");
   const [pending, setPending] = useState<string[]>([]);
   const [error, setError] = useState("");
+  const openCount = items.filter((item) => !item.done).length;
   const shown = items.filter((a) => filter === "all" || !a.done);
   const groups = shown.reduce<Record<string, ActionItem[]>>((acc, item) => {
     (acc[item.meetingId] ||= []).push(item);
@@ -34,22 +42,23 @@ export function ActionItemsView({
   };
   return (
     <div className="scrollbar-thin paper-texture min-h-0 flex-1 overflow-y-auto">
-      <div className="mx-auto max-w-3xl px-5 pb-24 pt-10 sm:px-8">
-        <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-primary">
-          From conversation to action
-        </p>
-        <div className="mt-2 flex flex-wrap items-end justify-between gap-4">
+      <div className="workspace-page mx-auto max-w-4xl px-5 pb-24 pt-10 sm:px-8">
+        <p className="section-eyebrow">From conversation to action</p>
+        <div className="mt-3 flex flex-wrap items-end justify-between gap-6">
           <div>
-            <h1 className="font-display text-[36px]">Action items</h1>
-            <p className="mt-2 max-w-md text-[13px] leading-relaxed text-muted-foreground">
-              {items.filter((a) => !a.done).length} open next steps across your
-              meetings. Review the source before following up.
+            <h1 className="font-display text-[40px] leading-tight tracking-tight sm:text-[48px]">
+              Action items
+            </h1>
+            <p className="mt-3 max-w-md text-sm leading-relaxed text-muted-foreground">
+              The next steps from your meetings, all in one place. Review the
+              source before following up.
               {items.length >= 5000 &&
                 " Showing up to 5,000 action items; open a source meeting for its complete list."}
             </p>
           </div>
           <div
             className="flex gap-1 rounded-xl border border-border bg-card p-1"
+            role="group"
             aria-label="Filter action items"
           >
             {(["open", "all"] as const).map((value) => (
@@ -57,9 +66,14 @@ export function ActionItemsView({
                 key={value}
                 onClick={() => setFilter(value)}
                 aria-pressed={filter === value}
-                className={`rounded-lg px-3 py-2 text-xs font-semibold capitalize ${filter === value ? "bg-foreground text-background" : "text-muted-foreground"}`}
+                className={`flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors ${filter === value ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
               >
-                {value}
+                {value === "open" ? "Open" : "All"}
+                <span
+                  className={`rounded-md px-1.5 py-0.5 text-[10px] tabular-nums ${filter === value ? "bg-background/15" : "bg-secondary"}`}
+                >
+                  {value === "open" ? openCount : items.length}
+                </span>
               </button>
             ))}
           </div>
@@ -67,65 +81,92 @@ export function ActionItemsView({
         {error && (
           <p
             role="alert"
-            className="mt-5 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive"
+            className="mt-5 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive dark:text-red-400"
           >
             {error}
           </p>
         )}
         {!shown.length && (
-          <div className="mt-8 rounded-2xl border border-dashed border-border px-5 py-12 text-center">
-            <ListChecks size={30} className="mx-auto text-primary" />
-            <h2 className="mt-4 text-base font-semibold">
+          <div className="surface-card mt-8 px-5 py-14 text-center">
+            <span className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-primary/10 text-primary">
+              <ListChecks size={26} />
+            </span>
+            <h2 className="font-display mt-5 text-[28px]">
               {items.length ? "You’re all caught up" : "No action items yet"}
             </h2>
-            <p className="mt-2 text-sm text-muted-foreground">
+            <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted-foreground">
               {items.length
                 ? "Switch to All to review completed items."
                 : "Action items from saved meetings will appear here."}
             </p>
+            {items.length > 0 && (
+              <button
+                onClick={() => setFilter("all")}
+                className="button-secondary mt-5"
+              >
+                View completed items
+              </button>
+            )}
           </div>
         )}
-        <div className="mt-7 space-y-7">
+        <div className="mt-8 space-y-7">
           {Object.entries(groups).map(([meetingId, list]) => (
             <section key={meetingId}>
               <button
                 onClick={() => onOpenMeeting(meetingId)}
-                className="mb-3 flex items-center gap-2 text-xs font-semibold text-muted-foreground hover:text-primary"
+                className="group mb-2 flex min-h-11 max-w-full items-center gap-2 rounded-lg text-left text-xs font-semibold text-muted-foreground transition-colors hover:text-primary"
               >
-                {list[0].meetingTitle}
-                <ExternalLink size={12} />
+                <span className="break-words">{list[0].meetingTitle}</span>
+                <ArrowUpRight
+                  size={14}
+                  className="shrink-0 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5"
+                />
+                <span className="ml-1 shrink-0 font-normal tabular-nums">
+                  {list.length}
+                </span>
               </button>
-              <div className="space-y-2">
+              <ul className="surface-card divide-y divide-border overflow-hidden">
                 {list.map((item) => (
-                  <div
+                  <li
                     key={item.id}
-                    className="flex items-start gap-3 rounded-xl border border-border bg-card p-4 shadow-sm"
+                    className="flex items-start gap-2 p-3 transition-colors hover:bg-secondary/25 sm:gap-3 sm:p-4"
                   >
                     <button
                       disabled={!onToggle || pending.includes(item.id)}
                       role="checkbox"
                       aria-checked={item.done}
+                      aria-busy={pending.includes(item.id)}
                       aria-label={`${item.done ? "Reopen" : "Complete"}: ${item.text}`}
                       onClick={() => void toggle(item)}
-                      className="rounded-full p-1"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl transition-colors hover:bg-secondary"
                     >
-                      {item.done ? (
+                      {pending.includes(item.id) ? (
+                        <Loader2
+                          size={19}
+                          className="animate-spin text-primary"
+                        />
+                      ) : item.done ? (
                         <CheckCircle2 size={19} className="text-primary" />
                       ) : (
                         <Circle size={19} className="text-muted-foreground" />
                       )}
                     </button>
-                    <div className="min-w-0 flex-1">
+                    <div className="min-w-0 flex-1 py-2">
                       <p
-                        className={`text-[13px] leading-relaxed ${item.done ? "text-muted-foreground line-through" : ""}`}
+                        className={`break-words text-sm leading-relaxed ${item.done ? "text-muted-foreground line-through" : ""}`}
                       >
                         {item.text}
                       </p>
-                      <div className="mt-2 flex flex-wrap items-center gap-2 text-[10px] text-muted-foreground">
-                        <span className="rounded-md bg-secondary px-2 py-1">
+                      <div className="mt-2 flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted-foreground">
+                        <span className="max-w-full break-words rounded-md bg-secondary px-2 py-1">
                           {item.owner}
                         </span>
-                        {item.due && <span>Due {item.due}</span>}
+                        {item.due && (
+                          <span className="flex items-center gap-1.5">
+                            <CalendarDays size={12} className="shrink-0" />
+                            Due {item.due}
+                          </span>
+                        )}
                         {pending.includes(item.id) && (
                           <span role="status">Saving…</span>
                         )}
@@ -135,13 +176,13 @@ export function ActionItemsView({
                       onClick={() => onOpenMeeting(item.meetingId)}
                       aria-label={`Open source: ${item.meetingTitle}`}
                       title="Open source meeting"
-                      className="rounded-lg p-2 text-muted-foreground hover:bg-secondary hover:text-primary"
+                      className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-primary"
                     >
-                      <ExternalLink size={14} />
+                      <ArrowUpRight size={17} />
                     </button>
-                  </div>
+                  </li>
                 ))}
-              </div>
+              </ul>
             </section>
           ))}
         </div>

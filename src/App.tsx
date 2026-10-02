@@ -9,6 +9,11 @@ import { Sidebar } from "./components/Sidebar";
 import { ActionItemsView } from "./components/ActionItemsView";
 import { CommitmentsView } from "./components/CommitmentsView";
 import { TemplatesView } from "./components/TemplatesView";
+import {
+  LibraryAssistant,
+  type LibraryQuestion,
+} from "./components/LibraryAssistant";
+import { sampleLibraryAnswer } from "./lib/library-answer";
 import { ACTION_ITEMS, MEETINGS, PEOPLE } from "./lib/data";
 import { getBackend } from "./lib/backend";
 import { useLiveSession, type LiveLine } from "./hooks/useLiveSession";
@@ -34,6 +39,12 @@ export default function App() {
   const [dark, setDark] = useState(initialTheme);
   const [view, setView] = useState<View>({ kind: "home" });
   const [paletteOpen, setPaletteOpen] = useState(false);
+  const [assistant, setAssistant] = useState<LibraryQuestion | null>(null);
+  const assistantRequest = useRef(0);
+  const closeAssistant = useCallback(() => {
+    assistantRequest.current += 1;
+    setAssistant(null);
+  }, []);
   const [meetings, setMeetings] = useState<Meeting[]>(
     backend.mode === "demo" ? MEETINGS : [],
   );
@@ -120,6 +131,7 @@ export default function App() {
     backend
       .onLibraryChanged(() => {
         if (disposed) return;
+        closeAssistant();
         setMeetings([]);
         setActionItems([]);
         setDetail(null);
@@ -143,7 +155,14 @@ export default function App() {
       disposed = true;
       unsubscribe?.();
     };
-  }, [refreshLibrary]);
+  }, [closeAssistant, refreshLibrary]);
+
+  useEffect(
+    () => () => {
+      assistantRequest.current += 1;
+    },
+    [],
+  );
 
   const selectedId = view.kind === "meeting" ? view.id : null;
   useEffect(() => {
@@ -245,11 +264,35 @@ export default function App() {
     );
   };
   const libraryChanged = () => {
+    closeAssistant();
     setMeetings([]);
     setActionItems([]);
     setDetail(null);
     setBrief(null);
     void refreshLibrary().catch(() => {});
+  };
+
+  const askLibrary = async (question: string) => {
+    const text = question.trim();
+    if (!text) return;
+    const request = ++assistantRequest.current;
+    setAssistant({ question: text, answer: null, pending: true, error: null });
+    try {
+      const answer =
+        backend.mode === "demo"
+          ? sampleLibraryAnswer(text, meetings, actionItems)
+          : { text: await backend.ask(text), sources: [] };
+      if (request === assistantRequest.current)
+        setAssistant({ question: text, answer, pending: false, error: null });
+    } catch (cause) {
+      if (request === assistantRequest.current)
+        setAssistant({
+          question: text,
+          answer: null,
+          pending: false,
+          error: `Could not answer this question: ${messageOf(cause)}`,
+        });
+    }
   };
 
   return (
@@ -279,10 +322,12 @@ export default function App() {
         className="flex min-w-0 flex-1 flex-col outline-none"
       >
         {backend.mode === "demo" && (
-          <div className="border-b border-border bg-accent/50 px-5 py-2 text-center text-xs text-muted-foreground">
-            <strong className="text-foreground">Interactive demo</strong> ·
-            Sample meetings · Recording is simulated · Changes last for this
-            session
+          <div className="demo-notice">
+            <strong className="font-semibold text-foreground/80">
+              Interactive demo
+            </strong>
+            <span aria-hidden="true">·</span>
+            <span>Sample meetings. Recording is simulated.</span>
           </div>
         )}
         {visibleError && (
@@ -365,10 +410,11 @@ export default function App() {
         {view.kind === "home" && (
           <HomeView
             meetings={meetings}
+            actionItems={actionItems}
             brief={brief}
             onOpenMeeting={openMeeting}
             onRecord={live.start}
-            onAsk={() => setPaletteOpen(true)}
+            onAsk={(question) => void askLibrary(question)}
             onSearch={() => setPaletteOpen(true)}
             busy={busy || loading}
             recording={live.active}
@@ -448,6 +494,18 @@ export default function App() {
           onOpenActions={() => {
             setPaletteOpen(false);
             setView({ kind: "actions" });
+          }}
+        />
+      )}
+      {assistant && (
+        <LibraryAssistant
+          state={assistant}
+          demo={backend.mode === "demo"}
+          onAsk={(question) => void askLibrary(question)}
+          onClose={closeAssistant}
+          onOpenMeeting={(id) => {
+            closeAssistant();
+            openMeeting(id);
           }}
         />
       )}
