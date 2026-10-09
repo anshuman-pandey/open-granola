@@ -1,0 +1,78 @@
+name: Provider compatibility
+description: Report a reproducible provider/model failure or a tested local setup.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Use the [validation record](https://github.com/anshuman-pandey/open-granola/blob/main/docs/integrations/VALIDATION.md).
+        A synthetic connection test and a full recording workflow are separate results.
+        Never attach API keys, authorization URLs, private hostnames, meeting databases, real transcripts or recordings.
+        For vulnerabilities, follow [SECURITY.md](https://github.com/anshuman-pandey/open-granola/blob/main/SECURITY.md).
+  - type: dropdown
+    id: provider
+    attributes:
+      label: Provider route
+      options:
+        - LM Studio
+        - Ollama through Custom OpenAI-compatible server
+        - Another OpenAI-compatible server
+        - Built-in local model
+        - OpenAI API
+        - Claude API
+        - ChatGPT (experimental)
+    validations:
+      required: true
+  - type: input
+    id: versions
+    attributes:
+      label: Open Granola and provider versions
+      description: App version/commit, provider server version if applicable, and desktop development or packaged build.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS and hardware
+      description: OS/version, CPU architecture, RAM and GPU if relevant. Do not include device serial numbers.
+    validations:
+      required: true
+  - type: textarea
+    id: configuration
+    attributes:
+      label: Non-secret configuration
+      description: Exact model ID/tag, quantization/context capacity if known, loopback URL or redacted remote destination, local/cloud model choice, Whisper filename and requested languages. Describe whether authentication is enabled without sharing a key.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Reproduction steps and expected/actual result
+      description: Use synthetic content. Include an independent curl reproduction only if you actually ran it; remove credentials first.
+    validations:
+      required: true
+  - type: textarea
+    id: validation
+    attributes:
+      label: What was tested?
+      value: |
+        Synthetic connection test: pass / fail / not run
+        Microphone → Whisper → saved notes: pass / fail / not run
+        Restart, search and Markdown export: pass / fail / not run
+        Summary failure and retry: pass / fail / not run
+        Language quality review: reviewed / not reviewed
+    validations:
+      required: true
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized error or screenshot
+      description: Include relevant error text and screenshots of synthetic test results. Review all content for secrets and private data.
+  - type: checkboxes
+    id: privacy
+    attributes:
+      label: Before submitting
+      options:
+        - label: I removed credentials and private meeting/account data from this report.
+          required: true
+        - label: I marked checks I did not run as not run.
+          required: true

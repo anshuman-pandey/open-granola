@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import {
   ArrowDownWideNarrow,
   ArrowRight,
@@ -42,6 +43,7 @@ export function HomeView({
   busy,
   recording,
 }: Props) {
+  const { locale, t, formatDate, formatNumber, plural } = useI18n();
   const [question, setQuestion] = useState("");
   const [query, setQuery] = useState("");
   const [sort, setSort] = useState<"newest" | "oldest" | "title">("newest");
@@ -51,10 +53,10 @@ export function HomeView({
   const hour = now.getHours();
   const greeting =
     hour < 12
-      ? "Good morning."
+      ? t("Good morning.")
       : hour < 18
-        ? "Good afternoon."
-        : "Good evening.";
+        ? t("Good afternoon.")
+        : t("Good evening.");
   const shown = useMemo(() => {
     const needle = query.trim().toLowerCase();
     return meetings
@@ -72,12 +74,12 @@ export function HomeView({
       )
       .sort((a, b) =>
         sort === "title"
-          ? a.title.localeCompare(b.title)
+          ? a.title.localeCompare(b.title, locale)
           : sort === "newest"
             ? +new Date(b.date) - +new Date(a.date)
             : +new Date(a.date) - +new Date(b.date),
       );
-  }, [meetings, query, sort]);
+  }, [meetings, query, sort, locale]);
   const minutes = meetings.reduce(
     (sum, meeting) => sum + meeting.durationMin,
     0,
@@ -97,7 +99,7 @@ export function HomeView({
       <div className="mx-auto max-w-[1040px] px-5 pb-20 pt-8 sm:px-8 lg:px-12 lg:pt-10">
         <header className="animate-rise">
           <p className="text-[10px] font-semibold uppercase tracking-[0.15em] text-primary">
-            {now.toLocaleDateString(undefined, {
+            {formatDate(now, {
               weekday: "long",
               month: "long",
               day: "numeric",
@@ -110,13 +112,17 @@ export function HomeView({
               </h1>
               <p className="mt-2.5 max-w-xl text-[13px] leading-relaxed text-muted-foreground">
                 {meetings.length
-                  ? "A little context for your next conversation. Pick up where you left off."
-                  : "A fresh page for your conversations. Capture a meeting or bring your notes along."}
+                  ? t(
+                      "A little context for your next conversation. Pick up where you left off.",
+                    )
+                  : t(
+                      "A fresh page for your conversations. Capture a meeting or bring your notes along.",
+                    )}
               </p>
             </div>
             <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border/80 bg-card/70 px-2.5 py-1.5 text-[10px] text-muted-foreground sm:flex">
               <span className="h-1.5 w-1.5 rounded-full bg-primary/70" />
-              {demo ? "Sample workspace" : "Local workspace"}
+              {demo ? t("Sample workspace") : t("Local workspace")}
             </span>
           </div>
         </header>
@@ -131,11 +137,11 @@ export function HomeView({
           >
             <Sparkles size={18} className="shrink-0 text-primary" />
             <input
-              aria-label="Ask across your meetings"
+              aria-label={t("Ask across your meetings")}
               value={question}
               onChange={(event) => setQuestion(event.target.value)}
               maxLength={4000}
-              placeholder="Ask across your meetings…"
+              placeholder={t("Ask across your meetings…")}
               className="min-h-8 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/80"
             />
             <button
@@ -143,12 +149,13 @@ export function HomeView({
               disabled={!question.trim() || busy}
               className="button-primary min-h-11 shrink-0 px-3 text-xs sm:px-4 md:min-h-10"
             >
-              Ask <ArrowRight size={14} />
+              {t("Ask")}
+              <ArrowRight size={14} />
             </button>
           </form>
           <div className="mt-2.5 flex flex-wrap items-center gap-x-3 gap-y-1.5 px-1 text-[10px] text-muted-foreground">
-            <span className="hidden sm:inline">Try asking</span>
-            {["What needs a follow-up?", "What did we decide?"].map(
+            <span className="hidden sm:inline">{t("Try asking")}</span>
+            {[t("What needs a follow-up?"), t("What did we decide?")].map(
               (prompt) => (
                 <button
                   key={prompt}
@@ -162,7 +169,7 @@ export function HomeView({
             )}
             {demo && (
               <span className="ml-auto hidden text-[9px] text-muted-foreground/80 lg:inline">
-                Demo answers use sample notes
+                {t("Demo answers use sample notes")}
               </span>
             )}
           </div>
@@ -171,20 +178,24 @@ export function HomeView({
         <dl className="mt-6 grid grid-cols-3 gap-2.5 sm:gap-3">
           {[
             {
-              label: "In your library",
-              value: `${meetings.length} ${meetings.length === 1 ? "meeting" : "meetings"}`,
-              detail: `${minutes} min`,
+              label: t("In your library"),
+              value: plural(
+                "{count} meeting",
+                "{count} meetings",
+                meetings.length,
+              ),
+              detail: t("{count} min", { count: minutes }),
               icon: CalendarDays,
             },
             {
-              label: "Open action items",
-              value: `${openActions} ${openActions === 1 ? "item" : "items"}`,
+              label: t("Open action items"),
+              value: plural("{count} item", "{count} items", openActions),
               detail: "",
               icon: Flame,
             },
             {
-              label: "Decisions saved",
-              value: `${decisions} ${decisions === 1 ? "decision" : "decisions"}`,
+              label: t("Decisions saved"),
+              value: plural("{count} decision", "{count} decisions", decisions),
               detail: "",
               icon: CheckCheck,
             },
@@ -224,7 +235,9 @@ export function HomeView({
               </div>
               <div className="min-w-0 flex-1">
                 <p className="text-[9px] font-semibold uppercase tracking-[0.1em] text-primary">
-                  {demo ? "A sample meeting brief" : "Before your next meeting"}
+                  {demo
+                    ? t("A sample meeting brief")
+                    : t("Before your next meeting")}
                 </p>
                 <h2
                   id="brief-heading"
@@ -234,11 +247,13 @@ export function HomeView({
                 </h2>
               </div>
               <span className="hidden text-[10px] text-muted-foreground sm:block">
-                {demo ? "Example agenda" : brief.startsIn}
+                {demo ? t("Example agenda") : brief.startsIn}
               </span>
               <button
                 aria-label={
-                  briefOpen ? "Collapse meeting brief" : "Expand meeting brief"
+                  briefOpen
+                    ? t("Collapse meeting brief")
+                    : t("Expand meeting brief")
                 }
                 aria-expanded={briefOpen}
                 aria-controls="meeting-brief-content"
@@ -260,7 +275,7 @@ export function HomeView({
                   <div>
                     <h3 className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       <History size={12} className="text-primary" />
-                      Last time
+                      {t("Last time")}
                     </h3>
                     <p className="mt-2 text-[12px] leading-[1.7] text-foreground/85">
                       {brief.lastTime.recap}
@@ -269,9 +284,9 @@ export function HomeView({
                   <div>
                     <h3 className="flex items-center gap-1.5 text-[9px] font-semibold uppercase tracking-[0.06em] text-muted-foreground">
                       <Flame size={12} className="text-primary" />
-                      Open commitments{" "}
+                      {t("Open commitments")}{" "}
                       <span className="font-normal">
-                        ({brief.openCommitments.length})
+                        ({formatNumber(brief.openCommitments.length)})
                       </span>
                     </h3>
                     {brief.openCommitments.length ? (
@@ -299,7 +314,7 @@ export function HomeView({
                               <span
                                 className={`mt-0.5 shrink-0 text-[9px] ${item.overdue ? "font-medium text-destructive dark:text-red-400" : "text-muted-foreground"}`}
                               >
-                                {item.overdue ? "Overdue · " : ""}
+                                {item.overdue ? t("Overdue · ") : ""}
                                 {item.due}
                               </span>
                             )}
@@ -308,7 +323,7 @@ export function HomeView({
                       </ul>
                     ) : (
                       <p className="mt-2 text-xs text-muted-foreground">
-                        No open commitments in this brief.
+                        {t("No open commitments in this brief.")}
                       </p>
                     )}
                   </div>
@@ -318,7 +333,11 @@ export function HomeView({
                     <details className="group min-w-0 flex-1">
                       <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded text-[10px] font-medium text-primary md:min-h-0 [&::-webkit-details-marker]:hidden">
                         <Lightbulb size={12} />
-                        {brief.worthRaising.length} topics worth raising
+                        {plural(
+                          "{count} topic worth raising",
+                          "{count} topics worth raising",
+                          brief.worthRaising.length,
+                        )}
                         <ChevronDown
                           size={12}
                           className="transition-transform group-open:rotate-180"
@@ -342,12 +361,14 @@ export function HomeView({
           <div className="mt-6 flex flex-wrap items-center gap-4 rounded-xl border border-border bg-card/60 p-4">
             <div className="min-w-0 flex-1">
               <h2 className="text-[13px] font-semibold">
-                Ready for your next conversation?
+                {t("Ready for your next conversation?")}
               </h2>
               <p className="mt-1 text-[11px] leading-relaxed text-muted-foreground">
                 {demo
-                  ? "Try a simulated session to see how notes come together."
-                  : "Start a microphone session and keep the notes in your library."}
+                  ? t("Try a simulated session to see how notes come together.")
+                  : t(
+                      "Start a microphone session and keep the notes in your library.",
+                    )}
               </p>
             </div>
             <button
@@ -357,12 +378,12 @@ export function HomeView({
             >
               <Video size={14} />
               {busy
-                ? "Please wait…"
+                ? t("Please wait…")
                 : recording
-                  ? "Session in progress"
+                  ? t("Session in progress")
                   : demo
-                    ? "Try demo"
-                    : "Start capture"}
+                    ? t("Try demo")
+                    : t("Start capture")}
             </button>
           </div>
         )}
@@ -374,11 +395,15 @@ export function HomeView({
                 id="library-heading"
                 className="font-display text-[27px] leading-none"
               >
-                Your meeting library
+                {t("Your meeting library")}
               </h2>
               <span className="text-[10px] text-muted-foreground">
-                {shown.length}
-                {query ? ` of ${meetings.length}` : " notes"}
+                {query
+                  ? t("{count} of {total}", {
+                      count: shown.length,
+                      total: meetings.length,
+                    })
+                  : plural("{count} note", "{count} notes", shown.length)}
               </span>
             </div>
             {onSearch && (
@@ -386,24 +411,26 @@ export function HomeView({
                 onClick={onSearch}
                 className="flex min-h-11 items-center gap-1 rounded-lg py-1.5 text-[11px] font-medium text-muted-foreground transition-colors hover:text-primary md:min-h-0"
               >
-                Search transcripts <ArrowRight size={12} />
+                {t("Search transcripts")}
+                <ArrowRight size={12} />
               </button>
             )}
           </div>
           {meetings.length >= 1000 && (
             <p className="mt-2 text-xs text-muted-foreground">
-              Showing the latest 1,000 meetings. Search transcripts to find
-              earlier notes.
+              {t(
+                "Showing the latest 1,000 meetings. Search transcripts to find earlier notes.",
+              )}
             </p>
           )}
           <div className="mt-4 flex flex-wrap gap-2.5">
             <div className="flex min-w-[160px] flex-1 items-center gap-2 rounded-xl border border-border bg-card/80 px-3 transition-colors focus-within:border-primary/40">
               <Search size={14} className="shrink-0 text-muted-foreground" />
               <input
-                aria-label="Filter meeting library"
+                aria-label={t("Filter meeting library")}
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
-                placeholder="Find a meeting, person, or topic…"
+                placeholder={t("Find a meeting, person, or topic…")}
                 className="min-h-11 min-w-0 flex-1 bg-transparent text-[12px] outline-none md:min-h-10"
               />
               {query && (
@@ -411,7 +438,7 @@ export function HomeView({
                   onClick={() => setQuery("")}
                   className="min-h-11 min-w-11 text-[10px] font-medium text-primary md:min-h-0 md:min-w-0"
                 >
-                  Clear
+                  {t("Clear")}
                 </button>
               )}
             </div>
@@ -420,15 +447,15 @@ export function HomeView({
                 size={13}
                 className="text-muted-foreground"
               />
-              <span className="sr-only">Sort meetings</span>
+              <span className="sr-only">{t("Sort meetings")}</span>
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as typeof sort)}
                 className="min-h-11 min-w-0 bg-transparent text-[11px] outline-none md:min-h-10"
               >
-                <option value="newest">Newest first</option>
-                <option value="oldest">Oldest first</option>
-                <option value="title">Title A–Z</option>
+                <option value="newest">{t("Newest first")}</option>
+                <option value="oldest">{t("Oldest first")}</option>
+                <option value="title">{t("Title A–Z")}</option>
               </select>
             </label>
           </div>
@@ -440,20 +467,22 @@ export function HomeView({
               />
               <h3 className="mt-4 text-sm font-semibold">
                 {query
-                  ? "No matching meetings"
-                  : "Room for your first conversation"}
+                  ? t("No matching meetings")
+                  : t("Room for your first conversation")}
               </h3>
               <p className="mx-auto mt-2 max-w-xs text-xs leading-relaxed text-muted-foreground">
                 {query
-                  ? "Try a different name or topic, or clear your filter."
-                  : "Capture a meeting or import your notes from Settings to build your library."}
+                  ? t("Try a different name or topic, or clear your filter.")
+                  : t(
+                      "Capture a meeting or import your notes from Settings to build your library.",
+                    )}
               </p>
               {query && (
                 <button
                   onClick={() => setQuery("")}
                   className="mt-4 min-h-11 rounded-lg border border-border px-4 py-2 text-xs font-semibold md:min-h-10"
                 >
-                  Clear filter
+                  {t("Clear filter")}
                 </button>
               )}
             </div>
@@ -467,7 +496,7 @@ export function HomeView({
                 >
                   <div className="flex w-full items-center justify-between gap-2">
                     <span className="text-[9px] font-semibold uppercase tracking-[0.04em] text-muted-foreground">
-                      {new Date(meeting.date).toLocaleDateString(undefined, {
+                      {formatDate(meeting.date, {
                         weekday: "short",
                         month: "short",
                         day: "numeric",
@@ -488,21 +517,27 @@ export function HomeView({
                     )}
                   </h3>
                   {meeting.starred && (
-                    <span className="sr-only">Starred meeting</span>
+                    <span className="sr-only">{t("Starred meeting")}</span>
                   )}
                   <p className="mt-2 line-clamp-2 text-[11.5px] leading-[1.7] text-muted-foreground">
                     {meeting.summary ||
-                      "Open this meeting to read the transcript and notes."}
+                      t("Open this meeting to read the transcript and notes.")}
                   </p>
                   <div className="mt-auto flex w-full items-center justify-between gap-2 pt-4">
                     <AvatarStack people={meeting.participants} max={4} />
                     <div className="flex items-center gap-3 text-[9px] text-muted-foreground">
                       <span className="flex items-center gap-1">
                         <Clock3 size={10} />
-                        {meeting.durationMin} min
+                        {t("{count} min", { count: meeting.durationMin })}
                       </span>
                       {meeting.decisions.length > 0 && (
-                        <span>{meeting.decisions.length} decisions</span>
+                        <span>
+                          {plural(
+                            "{count} decision",
+                            "{count} decisions",
+                            meeting.decisions.length,
+                          )}
+                        </span>
                       )}
                       <ArrowRight
                         size={13}

@@ -16,10 +16,31 @@ pub struct Segment {
 
 pub struct WhisperEngine {
     ctx: WhisperContext,
+    options: TranscriptionOptions,
+}
+
+#[derive(Debug, PartialEq)]
+struct TranscriptionOptions {
+    language: Option<&'static str>,
+    translate: bool,
+}
+
+impl TranscriptionOptions {
+    fn for_model(language: &str, multilingual: bool) -> Result<Self> {
+        let language = crate::language::whisper_language(language)?;
+        if !multilingual && language != Some("en") {
+            bail!("The installed transcription model supports English only. Select English or install a multilingual Whisper model before recording.");
+        }
+        Ok(Self {
+            language,
+            translate: false,
+        })
+    }
 }
 
 impl WhisperEngine {
-    pub fn load(model_path: &Path) -> Result<Self> {
+    pub fn load(model_path: &Path, language: &str) -> Result<Self> {
+        crate::language::whisper_language(language)?;
         if !model_path.is_file() {
             bail!(
                 "Transcription model missing. Install whisper-large-v3-turbo.bin in {}",
@@ -31,7 +52,8 @@ impl WhisperEngine {
             WhisperContextParameters::default(),
         )
         .context("failed to load transcription model")?;
-        Ok(Self { ctx })
+        let options = TranscriptionOptions::for_model(language, ctx.is_multilingual())?;
+        Ok(Self { ctx, options })
     }
 
     pub fn transcribe_window(&mut self, samples: &[f32], offset_ms: u64) -> Result<Vec<Segment>> {
@@ -57,8 +79,11 @@ impl WhisperEngine {
         params.set_print_realtime(false);
         params.set_print_timestamps(false);
         params.set_print_special(false);
-        params.set_language(None);
-        params.set_translate(false);
+        // None enables automatic language detection while still transcribing.
+        // detect_language=true would request detection-only in whisper.cpp.
+        params.set_language(self.options.language);
+        params.set_detect_language(false);
+        params.set_translate(self.options.translate);
         state.full(params, input)?;
         let mut out = Vec::new();
         for segment in state.as_iter() {
@@ -90,10 +115,34 @@ mod tests {
     fn missing_model_returns_an_actionable_error_before_loading_native_code() {
         let directory =
             std::env::temp_dir().join(format!("opengranola-missing-{}", uuid::Uuid::new_v4()));
-        let error = WhisperEngine::load(&directory.join("whisper-large-v3-turbo.bin"))
+        let error = WhisperEngine::load(&directory.join("whisper-large-v3-turbo.bin"), "auto")
             .err()
             .expect("missing model must fail");
         assert!(error.to_string().contains("Transcription model missing"));
         assert!(error.to_string().contains("whisper-large-v3-turbo.bin"));
+    }
+
+    #[test]
+    fn automatic_and_manual_capture_both_preserve_source_speech() {
+        assert_eq!(
+            TranscriptionOptions::for_model("auto", true).unwrap(),
+            TranscriptionOptions {
+                language: None,
+                translate: false
+            }
+        );
+        for code in ["hi", "en", "ja", "ar", "bn"] {
+            assert_eq!(
+                TranscriptionOptions::for_model(code, true).unwrap(),
+                TranscriptionOptions {
+                    language: Some(code),
+                    translate: false
+                }
+            );
+        }
+        assert!(TranscriptionOptions::for_model("auto", false).is_err());
+        assert!(TranscriptionOptions::for_model("hi", false).is_err());
+        assert!(TranscriptionOptions::for_model("en", false).is_ok());
+        assert!(TranscriptionOptions::for_model("hi\0", true).is_err());
     }
 }

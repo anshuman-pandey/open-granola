@@ -1129,7 +1129,7 @@ mod tests {
             .save(config(Provider::LmStudio, &url, false), None, false)
             .unwrap();
         assert!(NoteModel::new(&manager)
-            .enhance(&[], "Meeting")
+            .enhance(&[], "Meeting", "auto")
             .unwrap_err()
             .to_string()
             .contains("invalid JSON"));

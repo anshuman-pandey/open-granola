@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import {
   ArrowRight,
   BookOpen,
@@ -36,6 +37,7 @@ export function LibraryAssistant({
   onClose,
   onOpenMeeting,
 }: Props) {
+  const { t } = useI18n();
   const [draft, setDraft] = useState("");
   const input = useRef<HTMLInputElement>(null);
   const opener = useRef(document.activeElement as HTMLElement | null);
@@ -63,17 +65,17 @@ export function LibraryAssistant({
           </span>
           <div>
             <DialogTitle className="font-display text-[27px] font-normal">
-              Ask your meetings
+              {t("Ask your meetings")}
             </DialogTitle>
             <DialogDescription className="mt-1 text-[11px]">
               {demo
-                ? "Demo · excerpts from the sample library"
-                : "Answers from your notes · processed on this device"}
+                ? t("Demo · excerpts from the sample library")
+                : t("Answers from your notes · processed on this device")}
             </DialogDescription>
           </div>
         </header>
         <div className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-6 py-6">
-          <p className="section-eyebrow">Your question</p>
+          <p className="section-eyebrow">{t("Your question")}</p>
           <h2 className="mt-2 text-[17px] font-medium leading-relaxed">
             {state.question}
           </h2>
@@ -88,7 +90,7 @@ export function LibraryAssistant({
                 className="flex items-center gap-2 text-sm text-muted-foreground"
               >
                 <LoaderCircle size={16} className="animate-spin text-primary" />
-                Reading your local notes…
+                {t("Reading your local notes…")}
               </p>
             ) : state.error ? (
               <div
@@ -100,7 +102,7 @@ export function LibraryAssistant({
                   onClick={() => onAsk(state.question)}
                   className="mt-3 text-xs font-semibold text-primary underline underline-offset-4"
                 >
-                  Try again
+                  {t("Try again")}
                 </button>
               </div>
             ) : (
@@ -110,8 +112,10 @@ export function LibraryAssistant({
             )}
           </div>
           {!!state.answer?.sources.length && (
-            <section aria-label="Source notes" className="mt-6">
-              <h3 className="section-eyebrow">Explore the source notes</h3>
+            <section aria-label={t("Source notes")} className="mt-6">
+              <h3 className="section-eyebrow">
+                {t("Explore the source notes")}
+              </h3>
               <div className="mt-3 space-y-2">
                 {state.answer.sources.map((source) => (
                   <button
@@ -149,17 +153,17 @@ export function LibraryAssistant({
           >
             <input
               ref={input}
-              aria-label="Ask another library question"
+              aria-label={t("Ask another library question")}
               maxLength={4000}
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
-              placeholder="Ask another question…"
+              placeholder={t("Ask another question…")}
               className="min-h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
             />
             <button
               disabled={!draft.trim() || state.pending}
               type="submit"
-              aria-label="Send library question"
+              aria-label={t("Send library question")}
               className="button-primary min-h-10 px-3"
             >
               <Send size={15} />
@@ -167,8 +171,10 @@ export function LibraryAssistant({
           </form>
           <p className="mt-2.5 text-center text-[10px] text-muted-foreground">
             {demo
-              ? "Sample content only. Free-form AI answers run in the desktop app."
-              : "Review generated answers against your original notes."}
+              ? t(
+                  "Sample content only. Free-form AI answers run in the desktop app.",
+                )
+              : t("Review generated answers against your original notes.")}
           </p>
         </footer>
       </DialogContent>

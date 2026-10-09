@@ -32,6 +32,7 @@ export interface SummaryRun {
   error: string | null;
   started_at: string;
   completed_at: string | null;
+  summary_language?: string | null;
 }
 
 export interface Meeting {

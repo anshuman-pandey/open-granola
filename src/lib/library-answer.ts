@@ -1,4 +1,5 @@
 import type { ActionItem, Meeting } from "./types";
+import type { Translate } from "../i18n";
 
 export interface LibraryAnswer {
   text: string;
@@ -10,14 +11,19 @@ export function sampleLibraryAnswer(
   question: string,
   meetings: Meeting[],
   actions: ActionItem[],
+  t: Translate = (message) => message,
 ): LibraryAnswer {
-  if (/action|follow.up|next step|\bdue\b|\bowe\b/i.test(question)) {
+  if (
+    /action|follow.up|next step|\bdue\b|\bowe\b|seguimiento|tarea|pr[oó]xim|आगे ध्यान|अगले कदम|बाकी कार्य/i.test(
+      question,
+    )
+  ) {
     const open = actions.filter((item) => !item.done);
     const ids = new Set(open.map((item) => item.meetingId));
     return {
       text: open.length
-        ? `Open actions in the sample library:\n\n${open.map((item) => `• ${item.text}\n  ${item.owner}${item.due ? ` · ${item.due}` : ""}`).join("\n\n")}`
-        : "There are no open actions in this sample library.",
+        ? `${t("Open actions in the sample library:")}\n\n${open.map((item) => `• ${item.text}\n  ${item.owner}${item.due ? ` · ${item.due}` : ""}`).join("\n\n")}`
+        : t("There are no open actions in this sample library."),
       sources: meetings.filter((meeting) => ids.has(meeting.id)),
     };
   }
@@ -66,17 +72,20 @@ export function sampleLibraryAnswer(
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map(({ meeting }) => meeting);
+  const asksForDecisions = /decisi|decid|फ़ैसल|फैसल|निर्णय/i.test(question);
   const selected =
-    /decisi|decid/i.test(question) && matches.length === 0 ? meetings : matches;
+    asksForDecisions && matches.length === 0 ? meetings : matches;
   return {
     text: selected.length
       ? selected
           .map(
             (meeting) =>
-              `${meeting.title}\n${/decisi|decid/i.test(question) ? meeting.decisions.map((decision) => `• ${decision}`).join("\n") || "No decisions saved." : meeting.summary || "Open the note to read its transcript."}`,
+              `${meeting.title}\n${asksForDecisions ? meeting.decisions.map((decision) => `• ${decision}`).join("\n") || t("No decisions saved.") : meeting.summary || t("Open the note to read its transcript.")}`,
           )
           .join("\n\n")
-      : "No matching sample notes found. Try a meeting name or ask about open action items. The desktop app uses your selected model provider to answer free-form questions.",
+      : t(
+          "No matching sample notes found. Try a meeting name or ask about open action items. The desktop app uses your selected model provider to answer free-form questions.",
+        ),
     sources: selected,
   };
 }

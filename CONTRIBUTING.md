@@ -1,5 +1,7 @@
 # Contributing to Open Granola
 
+English · [हिन्दी](docs/i18n/CONTRIBUTING.hi.md) · [Español](docs/i18n/CONTRIBUTING.es.md) · [Translation guide](docs/I18N.md)
+
 Keep local processing as the default and make every optional remote destination explicit. Features must state their limitations and fail visibly when a model, permission or platform feature is unavailable.
 
 ## Join in
@@ -7,6 +9,8 @@ Keep local processing as the default and make every optional remote destination 
 Bug reports, documentation fixes, accessibility improvements and code contributions are welcome. Check existing issues before opening one. For a larger change, describe the behavior and scope in an issue first so contributors can discuss it. See [SECURITY.md](SECURITY.md) for private vulnerability reports.
 
 Fork the repository, create a branch for your change, and open a pull request against `main`. Include a short description and the checks you ran. Small documentation fixes do not need the native toolchain.
+
+For focused integration work, see the [community contribution plan](docs/COMMUNITY_GROWTH.md).
 
 ## Setup
 

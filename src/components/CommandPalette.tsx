@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import { CheckSquare, FileText, Search } from "lucide-react";
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { SearchHit } from "../lib/backend";
@@ -26,6 +27,7 @@ export function CommandPalette({
   onOpenActions,
   searchFn,
 }: Props) {
+  const { t } = useI18n();
   const [query, setQuery] = useState("");
   const [index, setIndex] = useState(0);
   const [remote, setRemote] = useState<SearchHit[]>([]);
@@ -125,18 +127,19 @@ export function CommandPalette({
         }}
       >
         <DialogTitle className="sr-only">
-          Search your meeting library
+          {t("Search your meeting library")}
         </DialogTitle>
         <DialogDescription className="sr-only">
-          Search meetings and action items. Use the arrow keys to select a
-          result and Enter to open it.
+          {t(
+            "Search meetings and action items. Use the arrow keys to select a result and Enter to open it.",
+          )}
         </DialogDescription>
         <div className="flex items-center gap-3 border-b border-border px-4 py-4 pr-12">
           <Search size={18} className="shrink-0 text-muted-foreground" />
           <input
             ref={inputRef}
             role="combobox"
-            aria-label="Search meetings and transcripts"
+            aria-label={t("Search meetings and transcripts")}
             aria-expanded="true"
             aria-controls="library-search-results"
             aria-autocomplete="list"
@@ -170,7 +173,7 @@ export function CommandPalette({
                 pick(results[currentIndex]);
               }
             }}
-            placeholder="Search meetings, transcripts, actions…"
+            placeholder={t("Search meetings, transcripts, actions…")}
             className="min-w-0 flex-1 bg-transparent text-sm outline-none"
           />
         </div>
@@ -178,7 +181,7 @@ export function CommandPalette({
           ref={resultsRef}
           id="library-search-results"
           role="listbox"
-          aria-label="Search results"
+          aria-label={t("Search results")}
           aria-busy={loading}
           className="max-h-[min(380px,60dvh)] overflow-y-auto p-2"
         >
@@ -187,7 +190,7 @@ export function CommandPalette({
               role="status"
               className="px-3 py-8 text-center text-sm text-muted-foreground"
             >
-              Searching your library…
+              {t("Searching your library…")}
             </p>
           )}
           {!loading && error && (
@@ -195,15 +198,18 @@ export function CommandPalette({
               role="alert"
               className="px-3 py-8 text-center text-sm text-destructive"
             >
-              Search could not finish. Try a shorter search or reopen the
-              library.
+              {t(
+                "Search could not finish. Try a shorter search or reopen the library.",
+              )}
             </p>
           )}
           {!loading && !error && results.length === 0 && (
             <p className="px-3 py-8 text-center text-sm text-muted-foreground">
               {query
-                ? `No matches for “${query}”. Try another word.`
-                : "Your library is empty. Import or capture a meeting to get started."}
+                ? t("No matches for “{query}”. Try another word.", { query })
+                : t(
+                    "Your library is empty. Import or capture a meeting to get started.",
+                  )}
             </p>
           )}
           {!loading &&
@@ -239,10 +245,13 @@ export function CommandPalette({
         </div>
         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-border px-4 py-3 text-[10px] text-muted-foreground">
           <span>
-            Keyword search · {searchFn ? "desktop library" : "sample workspace"}
+            {t("Keyword search ·")}
+            {searchFn ? t("desktop library") : t("sample workspace")}
           </span>
           <span>
-            ↑↓ Navigate <span className="mx-1.5">↵ Open</span> Esc Close
+            {t("↑↓ Navigate")}
+            <span className="mx-1.5">{t("↵ Open")}</span>
+            {t("Esc Close")}
           </span>
         </div>
       </DialogContent>

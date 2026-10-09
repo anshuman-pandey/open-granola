@@ -34,7 +34,12 @@ pub struct CaptureSession {
 }
 
 impl CaptureSession {
-    pub fn begin(app: AppHandle, model: PathBuf, title: Option<String>) -> Result<Self> {
+    pub fn begin(
+        app: AppHandle,
+        model: PathBuf,
+        title: Option<String>,
+        language: String,
+    ) -> Result<Self> {
         let (stop, stopped) = mpsc::channel();
         let (ready, startup) = mpsc::sync_channel(1);
         let worker = std::thread::Builder::new().name("microphone-capture".into()).spawn(move || {
@@ -43,7 +48,7 @@ impl CaptureSession {
                 duration_s: 0, title,
             };
             let capture = (|| -> Result<_> {
-                let engine = WhisperEngine::load(&model)?;
+                let engine = WhisperEngine::load(&model, &language)?;
                 let dropped = Arc::new(AtomicUsize::new(0));
                 let error = Arc::new(Mutex::new(None));
                 let (stream, consumer, resampler) = microphone(dropped.clone(), error.clone())?;
