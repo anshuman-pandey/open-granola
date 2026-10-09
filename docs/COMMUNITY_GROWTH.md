@@ -6,7 +6,7 @@ The useful offer is a reproducible local-model integration, clearer language sup
 
 ## Assets prepared in this repository
 
-- Complete [Hindi](i18n/README.hi.md) and [Spanish](i18n/README.es.md) README translations, plus [Hindi](i18n/CONTRIBUTING.hi.md) and [Spanish](i18n/CONTRIBUTING.es.md) contribution guides.
+- Complete README and contribution-guide translations in Hindi, Spanish, Japanese, Simplified Chinese and Traditional Chinese; see the [language index](I18N.md#read-the-repository-in-your-language).
 - [Language coverage and maintenance contract](I18N.md), with UI language kept separate from speech and note language.
 - [LM Studio setup](integrations/LM_STUDIO.md), [Ollama setup](integrations/OLLAMA.md) and a shared [synthetic validation record](integrations/VALIDATION.md).
 - Focused [translation](../.github/ISSUE_TEMPLATE/translation.yml) and [provider compatibility](../.github/ISSUE_TEMPLATE/integration.yml) issue forms.

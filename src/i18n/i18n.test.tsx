@@ -9,6 +9,11 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider, useI18n } from "./index";
 import { workspaceMessages } from "./messages-workspace";
 import { settingsMessages } from "./messages-settings";
+import {
+  interfaceLanguages,
+  sourceMessages,
+  translationCatalogs,
+} from "./locales";
 
 function LanguageExample() {
   const { locale, setLocale, t, plural, formatDate, formatNumber } = useI18n();
@@ -16,6 +21,9 @@ function LanguageExample() {
     <>
       <button onClick={() => setLocale("hi")}>Hindi</button>
       <button onClick={() => setLocale("es")}>Spanish</button>
+      <button onClick={() => setLocale("ja")}>日本語</button>
+      <button onClick={() => setLocale("zh-CN")}>简体中文</button>
+      <button onClick={() => setLocale("zh-TW")}>繁體中文</button>
       <output data-testid="locale">{locale}</output>
       <output data-testid="label">{t("Meeting library")}</output>
       <output data-testid="count">
@@ -116,6 +124,69 @@ describe("workspace language", () => {
     expect(document.documentElement.lang).toBe("hi");
   });
 
+  it.each(
+    interfaceLanguages.filter(({ locale }) =>
+      ["ja", "zh-CN", "zh-TW"].includes(locale),
+    ),
+  )(
+    "switches, restores and synchronizes $locale with locale-aware formatting",
+    ({ locale, label, intlLocale }) => {
+      const view = render(
+        <LanguageProvider>
+          <LanguageExample />
+        </LanguageProvider>,
+      );
+      fireEvent.click(screen.getByRole("button", { name: label }));
+      expect(screen.getByTestId("label")).not.toHaveTextContent(
+        "Meeting library",
+      );
+      expect(document.documentElement.lang).toBe(locale);
+      expect(window.localStorage.getItem("open-granola-language")).toBe(locale);
+      expect(screen.getByTestId("number")).toHaveTextContent(
+        new Intl.NumberFormat(intlLocale).format(12500),
+      );
+      expect(screen.getByTestId("date")).toHaveTextContent(
+        new Intl.DateTimeFormat(intlLocale, {
+          month: "long",
+          day: "numeric",
+        }).format(new Date(2026, 11, 2)),
+      );
+      view.unmount();
+      render(
+        <LanguageProvider>
+          <LanguageExample />
+        </LanguageProvider>,
+      );
+      expect(screen.getByTestId("locale")).toHaveTextContent(locale);
+      fireEvent.click(screen.getByRole("button", { name: "Spanish" }));
+      act(() =>
+        window.dispatchEvent(
+          new StorageEvent("storage", {
+            key: "open-granola-language",
+            newValue: locale,
+          }),
+        ),
+      );
+      expect(screen.getByTestId("locale")).toHaveTextContent(locale);
+    },
+  );
+
+  it.each(["ja", "zh-CN", "zh-TW"] as const)(
+    "preserves unrecognized content and interpolated values in %s",
+    (locale) => {
+      window.localStorage.setItem("open-granola-language", locale);
+      const { result } = renderHook(useI18n, { wrapper: LanguageProvider });
+      expect(result.current.t("__proto__")).toBe("__proto__");
+      expect(result.current.t("constructor")).toBe("constructor");
+      expect(
+        result.current.t("Source: 未翻訳のメモ / 原始记录 / 原始紀錄"),
+      ).toBe("Source: 未翻訳のメモ / 原始记录 / 原始紀錄");
+      expect(result.current.t("Hello {name}", { name: "田中 {count}" })).toBe(
+        "Hello 田中 {count}",
+      );
+    },
+  );
+
   it("keeps every catalog entry complete and interpolation placeholders intact", () => {
     const placeholders = (value: string) =>
       [...value.matchAll(/\{([a-zA-Z0-9_]+)\}/g)]
@@ -132,6 +203,19 @@ describe("workspace language", () => {
             `${source} (${locale})`,
           ).toEqual(placeholders(source));
         }
+      }
+    }
+    for (const [locale, catalog] of Object.entries(translationCatalogs)) {
+      expect(Object.keys(catalog).sort(), locale).toEqual(
+        Object.keys(sourceMessages).sort(),
+      );
+      for (const [source, translated] of Object.entries(catalog)) {
+        expect(translated.trim(), `${source} (${locale})`).not.toBe("");
+        expect(placeholders(translated), `${source} (${locale})`).toEqual(
+          placeholders(source),
+        );
+        if (source.includes("DELETE"))
+          expect(translated, locale).toContain("DELETE");
       }
     }
   });

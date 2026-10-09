@@ -92,6 +92,28 @@
     letter-spacing: normal;
     line-height: 1.35;
   }
+  :root:lang(ja) {
+    --cjk-font:
+      "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP",
+      sans-serif;
+  }
+  :root:lang(zh-CN) {
+    --cjk-font: "PingFang SC", "Microsoft YaHei", "Noto Sans SC", sans-serif;
+  }
+  :root:lang(zh-TW) {
+    --cjk-font: "PingFang TC", "Microsoft JhengHei", "Noto Sans TC", sans-serif;
+  }
+  body:lang(ja),
+  body:lang(zh) {
+    font-family: "Inter", var(--cjk-font);
+  }
+  .font-display:lang(ja),
+  .font-display:lang(zh) {
+    font-family: var(--cjk-font);
+    letter-spacing: normal;
+    line-height: 1.4;
+    overflow-wrap: anywhere;
+  }
 }
 
 @layer utilities {

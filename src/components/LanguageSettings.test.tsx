@@ -2,6 +2,7 @@ import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { LanguageProvider } from "../i18n";
 import { LanguageSettings } from "./LanguageSettings";
+import { translationCatalogs } from "../i18n/locales";
 
 const backend = vi.hoisted(() => ({
   mode: "tauri",
@@ -22,6 +23,46 @@ beforeEach(() => {
 });
 
 describe("independent language preferences", () => {
+  it.each(["ja", "zh-CN", "zh-TW"] as const)(
+    "keeps %s interface choice separate from Japanese/Chinese meeting codes",
+    async (locale) => {
+      backend.getLanguageSettings.mockResolvedValue({
+        transcription_language: "ja",
+        summary_language: "zh",
+      });
+      render(
+        <LanguageProvider>
+          <LanguageSettings />
+        </LanguageProvider>,
+      );
+      await waitFor(() =>
+        expect(screen.getByLabelText("Spoken language")).toBeEnabled(),
+      );
+      const interfaceSelect = screen.getByLabelText("Interface language");
+      for (const name of ["日本語", "简体中文", "繁體中文"]) {
+        expect(screen.getByRole("option", { name })).toBeInTheDocument();
+      }
+      fireEvent.change(interfaceSelect, { target: { value: locale } });
+      const t = (message: string) => translationCatalogs[locale][message];
+      expect(screen.getByLabelText(t("Interface language"))).toHaveValue(
+        locale,
+      );
+      expect(screen.getByLabelText(t("Spoken language"))).toHaveValue("ja");
+      const summary = screen.getByLabelText(t("Summary language"));
+      expect(summary).toHaveValue("zh");
+      expect(backend.saveLanguageSettings).not.toHaveBeenCalled();
+      fireEvent.change(summary, { target: { value: "ja" } });
+      fireEvent.click(
+        screen.getByRole("button", { name: t("Save meeting languages") }),
+      );
+      await screen.findByText(t("Language settings saved."));
+      expect(backend.saveLanguageSettings).toHaveBeenCalledExactlyOnceWith({
+        transcription_language: "ja",
+        summary_language: "ja",
+      });
+      expect(window.localStorage.getItem("open-granola-language")).toBe(locale);
+    },
+  );
   it("repairs unreadable preferences only through an explicit reset", async () => {
     backend.getLanguageSettings.mockRejectedValueOnce(
       new Error("Saved language settings are invalid"),

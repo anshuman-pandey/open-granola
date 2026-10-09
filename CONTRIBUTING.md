@@ -1,6 +1,6 @@
 # Contributing to Open Granola
 
-English · [हिन्दी](docs/i18n/CONTRIBUTING.hi.md) · [Español](docs/i18n/CONTRIBUTING.es.md) · [Translation guide](docs/I18N.md)
+English · [हिन्दी](docs/i18n/CONTRIBUTING.hi.md) · [Español](docs/i18n/CONTRIBUTING.es.md) · [日本語](docs/i18n/CONTRIBUTING.ja.md) · [简体中文](docs/i18n/CONTRIBUTING.zh-CN.md) · [繁體中文](docs/i18n/CONTRIBUTING.zh-TW.md) · [Translation guide](docs/I18N.md)
 
 Keep local processing as the default and make every optional remote destination explicit. Features must state their limitations and fail visibly when a model, permission or platform feature is unavailable.
 

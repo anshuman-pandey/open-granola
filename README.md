@@ -18,7 +18,7 @@
 </p>
 
 <p align="center">
-  English · <a href="docs/i18n/README.hi.md">हिन्दी</a> · <a href="docs/i18n/README.es.md">Español</a> · <a href="docs/I18N.md">Language support</a>
+  English · <a href="docs/i18n/README.hi.md">हिन्दी</a> · <a href="docs/i18n/README.es.md">Español</a> · <a href="docs/i18n/README.ja.md">日本語</a> · <a href="docs/i18n/README.zh-CN.md">简体中文</a> · <a href="docs/i18n/README.zh-TW.md">繁體中文</a> · <a href="docs/I18N.md">Language support</a>
 </p>
 
 **Development preview.** Open Granola records your microphone, transcribes with local Whisper, and turns the transcript into notes using a local model or a provider you connect. Your library stays in a local SQLite database. Cloud summaries send transcript text to the selected provider.

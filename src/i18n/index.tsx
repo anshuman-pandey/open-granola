@@ -6,20 +6,23 @@ import {
   useState,
   type ReactNode,
 } from "react";
-import { workspaceMessages } from "./messages-workspace";
-import { settingsMessages } from "./messages-settings";
+import {
+  interfaceLanguages,
+  isLocale,
+  translationCatalogs,
+  type Locale,
+} from "./locales";
 
-export type Locale = "en" | "hi" | "es";
+export type { Locale } from "./locales";
 export type TranslationValues = Record<string, string | number>;
 export type Translate = (message: string, values?: TranslationValues) => string;
 const storageKey = "open-granola-language";
-const locales: Record<Locale, string> = { en: "en", hi: "hi-IN", es: "es" };
-const isLocale = (value: unknown): value is Locale =>
-  value === "en" || value === "hi" || value === "es";
 
 function languageTools(locale: Locale) {
-  const intlLocale = locales[locale];
-  const messages = { ...workspaceMessages, ...settingsMessages };
+  const intlLocale = interfaceLanguages.find(
+    (language) => language.locale === locale,
+  )!.intlLocale;
+  const messages = locale === "en" ? undefined : translationCatalogs[locale];
   const formatNumber = (value: number, options?: Intl.NumberFormatOptions) =>
     new Intl.NumberFormat(intlLocale, options).format(value);
   const formatDate = (
@@ -39,7 +42,9 @@ function languageTools(locale: Locale) {
   };
   const t: Translate = (message, values = {}) => {
     const translated =
-      locale === "en" ? message : (messages[message]?.[locale] ?? message);
+      messages && Object.hasOwn(messages, message)
+        ? messages[message]
+        : message;
     return translated.replace(
       /\{([a-zA-Z0-9_]+)\}/g,
       (placeholder, key: string) => {

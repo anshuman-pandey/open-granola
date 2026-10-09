@@ -1,6 +1,7 @@
 import { Languages, Loader2 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useI18n, type Locale } from "../i18n";
+import { interfaceLanguages } from "../i18n/locales";
 import { getBackend } from "../lib/backend";
 import {
   DEFAULT_LANGUAGE_SETTINGS,
@@ -116,15 +117,11 @@ export function LanguageSettings({
             onChange={(event) => setLocale(event.target.value as Locale)}
             aria-describedby="interface-language-help"
           >
-            <option value="en" lang="en">
-              English
-            </option>
-            <option value="hi" lang="hi">
-              हिन्दी
-            </option>
-            <option value="es" lang="es">
-              Español
-            </option>
+            {interfaceLanguages.map(({ locale: code, label }) => (
+              <option key={code} value={code} lang={code}>
+                {label}
+              </option>
+            ))}
           </select>
         </label>
         <p

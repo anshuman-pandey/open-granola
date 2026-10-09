@@ -17,7 +17,7 @@
   <a href="../COMPETITIVE_RESEARCH.md">Investigación y prioridades</a>
 </p>
 
-[English](../../README.md) · [हिन्दी](README.hi.md) · **Español** · [Contribuir a las traducciones](../I18N.md)
+[English](../../README.md) · [हिन्दी](README.hi.md) · **Español** · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Contribuir a las traducciones](../I18N.md)
 
 <!-- English source: README.md at 6127b7f34b2e3ea786481953cfe57a7179a214c6; reviewed 2026-10-10. -->
 

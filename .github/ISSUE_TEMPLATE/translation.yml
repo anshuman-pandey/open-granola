@@ -4,7 +4,7 @@ body:
   - type: markdown
     attributes:
       value: |
-        Reports in English, हिन्दी or Español are welcome. See [the language guide](https://github.com/anshuman-pandey/open-granola/blob/main/docs/I18N.md).
+        Reports in English, हिन्दी, Español, 日本語, 简体中文 or 繁體中文 are welcome. See [the language guide](https://github.com/anshuman-pandey/open-granola/blob/main/docs/I18N.md).
         Keep screenshots and examples synthetic. Do not include real meeting content or credentials.
         For model/transcription accuracy, identify it below so we do not confuse it with an interface translation.
   - type: input
@@ -12,7 +12,7 @@ body:
     attributes:
       label: Language or locale
       description: Name and code if known; say whether this is an existing translation or a new language request.
-      placeholder: Hindi (hi), Spanish (es), or another language
+      placeholder: Japanese (ja), Simplified Chinese (zh-CN), Traditional Chinese (zh-TW), or another language
     validations:
       required: true
   - type: dropdown
