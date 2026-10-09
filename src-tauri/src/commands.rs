@@ -6,6 +6,7 @@ use tauri::{AppHandle, Emitter, State};
 use uuid::Uuid;
 
 use crate::audio::CaptureSession;
+use crate::language::LanguageSettings;
 use crate::llm::{EnhancedNote, LocalLlm, NoteModel};
 use crate::providers::{Provider, ProviderConfig, ProviderStatus};
 use crate::storage::Db;
@@ -27,8 +28,11 @@ pub async fn start_capture(
         validate_text(title, 500, "Meeting title", true)?;
     }
     let model = state.data_dir.join("models/whisper-large-v3-turbo.bin");
+    let language = LanguageSettings::load(&state.db.lock())
+        .map_err(|e| format!("{e:#}"))?
+        .transcription_language;
     let session = tauri::async_runtime::spawn_blocking(move || {
-        CaptureSession::begin(app, model, meeting_hint)
+        CaptureSession::begin(app, model, meeting_hint, language)
     })
     .await
     .map_err(|e| e.to_string())?
@@ -89,7 +93,8 @@ pub async fn stop_capture_and_enhance(
         let enhanced = enhance_saved(&state, &id, &captured.transcript, &template_md, true);
         let enhanced_ok = enhanced.is_ok();
         if let Err(e) = enhanced { let _ = app.emit("capture-warning", format!("Transcript saved; {e}")); }
-        if let Ok(commitments) = if enhanced_ok { with_llm(&state, |llm| llm.extract_commitments(&captured.transcript)) } else { Ok(Vec::new()) } {
+        let commitment_language = LanguageSettings::load(&state.db.lock()).map_err(|e| e.to_string());
+        if let Ok(commitments) = if enhanced_ok { commitment_language.and_then(|languages| with_llm(&state, |llm| llm.extract_commitments(&captured.transcript, &languages.summary_language))) } else { Ok(Vec::new()) } {
             let db = state.db.lock();
             if let Ok(tx) = db.conn().unchecked_transaction() {
                 let result: rusqlite::Result<()> = commitments.into_iter().try_for_each(|c| {
@@ -129,6 +134,40 @@ pub async fn get_provider_settings(
     tauri::async_runtime::spawn_blocking(move || Ok(state.providers.lock().status()))
         .await
         .map_err(|_| "Could not read provider settings".to_string())?
+}
+
+#[tauri::command]
+pub async fn get_language_settings(
+    state: State<'_, Arc<AppState>>,
+) -> Result<LanguageSettings, String> {
+    let _gate = state.capture_gate.lock().await;
+    LanguageSettings::load(&state.db.lock()).map_err(|e| format!("{e:#}"))
+}
+
+// Caller holds capture_gate, including through the database write. No language
+// or provider change can race a capture, pending save, purge, or summary retry.
+fn save_language_preferences(
+    state: &AppState,
+    settings: LanguageSettings,
+) -> Result<LanguageSettings, String> {
+    if state.session.lock().is_some() || state.pending_capture.lock().is_some() {
+        return Err("Stop and save or discard the recording before changing languages".into());
+    }
+    settings
+        .save(&state.db.lock())
+        .map_err(|e| format!("{e:#}"))
+}
+
+#[tauri::command]
+pub async fn save_language_settings(
+    state: State<'_, Arc<AppState>>,
+    settings: LanguageSettings,
+) -> Result<LanguageSettings, String> {
+    let _gate = state.capture_gate.lock().await;
+    let state = state.inner().clone();
+    tauri::async_runtime::spawn_blocking(move || save_language_preferences(&state, settings))
+        .await
+        .map_err(|_| "Could not save language settings".to_string())?
 }
 
 #[tauri::command]
@@ -249,11 +288,17 @@ fn enhance_saved(
         return Err("This meeting has no transcript to summarize".into());
     }
     let config = state.providers.lock().config().clone();
+    let language = LanguageSettings::load(&state.db.lock())
+        .map_err(|e| format!("{e:#}"))?
+        .summary_language;
     let run_id = Uuid::new_v4().to_string();
     let provider = serde_json::to_value(config.provider).map_err(|e| e.to_string())?;
-    state.db.lock().conn().execute("INSERT INTO summary_runs(id,meeting_id,provider,model,endpoint,off_device,status,started_at) VALUES(?1,?2,?3,?4,?5,?6,'running',?7)",
-        rusqlite::params![run_id,id,provider.as_str().unwrap_or("unknown"),config.model,config.base_url,config.sends_transcript_off_device(),chrono::Utc::now().to_rfc3339()]).map_err(|e|e.to_string())?;
-    let result = with_llm(state, |model| model.enhance(transcript, template)).and_then(|note| {
+    state.db.lock().conn().execute("INSERT INTO summary_runs(id,meeting_id,provider,model,endpoint,off_device,status,started_at,summary_language) VALUES(?1,?2,?3,?4,?5,?6,'running',?7,?8)",
+        rusqlite::params![run_id,id,provider.as_str().unwrap_or("unknown"),config.model,config.base_url,config.sends_transcript_off_device(),chrono::Utc::now().to_rfc3339(),language]).map_err(|e|e.to_string())?;
+    let result = with_llm(state, |model| {
+        model.enhance(transcript, template, &language)
+    })
+    .and_then(|note| {
         update_enhancement(&state.db.lock(), id, &note, &run_id, update_actions).map_err(|_| {
             "Summary generated but could not be saved. The previous note is intact.".to_string()
         })
@@ -316,9 +361,9 @@ fn nonnegative_ms(row: &rusqlite::Row<'_>, column: usize) -> rusqlite::Result<u6
 }
 
 fn summary_history(db: &Db, meeting_id: &str) -> rusqlite::Result<Vec<serde_json::Value>> {
-    let mut statement=db.conn().prepare("SELECT provider,model,endpoint,off_device,status,error,started_at,completed_at FROM summary_runs WHERE meeting_id=?1 ORDER BY rowid DESC LIMIT 20")?;
+    let mut statement=db.conn().prepare("SELECT provider,model,endpoint,off_device,status,error,started_at,completed_at,summary_language FROM summary_runs WHERE meeting_id=?1 ORDER BY rowid DESC LIMIT 20")?;
     let rows=statement.query_map([meeting_id],|row|Ok(serde_json::json!({
-        "provider":row.get::<_,String>(0)?,"model":row.get::<_,String>(1)?,"endpoint":row.get::<_,String>(2)?,"off_device":row.get::<_,bool>(3)?,"status":row.get::<_,String>(4)?,"error":row.get::<_,Option<String>>(5)?,"started_at":row.get::<_,String>(6)?,"completed_at":row.get::<_,Option<String>>(7)?
+        "provider":row.get::<_,String>(0)?,"model":row.get::<_,String>(1)?,"endpoint":row.get::<_,String>(2)?,"off_device":row.get::<_,bool>(3)?,"status":row.get::<_,String>(4)?,"error":row.get::<_,Option<String>>(5)?,"started_at":row.get::<_,String>(6)?,"completed_at":row.get::<_,Option<String>>(7)?,"summary_language":row.get::<_,Option<String>>(8)?
     })))?;
     rows.collect()
 }
@@ -1061,6 +1106,12 @@ mod tests {
         };
         // The selected local model is intentionally absent; no provider or
         // credential-store access is necessary to reproduce a real failure.
+        LanguageSettings {
+            summary_language: "hi".into(),
+            ..Default::default()
+        }
+        .save(&state.db.lock())
+        .unwrap();
         let error =
             enhance_saved(&state, "retry-meeting", &transcript, "Meeting", false).unwrap_err();
         assert!(!error.is_empty());
@@ -1087,9 +1138,37 @@ mod tests {
             assert_eq!(history[0]["provider"], "local");
             assert_eq!(history[0]["status"], "failed");
             assert_eq!(history[0]["off_device"], false);
+            assert_eq!(history[0]["summary_language"], "hi");
             assert!(history[0]["completed_at"].as_str().is_some());
             assert!(!history[0]["error"].as_str().unwrap().is_empty());
         }
+        // A pending capture rejects setting changes and cannot silently alter
+        // the preference that was in force when capture started.
+        *state.pending_capture.lock() = Some(crate::audio::CapturedMeeting {
+            transcript: transcript.clone(),
+            started_at: "2099-01-01".into(),
+            duration_s: 1,
+            title: None,
+        });
+        let next = LanguageSettings {
+            summary_language: "es".into(),
+            ..Default::default()
+        };
+        assert!(save_language_preferences(&state, next.clone()).is_err());
+        assert_eq!(
+            LanguageSettings::load(&state.db.lock())
+                .unwrap()
+                .summary_language,
+            "hi"
+        );
+        state.pending_capture.lock().take();
+        save_language_preferences(&state, next).unwrap();
+        assert!(enhance_saved(&state, "retry-meeting", &transcript, "Meeting", false).is_err());
+        let history = summary_history(&state.db.lock(), "retry-meeting").unwrap();
+        assert_eq!(history.len(), 2);
+        assert_eq!(history[0]["summary_language"], "es");
+        assert_eq!(history[1]["summary_language"], "hi");
+        assert_eq!(preserved_meeting_children(&state.db.lock()), before);
         drop(state);
         std::fs::remove_dir_all(dir).unwrap();
     }

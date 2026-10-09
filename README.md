@@ -17,6 +17,10 @@
   <a href="docs/COMPETITIVE_RESEARCH.md">Research and priorities</a>
 </p>
 
+<p align="center">
+  English · <a href="docs/i18n/README.hi.md">हिन्दी</a> · <a href="docs/i18n/README.es.md">Español</a> · <a href="docs/I18N.md">Language support</a>
+</p>
+
 **Development preview.** Open Granola records your microphone, transcribes with local Whisper, and turns the transcript into notes using a local model or a provider you connect. Your library stays in a local SQLite database. Cloud summaries send transcript text to the selected provider.
 
 System-audio capture is not implemented: this build does not record the remote side of a call through headphones. Real microphone/model sessions, provider accounts and packaged releases still need end-to-end testing on the intended hardware. The browser preview uses labeled sample meetings.
@@ -51,6 +55,8 @@ The ChatGPT route uses the [official sign-in flow for open-source/local apps](ht
 Claude is connected with an API key; this app has no Claude consumer-account login. OpenAI API keys and ChatGPT plan sign-in are separate routes.
 
 ### Connect a summarizer
+
+Setup guides: [LM Studio](docs/integrations/LM_STUDIO.md) · [Ollama](docs/integrations/OLLAMA.md).
 
 1. Open **Settings → Models & connections** in the desktop app.
 2. Choose a provider and enter its exact model ID. For a custom server, enter the API base URL it documents.

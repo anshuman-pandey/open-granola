@@ -1,3 +1,4 @@
+import { useI18n, type Translate } from "../i18n";
 import {
   Check,
   CheckCircle2,
@@ -30,17 +31,26 @@ interface Props {
   onSummaryAttempt?: () => Promise<void>;
 }
 
-function demoAnswer(question: string, meeting: Meeting, items: ActionItem[]) {
-  if (/action|next|follow.up|owner/i.test(question))
-    return `Sample meeting action items:\n\n${
+function demoAnswer(
+  question: string,
+  meeting: Meeting,
+  items: ActionItem[],
+  t: Translate,
+) {
+  if (
+    /action|next|follow.up|owner|अगले|काम|कार्रवाई|pasos|acciones|seguimiento/i.test(
+      question,
+    )
+  )
+    return `${t("Sample meeting action items:")}\n\n${
       items
         .filter((a) => !a.done)
         .map((a) => `• ${a.text} — ${a.owner}`)
-        .join("\n") || "No open action items in this note."
+        .join("\n") || t("No open action items in this note.")
     }`;
-  if (/decid|decision/i.test(question))
-    return `Decisions recorded in this sample note:\n\n${meeting.decisions.map((d) => `• ${d}`).join("\n") || "No decisions recorded."}`;
-  return `Sample note summary:\n\n${meeting.summary || "No summary recorded."}\n\nThis browser preview displays the saved note content. Free-form AI answers require a configured desktop model.`;
+  if (/decid|decision|decisión|फ़ैसला|फैसला|निर्णय/i.test(question))
+    return `${t("Decisions recorded in this sample note:")}\n\n${meeting.decisions.map((d) => `• ${d}`).join("\n") || t("No decisions recorded.")}`;
+  return `${t("Sample note summary:")}\n\n${meeting.summary || t("No summary recorded.")}\n\n${t("This browser preview displays the saved note content. Free-form AI answers require a configured desktop model.")}`;
 }
 
 export function NoteView({
@@ -50,6 +60,7 @@ export function NoteView({
   askFn,
   onSummaryAttempt,
 }: Props) {
+  const { t, formatDate, formatNumber, plural } = useI18n();
   const demo = getBackend().mode === "demo";
   const [tab, setTab] = useState<"notes" | "transcript">("notes");
   const [chatOpen, setChatOpen] = useState(false);
@@ -99,7 +110,9 @@ export function NoteView({
 
   const copy = async () => {
     try {
-      await navigator.clipboard.writeText(meetingMarkdown(meeting, items));
+      await navigator.clipboard.writeText(
+        meetingMarkdown(meeting, items, { t, formatDate }),
+      );
       setCopied(true);
       setNotice("Meeting copied as Markdown.");
       setError("");
@@ -145,8 +158,10 @@ export function NoteView({
       const answer = askFn
         ? await askFn(text.trim())
         : demo
-          ? demoAnswer(text, meeting, items)
-          : "The meeting assistant is unavailable. Check your model configuration in Settings.";
+          ? demoAnswer(text, meeting, items, t)
+          : t(
+              "The meeting assistant is unavailable. Check your model configuration in Settings.",
+            );
       if (sequence === request.current)
         setChat((prev) => [
           ...prev,
@@ -159,7 +174,9 @@ export function NoteView({
           {
             id: `a-${sequence}`,
             role: "assistant",
-            text: "I couldn’t answer this question. Check the selected model provider in Settings, then try again.",
+            text: t(
+              "I couldn’t answer this question. Check the selected model provider in Settings, then try again.",
+            ),
           },
         ]);
     } finally {
@@ -176,7 +193,7 @@ export function NoteView({
           <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2 text-[11px] text-muted-foreground">
               <time dateTime={meeting.date}>
-                {new Date(meeting.date).toLocaleDateString(undefined, {
+                {formatDate(meeting.date, {
                   month: "long",
                   day: "numeric",
                   year: "numeric",
@@ -184,7 +201,7 @@ export function NoteView({
               </time>
               <span className="flex items-center gap-1.5">
                 <Clock3 size={12} aria-hidden="true" />
-                {meeting.durationMin} min
+                {t("{count} min", { count: meeting.durationMin })}
               </span>
               <span className="rounded-full border border-border/70 bg-secondary/60 px-2.5 py-0.5 text-[10px] font-medium text-secondary-foreground">
                 {meeting.template}
@@ -193,8 +210,8 @@ export function NoteView({
             <div className="flex items-center gap-1">
               <button
                 onClick={copy}
-                aria-label="Copy meeting as Markdown"
-                title="Copy Markdown"
+                aria-label={t("Copy meeting as Markdown")}
+                title={t("Copy Markdown")}
                 className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground sm:min-h-0 sm:min-w-0"
               >
                 {copied ? <Check size={15} /> : <Copy size={15} />}
@@ -203,14 +220,14 @@ export function NoteView({
                 onClick={() => {
                   downloadMarkdown(
                     meeting.title,
-                    meetingMarkdown(meeting, items),
+                    meetingMarkdown(meeting, items, { t, formatDate }),
                   );
                   setNotice("Markdown export downloaded.");
                 }}
                 className="flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-medium sm:min-h-0 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
               >
                 <Download size={14} />
-                Export
+                {t("Export")}
               </button>
             </div>
           </div>
@@ -225,19 +242,19 @@ export function NoteView({
             )}
             <p className="min-w-0 text-[12px] leading-6 text-muted-foreground">
               {meeting.participants.map((p) => p.name).join(", ") ||
-                "No participants recorded"}
+                t("No participants recorded")}
             </p>
           </div>
           <div className="mt-6 flex flex-wrap items-center gap-2">
             <div
               role="tablist"
-              aria-label="Meeting content"
+              aria-label={t("Meeting content")}
               className="flex rounded-xl border border-border/60 bg-secondary/55 p-1"
             >
               {(
                 [
-                  ["notes", "Notes", ListChecks],
-                  ["transcript", "Transcript", ScrollText],
+                  ["notes", t("Notes"), ListChecks],
+                  ["transcript", t("Transcript"), ScrollText],
                 ] as const
               ).map(([id, label, Icon]) => (
                 <button
@@ -257,7 +274,7 @@ export function NoteView({
                       return;
                     event.preventDefault();
                     const next =
-                      event.key === "Home"
+                      event.key === t("Home")
                         ? "notes"
                         : event.key === "End"
                           ? "transcript"
@@ -276,7 +293,7 @@ export function NoteView({
                   {label}
                   {id === "transcript" && (
                     <span className="font-mono2 ml-1 text-[9px] text-muted-foreground">
-                      {meeting.transcript.length}
+                      {formatNumber(meeting.transcript.length)}
                     </span>
                   )}
                 </button>
@@ -290,7 +307,7 @@ export function NoteView({
               className="ml-auto flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-2.5 text-[11px] font-semibold text-primary transition-colors hover:bg-primary/5 xl:hidden"
             >
               <MessageCircle size={14} aria-hidden="true" />
-              Ask
+              {t("Ask")}
             </button>
           </div>
         </header>
@@ -300,7 +317,7 @@ export function NoteView({
             role="alert"
             className="border-b border-destructive/20 bg-destructive/5 px-5 py-3 text-xs text-destructive"
           >
-            {error}
+            {t(error)}
           </div>
         )}
         {notice && (
@@ -308,7 +325,7 @@ export function NoteView({
             role="status"
             className="border-b border-border bg-secondary/60 px-5 py-2 text-xs text-muted-foreground"
           >
-            {notice}
+            {t(notice)}
           </div>
         )}
         <div
@@ -327,21 +344,23 @@ export function NoteView({
                 />
                 <h2 className="flex items-center gap-2 text-[10px] font-semibold uppercase tracking-[0.14em] text-primary">
                   <Sparkles size={13} aria-hidden="true" />
-                  {demo ? "Sample summary" : "At a glance"}
+                  {demo ? t("Sample summary") : t("At a glance")}
                 </h2>
                 <p className="mt-4 whitespace-pre-wrap text-[14px] leading-[1.85] text-foreground/90 sm:text-[15px]">
                   {meeting.summary ||
-                    "No summary is available for this meeting. You can still read and export the transcript."}
+                    t(
+                      "No summary is available for this meeting. You can still read and export the transcript.",
+                    )}
                 </p>
               </section>
               {meeting.chapters.length > 0 && (
                 <section>
                   <div className="mb-4 flex items-baseline justify-between gap-3">
                     <h2 className="font-display text-[25px] leading-tight">
-                      The conversation
+                      {t("The conversation")}
                     </h2>
                     <span className="text-[10px] text-muted-foreground">
-                      Jump to a moment
+                      {t("Jump to a moment")}
                     </span>
                   </div>
                   <div className="divide-y divide-border/75 rounded-2xl border border-border/80 bg-card/65 px-4 sm:px-5">
@@ -353,8 +372,11 @@ export function NoteView({
                         <button
                           disabled={!meeting.transcript.length}
                           onClick={() => jumpTo(chapter.timestamp)}
-                          title="Find this moment in transcript"
-                          aria-label={`Find ${chapter.title} at ${chapter.timestamp} in transcript`}
+                          title={t("Find this moment in transcript")}
+                          aria-label={t(
+                            "Find {title} at {time} in transcript",
+                            { title: chapter.title, time: chapter.timestamp },
+                          )}
                           className="font-mono2 flex h-fit min-h-11 w-fit shrink-0 sm:min-h-0 items-center gap-1 rounded-md bg-secondary/80 px-2 py-1 text-[10px] text-secondary-foreground transition-colors hover:bg-primary/10 hover:text-primary"
                         >
                           {chapter.timestamp}
@@ -376,10 +398,10 @@ export function NoteView({
               <section>
                 <div className="mb-4 flex items-baseline gap-3">
                   <h2 className="font-display text-[25px] leading-tight">
-                    Decisions
+                    {t("Decisions")}
                   </h2>
                   <span className="text-[10px] text-muted-foreground">
-                    {meeting.decisions.length} recorded
+                    {t("{count} recorded", { count: meeting.decisions.length })}
                   </span>
                 </div>
                 {meeting.decisions.length ? (
@@ -402,17 +424,21 @@ export function NoteView({
                   </ul>
                 ) : (
                   <p className="text-[13px] leading-relaxed text-muted-foreground">
-                    No decisions recorded in this note.
+                    {t("No decisions recorded in this note.")}
                   </p>
                 )}
               </section>
               <section>
                 <div className="mb-4 flex items-baseline gap-3">
                   <h2 className="font-display text-[25px] leading-tight">
-                    Next steps
+                    {t("Next steps")}
                   </h2>
                   <span className="text-[10px] text-muted-foreground">
-                    {items.filter((a) => !a.done).length} open action items
+                    {plural(
+                      "{count} open action item",
+                      "{count} open action items",
+                      items.filter((a) => !a.done).length,
+                    )}
                   </span>
                 </div>
                 {items.length ? (
@@ -450,7 +476,10 @@ export function NoteView({
                             {item.owner}
                             {item.due ? ` · ${item.due}` : ""}
                             {pending.includes(item.id) && (
-                              <span className="text-primary"> · Saving…</span>
+                              <span className="text-primary">
+                                {" "}
+                                {t("· Saving…")}
+                              </span>
                             )}
                           </span>
                         </span>
@@ -459,15 +488,17 @@ export function NoteView({
                   </div>
                 ) : (
                   <p className="text-[13px] leading-relaxed text-muted-foreground">
-                    No action items recorded in this note.
+                    {t("No action items recorded in this note.")}
                   </p>
                 )}
               </section>
               <p className="flex items-center gap-2 border-t border-border/70 pt-5 text-[10px] leading-relaxed text-muted-foreground">
                 <ScrollText size={13} className="shrink-0" aria-hidden="true" />
                 {demo
-                  ? "Sample meeting · explore the transcript for context."
-                  : "Keep the transcript close. Review important details before sharing."}
+                  ? t("Sample meeting · explore the transcript for context.")
+                  : t(
+                      "Keep the transcript close. Review important details before sharing.",
+                    )}
               </p>
             </div>
           ) : (
@@ -479,19 +510,19 @@ export function NoteView({
                   aria-hidden="true"
                 />
                 <input
-                  aria-label="Search this transcript"
+                  aria-label={t("Search this transcript")}
                   value={query}
                   onChange={(e) => {
                     setQuery(e.target.value);
                     setHighlight(null);
                   }}
-                  placeholder="Find a word or phrase…"
+                  placeholder={t("Find a word or phrase…")}
                   className="h-11 min-w-0 flex-1 bg-transparent text-[12px] outline-none"
                 />
                 {query && (
                   <button
                     onClick={() => setQuery("")}
-                    aria-label="Clear transcript search"
+                    aria-label={t("Clear transcript search")}
                     className="flex min-h-11 min-w-11 items-center justify-center rounded-md p-1.5 text-muted-foreground hover:bg-secondary sm:min-h-0 sm:min-w-0"
                   >
                     <X size={13} />
@@ -501,12 +532,23 @@ export function NoteView({
               <div className="mb-6 flex flex-wrap justify-between gap-2 text-[10px] leading-relaxed text-muted-foreground">
                 <p>
                   {demo
-                    ? "Sample speakers and timestamps are illustrative."
-                    : "Review transcripts for accuracy. Speaker labels may need verification."}
+                    ? t("Sample speakers and timestamps are illustrative.")
+                    : t(
+                        "Review transcripts for accuracy. Speaker labels may need verification.",
+                      )}
                 </p>
                 <p role="status">
-                  {shownSegments.length}{" "}
-                  {query ? "matching segments" : "segments"}
+                  {query
+                    ? plural(
+                        "{count} matching segment",
+                        "{count} matching segments",
+                        shownSegments.length,
+                      )
+                    : plural(
+                        "{count} segment",
+                        "{count} segments",
+                        shownSegments.length,
+                      )}
                 </p>
               </div>
               {shownSegments.length === 0 && (
@@ -518,15 +560,15 @@ export function NoteView({
                   />
                   <p className="text-sm text-muted-foreground">
                     {query
-                      ? "No matching transcript segments."
-                      : "No transcript saved for this meeting."}
+                      ? t("No matching transcript segments.")
+                      : t("No transcript saved for this meeting.")}
                   </p>
                   {query && (
                     <button
                       onClick={() => setQuery("")}
                       className="mt-3 text-xs font-medium text-primary"
                     >
-                      Clear search
+                      {t("Clear search")}
                     </button>
                   )}
                 </div>
@@ -537,7 +579,7 @@ export function NoteView({
                     (p) => p.id === segment.speakerId,
                   ) ?? {
                     id: segment.speakerId,
-                    name: "Unknown speaker",
+                    name: t("Unknown speaker"),
                     initials: "?",
                     color: "#777777",
                   };
@@ -580,7 +622,7 @@ export function NoteView({
       </div>
       <aside
         id={`${viewId}-assistant`}
-        aria-label="Meeting assistant"
+        aria-label={t("Meeting assistant")}
         onKeyDown={(event) => {
           if (event.key === "Escape" && chatOpen) {
             event.preventDefault();
@@ -594,16 +636,18 @@ export function NoteView({
             <Sparkles size={15} aria-hidden="true" />
           </div>
           <div className="min-w-0">
-            <h2 className="text-[12px] font-semibold">Ask this meeting</h2>
+            <h2 className="text-[12px] font-semibold">
+              {t("Ask this meeting")}
+            </h2>
             <p className="mt-1 text-[10px] text-muted-foreground">
               {demo
-                ? "Demo · saved sample content"
-                : "Local answers · this meeting"}
+                ? t("Demo · saved sample content")
+                : t("Local answers · this meeting")}
             </p>
           </div>
           <button
             onClick={() => setChatOpen(false)}
-            aria-label="Close meeting assistant"
+            aria-label={t("Close meeting assistant")}
             className="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-secondary xl:hidden"
           >
             <X size={17} />
@@ -613,24 +657,28 @@ export function NoteView({
           className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-5 py-6"
           role="log"
           aria-live="polite"
-          aria-label="Assistant conversation"
+          aria-label={t("Assistant conversation")}
         >
           {chat.length === 0 ? (
             <div className="pt-3">
               <p className="font-display text-[28px] leading-[1.2] tracking-[-0.02em]">
-                A little clarity,
+                {t("A little clarity,")}
                 <br />
                 <span className="text-muted-foreground">
-                  whenever you need it.
+                  {t("whenever you need it.")}
                 </span>
               </p>
               <p className="mt-4 text-[12px] leading-[1.8] text-muted-foreground">
                 {demo
-                  ? "Revisit the decisions and next steps in this sample meeting. Replies use its saved note content."
-                  : "Ask a question about this meeting. Check important details against the source transcript."}
+                  ? t(
+                      "Revisit the decisions and next steps in this sample meeting. Replies use its saved note content.",
+                    )
+                  : t(
+                      "Ask a question about this meeting. Check important details against the source transcript.",
+                    )}
               </p>
               <div className="mt-6 space-y-2">
-                {["What was decided?", "What are the next steps?"].map(
+                {[t("What was decided?"), t("What are the next steps?")].map(
                   (question) => (
                     <button
                       key={question}
@@ -656,7 +704,7 @@ export function NoteView({
                   <p
                     className={`mb-1.5 text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground ${message.role === "user" ? "text-right" : ""}`}
                   >
-                    {message.role === "user" ? "You" : "Open Granola"}
+                    {message.role === "user" ? t("You") : "Open Granola"}
                   </p>
                   <div
                     className={`whitespace-pre-wrap rounded-2xl px-4 py-3.5 text-[12px] leading-[1.8] ${message.role === "user" ? "ml-4 rounded-tr-md bg-secondary/80" : "rounded-tl-md border border-border/80 bg-card"}`}
@@ -676,7 +724,7 @@ export function NoteView({
                 className="h-1.5 w-1.5 rounded-full bg-primary"
                 aria-hidden="true"
               />
-              Reading this meeting…
+              {t("Reading this meeting…")}
             </p>
           )}
           <div ref={chatEnd} />
@@ -705,18 +753,20 @@ export function NoteView({
                   void send(draft);
                 }
               }}
-              aria-label="Ask the meeting assistant"
-              placeholder="Ask about this meeting…"
+              aria-label={t("Ask the meeting assistant")}
+              placeholder={t("Ask about this meeting…")}
               className="block max-h-40 min-h-12 w-full resize-y bg-transparent text-[12px] leading-relaxed outline-none"
             />
             <div className="mt-2 flex items-center justify-between gap-2">
               <span className="text-[9px] text-muted-foreground">
-                {demo ? "Sample note replies" : "Processed on this device"}
+                {demo
+                  ? t("Sample note replies")
+                  : t("Processed on this device")}
               </span>
               <button
                 disabled={!draft.trim() || thinking}
                 type="submit"
-                aria-label="Send question"
+                aria-label={t("Send question")}
                 className="flex h-11 w-11 items-center justify-center rounded-lg bg-primary sm:h-8 sm:w-8 text-primary-foreground transition-colors hover:bg-primary/90"
               >
                 <Send size={13} />
@@ -725,8 +775,8 @@ export function NoteView({
           </form>
           <p className="mt-2.5 text-center text-[9px] leading-relaxed text-muted-foreground">
             {demo
-              ? "Free-form answers need a desktop model."
-              : "Answers can be imperfect. Review the source."}
+              ? t("Free-form answers need a desktop model.")
+              : t("Answers can be imperfect. Review the source.")}
           </p>
         </div>
       </aside>

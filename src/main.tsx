@@ -9,9 +9,12 @@ import "@fontsource/instrument-serif/latin-400-italic.css";
 import "@fontsource/jetbrains-mono/latin-400.css";
 import "./index.css";
 import App from "./App.tsx";
+import { LanguageProvider } from "./i18n";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <App />
+    <LanguageProvider>
+      <App />
+    </LanguageProvider>
   </StrictMode>,
 );

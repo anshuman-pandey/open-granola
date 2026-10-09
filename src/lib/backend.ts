@@ -12,6 +12,7 @@
 import type { ActionItem, Brief, Commitment, Meeting, Person } from "./types";
 import { ACTION_ITEMS, BRIEF, COMMITMENTS, MEETINGS } from "./data";
 import { DEMO_PROVIDER_STATUS } from "./provider-types";
+import { DEFAULT_LANGUAGE_SETTINGS, type LanguageSettings } from "./language-settings";
 import type {
   ChatgptAuthStatus,
   ChatgptModel,
@@ -60,6 +61,8 @@ export interface Backend {
   importGranola(json: string): Promise<number>;
   modelStatus(): Promise<Record<string, unknown>>;
   getProviderSettings(): Promise<ProviderStatus>;
+  getLanguageSettings(): Promise<LanguageSettings>;
+  saveLanguageSettings(settings: LanguageSettings): Promise<LanguageSettings>;
   saveProviderSettings(settings: SaveProviderSettings): Promise<ProviderStatus>;
   testProviderConnection(): Promise<ProviderTestResult>;
   chatgptAuthStatus(): Promise<ChatgptAuthStatus>;
@@ -111,6 +114,10 @@ const demoBackend: Backend = {
     demo: true,
   }),
   getProviderSettings: async () => structuredClone(DEMO_PROVIDER_STATUS),
+  getLanguageSettings: async () => ({ ...DEFAULT_LANGUAGE_SETTINGS }),
+  saveLanguageSettings: async () => {
+    throw new Error("Save transcription and summary languages in the desktop app. This browser preview uses sample content.");
+  },
   saveProviderSettings: async () => {
     throw new Error("Connect models in the desktop app. This browser preview does not save credentials.");
   },
@@ -475,6 +482,8 @@ const tauriBackend: Backend = {
   modelStatus: () => tauriInvoke("model_status"),
 
   getProviderSettings: () => tauriInvoke("get_provider_settings"),
+  getLanguageSettings: () => tauriInvoke("get_language_settings"),
+  saveLanguageSettings: (settings) => tauriInvoke("save_language_settings", { settings }),
 
   saveProviderSettings: ({ config, apiKey, clearApiKey }) =>
     tauriInvoke("save_provider_settings", {

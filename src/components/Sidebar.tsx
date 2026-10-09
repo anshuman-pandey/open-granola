@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import {
   CheckSquare,
   FileText,
@@ -32,7 +33,10 @@ interface Props {
   onToggleDark: () => void;
 }
 
-function groupLabel(iso: string) {
+function groupLabel(
+  iso: string,
+  formatDate: ReturnType<typeof useI18n>["formatDate"],
+) {
   const date = new Date(iso);
   const today = new Date();
   const yesterday = new Date(today);
@@ -43,17 +47,18 @@ function groupLabel(iso: string) {
   if (date.toDateString() === today.toDateString()) return "Today";
   if (date.toDateString() === yesterday.toDateString()) return "Yesterday";
   if (+date >= +weekStart && +date <= +today) return "This week";
-  return date.toLocaleDateString(undefined, { month: "long", year: "numeric" });
+  return formatDate(date, { month: "long", year: "numeric" });
 }
 
 export function Sidebar(p: Props) {
+  const { t, formatDate, formatNumber } = useI18n();
   const [mobileOpen, setMobileOpen] = useState(false);
   const demo = getBackend().mode === "demo";
   const groups: Record<string, Meeting[]> = {};
   [...p.meetings]
     .sort((a, b) => +new Date(b.date) - +new Date(a.date))
     .forEach((meeting) => {
-      (groups[groupLabel(meeting.date)] ||= []).push(meeting);
+      (groups[groupLabel(meeting.date, formatDate)] ||= []).push(meeting);
     });
   const navigate = (view: View) => {
     p.onNavigate(view);
@@ -77,7 +82,7 @@ export function Sidebar(p: Props) {
         >
           {icon}
         </span>
-        <span className="flex-1 text-left">{label}</span>
+        <span className="flex-1 text-left">{t(label)}</span>
         {active && (
           <span
             className="h-1 w-1 rounded-full bg-primary/70"
@@ -105,11 +110,14 @@ export function Sidebar(p: Props) {
           </svg>
         </div>
         <div className="min-w-0">
-          <div className="font-display text-[22px] leading-none tracking-[-0.025em]">
+          <div
+            lang="en"
+            className="font-display text-[22px] leading-none tracking-[-0.025em]"
+          >
             Open Granola
           </div>
           <div className="mt-1 text-[9px] text-muted-foreground">
-            local-first meeting notes
+            {t("local-first meeting notes")}
           </div>
         </div>
         <button
@@ -117,8 +125,8 @@ export function Sidebar(p: Props) {
           aria-hidden={mobileOpen || undefined}
           tabIndex={mobileOpen ? -1 : 0}
           className={`ml-auto flex min-h-10 min-w-10 shrink-0 items-center justify-center rounded-lg p-2 text-muted-foreground transition-colors hover:bg-sidebar-accent hover:text-foreground ${mobileOpen ? "invisible" : ""}`}
-          aria-label={`Use ${p.dark ? "light" : "dark"} theme`}
-          title={`Use ${p.dark ? "light" : "dark"} theme`}
+          aria-label={t(p.dark ? "Use light theme" : "Use dark theme")}
+          title={t(p.dark ? "Use light theme" : "Use dark theme")}
         >
           {p.dark ? <Sun size={14} /> : <Moon size={14} />}
         </button>
@@ -135,20 +143,20 @@ export function Sidebar(p: Props) {
             <Video size={14} />
           )}
           {p.busy
-            ? "Please wait…"
+            ? t("Please wait…")
             : p.recording
-              ? "Finish session"
+              ? t("Finish session")
               : demo
-                ? "Try a demo session"
-                : "Capture meeting"}
+                ? t("Try a demo session")
+                : t("Capture meeting")}
         </button>
         <p className="mt-2 text-center text-[9px] leading-relaxed text-muted-foreground">
           {demo
-            ? "Simulated transcript · no audio recorded"
-            : "Microphone capture · notes stored locally"}
+            ? t("Simulated transcript · no audio recorded")
+            : t("Microphone capture · notes stored locally")}
         </p>
       </div>
-      <nav aria-label="Workspace" className="space-y-0.5 px-3">
+      <nav aria-label={t("Workspace")} className="space-y-0.5 px-3">
         <button
           onClick={() => {
             p.onOpenSearch();
@@ -157,43 +165,47 @@ export function Sidebar(p: Props) {
           className="mb-2 flex min-h-11 w-full items-center gap-2 rounded-xl border border-sidebar-border bg-card/65 px-3 text-[11.5px] md:min-h-10 text-muted-foreground transition-colors hover:border-primary/25 hover:bg-card"
         >
           <Search size={13} />
-          <span className="flex-1 text-left">Search your notes</span>
+          <span className="flex-1 text-left">{t("Search your notes")}</span>
           <kbd className="rounded border border-sidebar-border/80 bg-background/70 px-1 py-0.5 text-[8px] leading-none">
             ⌘/Ctrl K
           </kbd>
         </button>
-        {navItem(<Home size={14} />, "Home", { kind: "home" })}
-        {navItem(<CheckSquare size={14} />, "Action items", {
+        {navItem(<Home size={14} />, t("Home"), { kind: "home" })}
+        {navItem(<CheckSquare size={14} />, t("Action items"), {
           kind: "actions",
         })}
-        {navItem(<Handshake size={14} />, "Commitments", {
+        {navItem(<Handshake size={14} />, t("Commitments"), {
           kind: "commitments",
         })}
-        {navItem(<LayoutTemplate size={14} />, "Templates", {
+        {navItem(<LayoutTemplate size={14} />, t("Templates"), {
           kind: "templates",
         })}
       </nav>
       <div className="mx-5 mb-1 mt-5 flex items-center justify-between border-t border-sidebar-border/70 pt-4 text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-        <span>Meeting library</span>
-        <span className="font-normal tabular-nums">{p.meetings.length}</span>
+        <span>{t("Meeting library")}</span>
+        <span className="font-normal tabular-nums">
+          {formatNumber(p.meetings.length)}
+        </span>
       </div>
       <nav
-        aria-label="Meetings"
+        aria-label={t("Meetings")}
         className="scrollbar-thin min-h-0 flex-1 overflow-y-auto px-3 pb-4"
       >
         {p.meetings.length === 0 && (
           <div className="mx-2 mt-4 rounded-xl border border-dashed border-sidebar-border p-4">
             <FileText size={16} className="text-muted-foreground/70" />
             <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-              A home for your conversations. Saved meetings will appear here.
+              {t(
+                "A home for your conversations. Saved meetings will appear here.",
+              )}
             </p>
           </div>
         )}
         {Object.entries(groups).map(([label, meetings]) => (
-          <div key={label} className="mt-3">
+          <div key={t(label)} className="mt-3">
             <div className="flex items-center gap-2 px-3 pb-1.5">
               <span className="text-[9px] font-medium text-muted-foreground">
-                {label}
+                {t(label)}
               </span>
               <span className="h-px flex-1 bg-sidebar-border/50" />
             </div>
@@ -224,7 +236,7 @@ export function Sidebar(p: Props) {
                       {meeting.starred && (
                         <span
                           className="shrink-0 text-[10px] text-primary"
-                          aria-label="Starred"
+                          aria-label={t("Starred")}
                         >
                           ★
                         </span>
@@ -233,7 +245,7 @@ export function Sidebar(p: Props) {
                     <div className="mt-2 flex items-center justify-between">
                       <AvatarStack people={meeting.participants} max={3} />
                       <span className="text-[9px] tabular-nums text-muted-foreground">
-                        {meeting.durationMin} min
+                        {t("{count} min", { count: meeting.durationMin })}
                       </span>
                     </div>
                   </button>
@@ -245,11 +257,11 @@ export function Sidebar(p: Props) {
       </nav>
       <div className="border-t border-sidebar-border px-3 pb-4 pt-2">
         <div className="flex items-center gap-1">
-          {navItem(<Settings size={14} />, "Settings", { kind: "settings" })}
+          {navItem(<Settings size={14} />, t("Settings"), { kind: "settings" })}
           {mobileOpen && (
             <button
               onClick={p.onToggleDark}
-              aria-label={`Use ${p.dark ? "light" : "dark"} theme`}
+              aria-label={t(p.dark ? "Use light theme" : "Use dark theme")}
               className="flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-lg text-muted-foreground hover:bg-sidebar-accent"
             >
               {p.dark ? <Sun size={17} /> : <Moon size={17} />}
@@ -260,13 +272,15 @@ export function Sidebar(p: Props) {
           <div className="flex items-center gap-1.5 text-[10px] font-semibold text-sidebar-foreground">
             <Shield size={12} className="text-primary" />
             {demo
-              ? "You’re in the browser demo"
-              : "Your notes stay on this device"}
+              ? t("You’re in the browser demo")
+              : t("Your notes stay on this device")}
           </div>
           <p className="mt-1 text-[9px] leading-relaxed text-muted-foreground">
             {demo
-              ? "Sample meetings, ready to explore. Changes last for this session."
-              : "View model readiness and privacy details in Settings."}
+              ? t(
+                  "Sample meetings, ready to explore. Changes last for this session.",
+                )
+              : t("View model readiness and privacy details in Settings.")}
           </p>
         </div>
       </div>
@@ -277,7 +291,7 @@ export function Sidebar(p: Props) {
       <div className="mobile-workspace-header fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
         <button
           onClick={() => setMobileOpen(true)}
-          aria-label="Open navigation"
+          aria-label={t("Open navigation")}
           className="flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-secondary"
         >
           <Menu size={19} />
@@ -287,7 +301,7 @@ export function Sidebar(p: Props) {
         </span>
         <button
           onClick={p.onOpenSearch}
-          aria-label="Search library"
+          aria-label={t("Search library")}
           className="ml-auto flex min-h-11 min-w-11 items-center justify-center rounded-lg p-2 text-muted-foreground hover:bg-secondary"
         >
           <Search size={18} />
@@ -301,9 +315,11 @@ export function Sidebar(p: Props) {
           side="left"
           className="flex w-[290px] flex-col gap-0 bg-sidebar p-0 [&>button:last-child]:right-3 [&>button:last-child]:top-3 [&>button:last-child]:flex [&>button:last-child]:h-11 [&>button:last-child]:w-11 [&>button:last-child]:items-center [&>button:last-child]:justify-center"
         >
-          <SheetTitle className="sr-only">Workspace navigation</SheetTitle>
+          <SheetTitle className="sr-only">
+            {t("Workspace navigation")}
+          </SheetTitle>
           <SheetDescription className="sr-only">
-            Browse meetings, action items, templates, and settings.
+            {t("Browse meetings, action items, templates, and settings.")}
           </SheetDescription>
           {content}
         </SheetContent>

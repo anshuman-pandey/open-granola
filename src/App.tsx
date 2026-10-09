@@ -1,3 +1,4 @@
+import { useI18n, type TranslationValues } from "./i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, LoaderCircle, X } from "lucide-react";
 import { CaptureBar } from "./components/CaptureBar";
@@ -35,6 +36,7 @@ function initialTheme() {
 }
 
 export default function App() {
+  const { t } = useI18n();
   const libraryGeneration = useRef(0);
   const [dark, setDark] = useState(initialTheme);
   const [view, setView] = useState<View>({ kind: "home" });
@@ -53,7 +55,10 @@ export default function App() {
   );
   const [brief, setBrief] = useState<Brief | null>(null);
   const [loading, setLoading] = useState(backend.mode === "tauri");
-  const [error, setError] = useState<string | null>(null);
+  const [error, setError] = useState<{
+    message: string;
+    values?: TranslationValues;
+  } | null>(null);
   const [detail, setDetail] = useState<Meeting | null>(null);
   const [detailError, setDetailError] = useState<{
     id: string;
@@ -86,7 +91,10 @@ export default function App() {
       setDetailVersion((version) => version + 1);
     } catch (cause) {
       if (generation === libraryGeneration.current)
-        setError(`Could not load your library: ${messageOf(cause)}`);
+        setError({
+          message: "Could not load your library: {error}",
+          values: { error: messageOf(cause) },
+        });
       throw cause;
     } finally {
       if (generation === libraryGeneration.current) setLoading(false);
@@ -107,7 +115,10 @@ export default function App() {
         })
         .catch((cause) => {
           if (!disposed && generation === libraryGeneration.current) {
-            setError(`Could not load your library: ${messageOf(cause)}`);
+            setError({
+              message: "Could not load your library: {error}",
+              values: { error: messageOf(cause) },
+            });
             setLoading(false);
           }
         });
@@ -147,9 +158,10 @@ export default function App() {
       })
       .catch(() => {
         if (!disposed)
-          setError(
-            "Library updates could not connect. Reload the app to refresh expired notes.",
-          );
+          setError({
+            message:
+              "Library updates could not connect. Reload the app to refresh expired notes.",
+          });
       });
     return () => {
       disposed = true;
@@ -248,7 +260,11 @@ export default function App() {
   const tauri = useTauriSession(handleTauriFinish);
   const live = backend.mode === "demo" ? demo : tauri;
   const busy = backend.mode === "tauri" && (tauri.busy || tauri.canRetry);
-  const visibleError = error ?? (backend.mode === "tauri" ? tauri.error : null);
+  const visibleError = error
+    ? t(error.message, error.values)
+    : backend.mode === "tauri"
+      ? tauri.error
+      : null;
   const openMeeting = (id: string) => setView({ kind: "meeting", id });
   const activeMeeting = selectedId
     ? backend.mode === "demo"
@@ -280,7 +296,7 @@ export default function App() {
     try {
       const answer =
         backend.mode === "demo"
-          ? sampleLibraryAnswer(text, meetings, actionItems)
+          ? sampleLibraryAnswer(text, meetings, actionItems, t)
           : { text: await backend.ask(text), sources: [] };
       if (request === assistantRequest.current)
         setAssistant({ question: text, answer, pending: false, error: null });
@@ -290,7 +306,9 @@ export default function App() {
           question: text,
           answer: null,
           pending: false,
-          error: `Could not answer this question: ${messageOf(cause)}`,
+          error: t("Could not answer this question: {error}", {
+            error: messageOf(cause),
+          }),
         });
     }
   };
@@ -301,7 +319,7 @@ export default function App() {
         href="#workspace"
         className="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-[100] focus:rounded-lg focus:bg-card focus:p-3"
       >
-        Skip to workspace
+        {t("Skip to workspace")}
       </a>
       <Sidebar
         meetings={meetings}
@@ -324,10 +342,10 @@ export default function App() {
         {backend.mode === "demo" && (
           <div className="demo-notice">
             <strong className="font-semibold text-foreground/80">
-              Interactive demo
+              {t("Interactive demo")}
             </strong>
             <span aria-hidden="true">·</span>
-            <span>Sample meetings. Recording is simulated.</span>
+            <span>{t("Sample meetings. Recording is simulated.")}</span>
           </div>
         )}
         {visibleError && (
@@ -342,11 +360,11 @@ export default function App() {
                 className="underline"
                 onClick={() => void refreshLibrary().catch(() => {})}
               >
-                Retry
+                {t("Retry")}
               </button>
             )}
             <button
-              aria-label="Dismiss error"
+              aria-label={t("Dismiss error")}
               onClick={() => {
                 setError(null);
                 tauri.clearError();
@@ -362,28 +380,31 @@ export default function App() {
             className="border-b border-border bg-amber-500/10 px-5 py-3 text-sm"
           >
             <p>
-              Your recording is still in memory. Keep this window open and retry
-              saving before starting another meeting.
+              {t(
+                "Your recording is still in memory. Keep this window open and retry saving before starting another meeting.",
+              )}
             </p>
             <div className="mt-2 flex gap-4">
               <button
                 className="font-semibold underline"
                 onClick={() => void tauri.stop()}
               >
-                Retry saving
+                {t("Retry saving")}
               </button>
               <button
                 className="text-muted-foreground underline"
                 onClick={() => {
                   if (
                     window.confirm(
-                      "Discard this unsaved recording? This cannot be undone.",
+                      t(
+                        "Discard this unsaved recording? This cannot be undone.",
+                      ),
                     )
                   )
                     void tauri.discard();
                 }}
               >
-                Discard unsaved recording
+                {t("Discard unsaved recording")}
               </button>
             </div>
           </div>
@@ -395,8 +416,8 @@ export default function App() {
           >
             <LoaderCircle size={16} className="animate-spin" />
             {tauri.phase === "saving"
-              ? "Finishing transcription and saving your note…"
-              : "Preparing microphone and local transcription…"}
+              ? t("Finishing transcription and saving your note…")
+              : t("Preparing microphone and local transcription…")}
           </div>
         )}
         {loading && (
@@ -404,7 +425,7 @@ export default function App() {
             role="status"
             className="px-5 py-2 text-xs text-muted-foreground"
           >
-            Loading your library…
+            {t("Loading your library…")}
           </div>
         )}
         {view.kind === "home" && (
@@ -432,9 +453,22 @@ export default function App() {
               const generation = libraryGeneration.current;
               const updated = await backend.getMeeting(activeMeeting.id);
               if (generation !== libraryGeneration.current) return;
-              setDetail((previous) => previous?.id === updated.meeting.id ? updated.meeting : previous);
-              setMeetings((previous) => previous.map((item) => item.id === updated.meeting.id ? updated.meeting : item));
-              setActionItems((previous) => [...previous.filter((item) => item.meetingId !== activeMeeting.id), ...updated.actionItems]);
+              setDetail((previous) =>
+                previous?.id === updated.meeting.id
+                  ? updated.meeting
+                  : previous,
+              );
+              setMeetings((previous) =>
+                previous.map((item) =>
+                  item.id === updated.meeting.id ? updated.meeting : item,
+                ),
+              );
+              setActionItems((previous) => [
+                ...previous.filter(
+                  (item) => item.meetingId !== activeMeeting.id,
+                ),
+                ...updated.actionItems,
+              ]);
             }}
             askFn={
               backend.mode === "tauri"
@@ -448,7 +482,7 @@ export default function App() {
             {detailError?.id === view.id ? (
               <>
                 <h1 className="text-xl font-semibold">
-                  Could not open this meeting
+                  {t("Could not open this meeting")}
                 </h1>
                 <p className="my-3 text-sm text-muted-foreground">
                   {detailError.message}
@@ -457,11 +491,11 @@ export default function App() {
                   className="rounded-lg border px-4 py-2"
                   onClick={() => setDetailVersion((version) => version + 1)}
                 >
-                  Try again
+                  {t("Try again")}
                 </button>
               </>
             ) : (
-              "Opening meeting…"
+              t("Opening meeting…")
             )}
           </div>
         )}
@@ -477,7 +511,10 @@ export default function App() {
         )}
         {view.kind === "templates" && <TemplatesView />}
         {view.kind === "settings" && (
-          <SettingsView onLibraryChange={libraryChanged} />
+          <SettingsView
+            onLibraryChange={libraryChanged}
+            captureLocked={live.active || busy}
+          />
         )}
       </main>
       {live.active && (

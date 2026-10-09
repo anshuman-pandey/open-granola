@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import { ArrowDown, Lightbulb, Mic, Square } from "lucide-react";
 import { useEffect, useRef } from "react";
 import { getBackend } from "../lib/backend";
@@ -19,6 +20,7 @@ export function CaptureBar({
   onStop,
   busy,
 }: Props) {
+  const { t } = useI18n();
   const demo = getBackend().mode === "demo";
   const transcript = useRef<HTMLDivElement>(null);
   const following = useRef(true);
@@ -36,7 +38,7 @@ export function CaptureBar({
 
   return (
     <section
-      aria-label={demo ? "Demo session" : "Active capture"}
+      aria-label={demo ? t("Demo session") : t("Active capture")}
       className="pointer-events-none absolute inset-x-0 bottom-0 z-40 flex justify-center px-3 pb-3 pt-2 sm:px-5 sm:pb-5"
     >
       <div className="pointer-events-auto w-full max-w-[890px] overflow-hidden rounded-[22px] border border-border bg-popover shadow-[0_14px_60px_-12px_hsl(var(--foreground)/0.25),0_3px_12px_hsl(var(--foreground)/0.06)] [overflow-wrap:anywhere]">
@@ -48,7 +50,7 @@ export function CaptureBar({
             />
             <span
               className="font-mono2 text-[11px] font-medium tabular-nums"
-              aria-label="Session duration"
+              aria-label={t("Session duration")}
             >
               {fmtClock(elapsed)}
             </span>
@@ -56,22 +58,22 @@ export function CaptureBar({
           <div className="min-w-0 flex-1">
             <p className="truncate text-[12px] font-semibold">
               {busy
-                ? "Saving your meeting"
+                ? t("Saving your meeting")
                 : demo
-                  ? "Sample conversation"
-                  : "Meeting capture"}
+                  ? t("Sample conversation")
+                  : t("Meeting capture")}
             </p>
             <p className="mt-1 text-[10px] leading-relaxed text-muted-foreground">
               {demo
-                ? "Demo · no audio recorded"
+                ? t("Demo · no audio recorded")
                 : busy
-                  ? "Keeping your transcript on this device"
-                  : "Microphone · transcribing on this device"}
+                  ? t("Keeping your transcript on this device")
+                  : t("Microphone · transcribing on this device")}
             </p>
           </div>
           <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border/80 bg-secondary/60 px-2.5 py-1 text-[9px] font-medium text-muted-foreground md:flex">
             <Mic size={11} aria-hidden="true" />
-            {demo ? "Simulated session" : "Microphone only"}
+            {demo ? t("Simulated session") : t("Microphone only")}
           </span>
           <button
             disabled={busy}
@@ -79,21 +81,21 @@ export function CaptureBar({
             className="flex min-h-11 shrink-0 items-center gap-1.5 rounded-full sm:min-h-0 bg-destructive px-3.5 py-2 text-[11px] font-semibold text-destructive-foreground transition-colors hover:bg-destructive/90"
           >
             <Square size={10} fill="currentColor" aria-hidden="true" />
-            {busy ? "Saving…" : "Finish"}
+            {busy ? t("Saving…") : t("Finish")}
           </button>
         </div>
         <div className="flex h-[min(178px,25dvh)] min-h-[105px]">
           <div className="flex min-w-0 flex-1 flex-col">
             <div className="flex shrink-0 items-center justify-between gap-3 px-4 pb-1.5 pt-3 sm:px-5">
               <h2 className="text-[9px] font-semibold uppercase tracking-[0.12em] text-muted-foreground">
-                {demo ? "Sample transcript" : "Live transcript"}
+                {demo ? t("Sample transcript") : t("Live transcript")}
               </h2>
               {lines.length > 0 && (
                 <button
                   onClick={latest}
                   className="flex items-center gap-1 rounded px-1 py-0.5 text-[9px] text-muted-foreground hover:text-primary"
                 >
-                  Latest
+                  {t("Latest")}
                   <ArrowDown size={10} aria-hidden="true" />
                 </button>
               )}
@@ -105,8 +107,8 @@ export function CaptureBar({
               aria-live="polite"
               aria-label={
                 demo
-                  ? "Sample conversation transcript"
-                  : "Live microphone transcript"
+                  ? t("Sample conversation transcript")
+                  : t("Live microphone transcript")
               }
               tabIndex={0}
               onScroll={(event) => {
@@ -121,8 +123,8 @@ export function CaptureBar({
               {lines.length === 0 && (
                 <p className="py-3 text-[12px] leading-relaxed text-muted-foreground">
                   {demo
-                    ? "The sample conversation will appear here shortly."
-                    : "Your transcript will appear here as you speak."}
+                    ? t("The sample conversation will appear here shortly.")
+                    : t("Your transcript will appear here as you speak.")}
                 </p>
               )}
               {lines.map((line) => (
@@ -152,7 +154,7 @@ export function CaptureBar({
           {demo && suggestions.length > 0 && (
             <div className="scrollbar-thin hidden w-[260px] shrink-0 space-y-2 overflow-y-auto border-l border-border/80 bg-secondary/25 px-4 py-3 sm:block">
               <h2 className="text-[9px] font-semibold uppercase tracking-[0.1em] text-muted-foreground">
-                Sample context
+                {t("Sample context")}
               </h2>
               {suggestions.slice(-2).map((suggestion) => (
                 <div

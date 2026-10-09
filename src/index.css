@@ -73,7 +73,9 @@
   }
   body {
     @apply bg-background text-foreground antialiased;
-    font-family: "Inter", system-ui, sans-serif;
+    font-family:
+      "Inter", "Kohinoor Devanagari", "Nirmala UI", "Noto Sans Devanagari",
+      system-ui, sans-serif;
     font-feature-settings: "cv11", "ss01";
   }
   .font-display {
@@ -83,6 +85,12 @@
   }
   .font-mono2 {
     font-family: "JetBrains Mono", ui-monospace, monospace;
+  }
+  .font-display:lang(hi) {
+    font-family:
+      "Kohinoor Devanagari", "Nirmala UI", "Noto Sans Devanagari", sans-serif;
+    letter-spacing: normal;
+    line-height: 1.35;
   }
 }
 

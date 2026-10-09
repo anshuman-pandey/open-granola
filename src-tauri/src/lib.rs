@@ -4,6 +4,7 @@ mod auth;
 mod calendar;
 mod commands;
 mod inference;
+mod language;
 mod llm;
 mod providers;
 mod storage;
@@ -110,6 +111,8 @@ pub fn run() {
             commands::import_granola_export,
             commands::regenerate_summary,
             commands::get_provider_settings,
+            commands::get_language_settings,
+            commands::save_language_settings,
             commands::save_provider_settings,
             commands::test_provider_connection,
             auth::start_chatgpt_sign_in,

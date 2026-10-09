@@ -154,7 +154,7 @@ impl Db {
             "PRAGMA foreign_keys=ON; PRAGMA secure_delete=ON; PRAGMA journal_mode=WAL; PRAGMA temp_store=MEMORY;",
         )?;
         let version: i64 = conn.query_row("PRAGMA user_version", [], |row| row.get(0))?;
-        if version > 2 {
+        if version > 3 {
             bail!("This library was created by a newer Open Granola version");
         }
         let tx = conn.unchecked_transaction()?;
@@ -162,7 +162,11 @@ impl Db {
         if version == 0 {
             tx.execute_batch(MIGRATION_V1)?;
         }
-        tx.execute_batch("PRAGMA user_version = 2; UPDATE summary_runs SET status='failed', error='The app closed before this summary finished. Retry from the saved transcript.', completed_at=datetime('now') WHERE status='running';")?;
+        if version < 3 {
+            // NULL honestly marks older runs without a recorded preference.
+            tx.execute_batch("ALTER TABLE summary_runs ADD COLUMN summary_language TEXT;")?;
+        }
+        tx.execute_batch("PRAGMA user_version = 3; UPDATE summary_runs SET status='failed', error='The app closed before this summary finished. Retry from the saved transcript.', completed_at=datetime('now') WHERE status='running';")?;
         // SQLite's ordinary secure_delete pragma alone does not clear deleted
         // FTS terms. This option is supported by our bundled SQLite (>=3.42).
         tx.execute_batch("INSERT INTO segments_fts(segments_fts,rank) VALUES('secure-delete',1);")?;
@@ -345,7 +349,7 @@ mod tests {
     }
 
     #[test]
-    fn version_one_library_migrates_to_two_without_losing_notes_actions_or_search() {
+    fn version_one_library_migrates_without_losing_notes_actions_or_search() {
         let conn = Connection::open_in_memory().unwrap();
         conn.execute_batch(SCHEMA).unwrap();
         conn.execute_batch(MIGRATION_V1).unwrap();
@@ -367,7 +371,7 @@ mod tests {
             .conn
             .query_row("PRAGMA user_version", [], |row| row.get(0))
             .unwrap();
-        assert_eq!(version, 2);
+        assert_eq!(version, 3);
         assert_eq!(count(&db, "meetings"), 1);
         assert_eq!(count(&db, "summary_runs"), 0);
         assert_eq!(matches(&db, "confidentialneedle"), 1);
@@ -384,6 +388,34 @@ mod tests {
             .unwrap();
         assert_eq!(count(&db, "summary_runs"), 0);
         assert_eq!(matches(&db, "confidentialneedle"), 0);
+    }
+
+    #[test]
+    fn version_two_keeps_history_and_marks_old_language_preferences_unknown() {
+        let conn = Connection::open_in_memory().unwrap();
+        conn.execute_batch(SCHEMA).unwrap();
+        conn.execute_batch(MIGRATION_V1).unwrap();
+        conn.execute_batch("PRAGMA user_version=2;").unwrap();
+        let legacy = Db { conn };
+        seed(&legacy, "legacy-meeting", "2099-01-01");
+        seed_history(&legacy, "legacy-meeting", "completed");
+        let db = Db::initialize(legacy.conn).unwrap();
+        let language: Option<String> = db
+            .conn
+            .query_row("SELECT summary_language FROM summary_runs", [], |row| {
+                row.get(0)
+            })
+            .unwrap();
+        assert!(language.is_none());
+        assert_eq!(count(&db, "summary_runs"), 1);
+        assert_eq!(matches(&db, "confidentialneedle"), 1);
+        // Reopening an already migrated database must not add the column twice.
+        let db = Db::initialize(db.conn).unwrap();
+        assert_eq!(count(&db, "summary_runs"), 1);
+        db.conn
+            .execute("DELETE FROM meetings WHERE id='legacy-meeting'", [])
+            .unwrap();
+        assert_eq!(count(&db, "summary_runs"), 0);
     }
 
     fn memory_db() -> Db {

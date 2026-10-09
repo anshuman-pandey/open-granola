@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import {
   BookOpen,
   Briefcase,
@@ -25,6 +26,7 @@ const ICONS: Record<string, ReactNode> = {
 };
 
 export function TemplatesView() {
+  const { t, plural } = useI18n();
   const [notice, setNotice] = useState("");
   const [error, setError] = useState("");
   const [copied, setCopied] = useState("");
@@ -34,7 +36,7 @@ export function TemplatesView() {
     setCopied("");
     try {
       await navigator.clipboard.writeText(text);
-      setNotice(`${name} copied.`);
+      setNotice(name);
       setCopied(name);
     } catch {
       setError(
@@ -45,20 +47,21 @@ export function TemplatesView() {
   return (
     <div className="scrollbar-thin paper-texture min-h-0 flex-1 overflow-y-auto">
       <div className="workspace-page mx-auto max-w-4xl px-5 pb-24 pt-10 sm:px-8">
-        <p className="section-eyebrow">A place to start</p>
+        <p className="section-eyebrow">{t("A place to start")}</p>
         <h1 className="font-display mt-3 text-[40px] leading-tight tracking-tight sm:text-[48px]">
-          Note templates
+          {t("Note templates")}
         </h1>
         <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-          Useful outlines for different conversations. Copy or download a
-          template to adapt in your own notes.
+          {t(
+            "Useful outlines for different conversations. Copy or download a template to adapt in your own notes.",
+          )}
         </p>
         {notice && (
           <p
             role="status"
             className="mt-4 rounded-xl border border-border bg-secondary p-3 text-xs"
           >
-            {notice}
+            {t("{name} copied.", { name: notice })}
           </p>
         )}
         {error && (
@@ -66,7 +69,7 @@ export function TemplatesView() {
             role="alert"
             className="mt-4 rounded-xl border border-destructive/20 bg-destructive/5 p-3 text-xs text-destructive dark:text-red-400"
           >
-            {error}
+            {t(error)}
           </p>
         )}
         <div className="mt-8 grid gap-4 sm:grid-cols-2">
@@ -84,7 +87,11 @@ export function TemplatesView() {
                   <div>
                     <h2 className="text-sm font-semibold">{template.name}</h2>
                     <p className="mt-1 text-[11px] text-muted-foreground">
-                      {template.structure.length} sections · Markdown
+                      {plural(
+                        "{count} section · Markdown",
+                        "{count} sections · Markdown",
+                        template.structure.length,
+                      )}
                     </p>
                   </div>
                 </div>
@@ -101,7 +108,9 @@ export function TemplatesView() {
                 <div className="mt-auto flex items-center gap-2 border-t border-border pt-4">
                   <button
                     onClick={() => void copy(markdown, template.name)}
-                    aria-label={`Copy ${template.name} outline`}
+                    aria-label={t("Copy {name} outline", {
+                      name: template.name,
+                    })}
                     className="button-secondary gap-2"
                   >
                     {copied === template.name ? (
@@ -109,13 +118,15 @@ export function TemplatesView() {
                     ) : (
                       <Copy size={14} />
                     )}
-                    {copied === template.name ? "Copied" : "Copy outline"}
+                    {copied === template.name ? t("Copied") : t("Copy outline")}
                   </button>
                   <button
                     onClick={() => downloadMarkdown(template.name, markdown)}
                     className="ml-auto flex h-11 w-11 shrink-0 items-center justify-center rounded-xl text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-                    aria-label={`Download ${template.name} template`}
-                    title="Download Markdown"
+                    aria-label={t("Download {name} template", {
+                      name: template.name,
+                    })}
+                    title={t("Download Markdown")}
                   >
                     <Download size={16} />
                   </button>
@@ -125,13 +136,14 @@ export function TemplatesView() {
           })}
         </div>
         <section className="mt-12 border-t border-border pt-8">
-          <p className="section-eyebrow">After the conversation</p>
+          <p className="section-eyebrow">{t("After the conversation")}</p>
           <h2 className="font-display mt-2 text-[32px] tracking-tight">
-            Prompts to try
+            {t("Prompts to try")}
           </h2>
           <p className="mt-2 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Starting points for turning meeting notes into useful follow-ups.
-            Review each prompt before using it with your chosen assistant.
+            {t(
+              "Starting points for turning meeting notes into useful follow-ups. Review each prompt before using it with your chosen assistant.",
+            )}
           </p>
           <div className="mt-5 space-y-3">
             {RECIPES.map((recipe) => (
@@ -157,7 +169,7 @@ export function TemplatesView() {
                 <div className="flex flex-wrap gap-2 py-4">
                   <button
                     onClick={() => void copy(recipe.prompt, recipe.name)}
-                    aria-label={`Copy ${recipe.name} prompt`}
+                    aria-label={t("Copy {name} prompt", { name: recipe.name })}
                     className="button-secondary gap-2"
                   >
                     {copied === recipe.name ? (
@@ -165,15 +177,17 @@ export function TemplatesView() {
                     ) : (
                       <Copy size={14} />
                     )}
-                    {copied === recipe.name ? "Copied" : "Copy prompt"}
+                    {copied === recipe.name ? t("Copied") : t("Copy prompt")}
                   </button>
                   <button
                     onClick={() => downloadMarkdown(recipe.name, recipe.prompt)}
-                    aria-label={`Download ${recipe.name} prompt`}
+                    aria-label={t("Download {name} prompt", {
+                      name: recipe.name,
+                    })}
                     className="button-secondary gap-2"
                   >
                     <Download size={14} />
-                    Download
+                    {t("Download")}
                   </button>
                 </div>
               </details>

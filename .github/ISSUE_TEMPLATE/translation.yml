@@ -1,0 +1,69 @@
+name: Translation or language support
+description: Improve a repository translation, interface wording, or language layout.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Reports in English, हिन्दी or Español are welcome. See [the language guide](https://github.com/anshuman-pandey/open-granola/blob/main/docs/I18N.md).
+        Keep screenshots and examples synthetic. Do not include real meeting content or credentials.
+        For model/transcription accuracy, identify it below so we do not confuse it with an interface translation.
+  - type: input
+    id: locale
+    attributes:
+      label: Language or locale
+      description: Name and code if known; say whether this is an existing translation or a new language request.
+      placeholder: Hindi (hi), Spanish (es), or another language
+    validations:
+      required: true
+  - type: dropdown
+    id: area
+    attributes:
+      label: Affected area
+      options:
+        - Repository README or contribution guide
+        - App interface wording
+        - Layout, font, keyboard or accessibility
+        - New interface or repository language
+        - Speech transcription or generated note language
+    validations:
+      required: true
+  - type: input
+    id: revision
+    attributes:
+      label: App version or repository commit
+      description: Use the app version or `git rev-parse --short HEAD`; for docs, include the page link.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: Platform and screen
+      description: OS/browser, demo or desktop, screen/page name, and display width or zoom if relevant.
+    validations:
+      required: true
+  - type: textarea
+    id: wording
+    attributes:
+      label: Current wording and suggested correction
+      description: Include the English source or translation key if known. Explain the meaning or layout problem; for a new language, describe the scope you can review.
+      placeholder: |
+        Current text:
+        Suggested text:
+        Why this is clearer:
+    validations:
+      required: true
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshot or reproduction steps
+      description: Attach a redacted screenshot with sample data, or describe the screen and steps if a screenshot is unavailable. For speech/model problems, include the model and both language choices, not private audio.
+    validations:
+      required: true
+  - type: checkboxes
+    id: review
+    attributes:
+      label: Review help
+      options:
+        - label: I can review this language fluently.
+        - label: I checked that the report contains no private meeting data or credentials.
+          required: true

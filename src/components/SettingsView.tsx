@@ -1,3 +1,4 @@
+import { useI18n } from "../i18n";
 import {
   AlertCircle,
   CheckCircle2,
@@ -13,6 +14,7 @@ import {
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getBackend } from "../lib/backend";
 import { ProviderSettings } from "./ProviderSettings";
+import { LanguageSettings } from "./LanguageSettings";
 import {
   Dialog,
   DialogContent,
@@ -51,9 +53,12 @@ function Section({
 
 export function SettingsView({
   onLibraryChange,
+  captureLocked = false,
 }: {
   onLibraryChange?: () => void;
+  captureLocked?: boolean;
 }) {
+  const { t, plural } = useI18n();
   const backend = getBackend();
   const demo = backend.mode === "demo";
   const [status, setStatus] = useState<Record<string, unknown> | null>(null);
@@ -66,6 +71,7 @@ export function SettingsView({
   >(null);
   const [confirmText, setConfirmText] = useState("");
   const [retention, setRetention] = useState("90");
+  const [languageSettingsVersion, setLanguageSettingsVersion] = useState(0);
   const fileRef = useRef<HTMLInputElement>(null);
   const confirmationTrigger = useRef<HTMLButtonElement>(null);
   const capabilities =
@@ -113,14 +119,14 @@ export function SettingsView({
         setRetention(String(value.retention_days));
       }
     } catch {
-      setError("Couldn’t read desktop readiness. Please try again.");
+      setError(t("Couldn’t read desktop readiness. Please try again."));
     } finally {
       setLoading(false);
     }
   };
   const importFile = async (file: File) => {
     if (file.size > 20 * 1024 * 1024) {
-      setError("Choose a JSON export smaller than 20 MB.");
+      setError(t("Choose a JSON export smaller than 20 MB."));
       return;
     }
     setBusy(true);
@@ -131,12 +137,18 @@ export function SettingsView({
       JSON.parse(content);
       const count = await backend.importGranola(content);
       setNotice(
-        `Imported ${count} meeting${count === 1 ? "" : "s"}. Your library has been refreshed.`,
+        plural(
+          "Imported {count} meeting. Your library has been refreshed.",
+          "Imported {count} meetings. Your library has been refreshed.",
+          count,
+        ),
       );
       onLibraryChange?.();
     } catch {
       setError(
-        "Import failed. Check that this is a supported Granola JSON export, then try again.",
+        t(
+          "Import failed. Check that this is a supported Granola JSON export, then try again.",
+        ),
       );
     } finally {
       setBusy(false);
@@ -149,13 +161,16 @@ export function SettingsView({
     try {
       if (confirmation === "purge") {
         await backend.purgeAll();
-        setNotice("Your meeting library has been deleted.");
+        setNotice(t("Your meeting library has been deleted."));
       } else {
         await backend.setRetention(Number(retention));
         setNotice(
           Number(retention)
-            ? `Retention set to ${retention} days. Older notes may be removed by the desktop app.`
-            : "Automatic retention deletion disabled.",
+            ? t(
+                "Retention set to {days} days. Older notes may be removed by the desktop app.",
+                { days: Number(retention) },
+              )
+            : t("Automatic retention deletion disabled."),
         );
       }
       setConfirmation(null);
@@ -164,9 +179,14 @@ export function SettingsView({
       await refresh();
     } catch {
       setError(
-        "This change could not be completed. Your library may be in use; stop any active session and try again.",
+        t(
+          "This change could not be completed. Your library may be in use; stop any active session and try again.",
+        ),
       );
     } finally {
+      // Purge may delete the rows before later cleanup reports a failure.
+      if (confirmation === "purge")
+        setLanguageSettingsVersion((version) => version + 1);
       setBusy(false);
     }
   };
@@ -175,12 +195,14 @@ export function SettingsView({
     <div className="scrollbar-thin paper-texture min-h-0 flex-1 overflow-y-auto">
       <div className="workspace-page mx-auto max-w-4xl space-y-6 px-5 pb-24 pt-10 sm:px-8">
         <div>
-          <p className="section-eyebrow">Make yourself at home</p>
+          <p className="section-eyebrow">{t("Make yourself at home")}</p>
           <h1 className="font-display mt-3 text-[40px] leading-tight tracking-tight sm:text-[48px]">
-            Settings
+            {t("Settings")}
           </h1>
           <p className="mt-3 max-w-lg text-sm leading-relaxed text-muted-foreground">
-            Know what’s running, where your notes live, and what’s available.
+            {t(
+              "Know what’s running, where your notes live, and what’s available.",
+            )}
           </p>
         </div>
         {demo && (
@@ -188,10 +210,11 @@ export function SettingsView({
             <AlertCircle size={17} className="mt-0.5 shrink-0 text-primary" />
             <p className="text-xs leading-relaxed text-muted-foreground">
               <strong className="font-semibold">
-                You’re exploring the browser demo.
+                {t("You’re exploring the browser demo.")}
               </strong>{" "}
-              Meetings are sample data. Audio capture, local AI models, import,
-              and library deletion require the desktop app.
+              {t(
+                "Meetings are sample data. Audio capture, local AI models, import, and library deletion require the desktop app.",
+              )}
             </p>
           </div>
         )}
@@ -201,7 +224,7 @@ export function SettingsView({
             className="flex items-start gap-2 rounded-xl border border-border bg-secondary p-4 text-xs leading-relaxed"
           >
             <CheckCircle2 size={16} className="shrink-0 text-primary" />
-            {notice}
+            {t(notice)}
           </p>
         )}
         {error && !confirmation && (
@@ -209,71 +232,83 @@ export function SettingsView({
             role="alert"
             className="rounded-xl border border-destructive/20 bg-destructive/5 p-4 text-xs leading-relaxed text-destructive dark:text-red-400"
           >
-            {error}
+            {t(error)}
           </p>
         )}
+        <LanguageSettings
+          key={languageSettingsVersion}
+          captureLocked={captureLocked}
+          disabled={busy}
+        />
         <ProviderSettings onSaved={() => void refresh()} />
         <Section
-          title="Privacy & storage"
-          description="Your workspace, on your device."
+          title={t("Privacy & storage")}
+          description={t("Your workspace, on your device.")}
           icon={<Shield size={16} className="text-primary" />}
         >
           <div>
-            <h3 className="text-[13px] font-semibold">Local by design</h3>
+            <h3 className="text-[13px] font-semibold">
+              {t("Local by design")}
+            </h3>
             <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-              The desktop app stores notes and transcripts in its local
-              database. Local storage is not a claim of encryption; your device
-              and backups still control who can access those files.
+              {t(
+                "The desktop app stores notes and transcripts in its local database. Local storage is not a claim of encryption; your device and backups still control who can access those files.",
+              )}
             </p>
           </div>
           <div className="grid gap-5 border-t border-border pt-5 sm:grid-cols-2">
             <div>
-              <h3 className="text-[13px] font-semibold">Network mode</h3>
+              <h3 className="text-[13px] font-semibold">{t("Network mode")}</h3>
               {!demo && typeof airlock.os_enforced === "boolean" && (
                 <p className="mt-2 inline-flex rounded-md bg-secondary px-2 py-1 text-[10px] font-medium text-muted-foreground">
                   {airlock.os_enforced
-                    ? "OS network block active"
+                    ? t("OS network block active")
                     : airlock.mode === "development"
-                      ? "Development mode"
-                      : "Application policy"}
+                      ? t("Development mode")
+                      : t("Application policy")}
                 </p>
               )}
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
                 {demo
-                  ? "This page is a browser preview. No network telemetry is measured here."
+                  ? t(
+                      "This page is a browser preview. No network telemetry is measured here.",
+                    )
                   : typeof airlock.detail === "string"
                     ? airlock.detail
-                    : "Waiting for desktop status. Network usage is not measured in this interface."}
+                    : t(
+                        "Waiting for desktop status. Network usage is not measured in this interface.",
+                      )}
               </p>
             </div>
             <div>
               <h3 className="text-[13px] font-semibold">
-                Recording responsibly
+                {t("Recording responsibly")}
               </h3>
               <p className="mt-2 text-xs leading-relaxed text-muted-foreground">
-                Let everyone in the conversation know before recording. Verify
-                important details in transcripts and AI summaries.
+                {t(
+                  "Let everyone in the conversation know before recording. Verify important details in transcripts and AI summaries.",
+                )}
               </p>
             </div>
           </div>
         </Section>
         <Section
-          title="Desktop readiness"
-          description="Check the models and features available to you."
+          title={t("Desktop readiness")}
+          description={t("Check the models and features available to you.")}
           icon={<Cpu size={16} className="text-primary" />}
         >
           <div className="flex items-center justify-between gap-3">
             <p className="text-xs text-muted-foreground">
               {demo
-                ? "Model checks are available in the desktop app."
+                ? t("Model checks are available in the desktop app.")
                 : loading
-                  ? "Checking your device…"
-                  : "Based on the desktop app’s latest status."}
+                  ? t("Checking your device…")
+                  : t("Based on the desktop app’s latest status.")}
             </p>
             <button
               disabled={demo || loading || busy}
               onClick={() => void refresh()}
-              aria-label="Refresh desktop readiness"
+              aria-label={t("Refresh desktop readiness")}
               className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl border border-border text-muted-foreground transition-colors hover:bg-secondary"
             >
               <RefreshCw size={14} className={loading ? "animate-spin" : ""} />
@@ -282,13 +317,13 @@ export function SettingsView({
           <div className="divide-y divide-border">
             {[
               {
-                label: "Speech transcription",
-                detail: "Whisper model file",
+                label: t("Speech transcription"),
+                detail: t("Whisper model file"),
                 key: "whisper",
               },
               {
-                label: "Built-in summary model",
-                detail: "Optional when another summary provider is selected",
+                label: t("Built-in summary model"),
+                detail: t("Optional when another summary provider is selected"),
                 key: "llm",
               },
             ].map((model) => (
@@ -309,14 +344,14 @@ export function SettingsView({
                     <CheckCircle2 size={12} />
                   )}
                   {demo
-                    ? "Desktop only"
+                    ? t("Desktop only")
                     : loading
-                      ? "Checking…"
+                      ? t("Checking…")
                       : status?.[model.key] === true
-                        ? "File present"
+                        ? t("File present")
                         : status?.[model.key] === false
-                          ? "Not installed"
-                          : "Unknown"}
+                          ? t("Not installed")
+                          : t("Unknown")}
                 </span>
               </div>
             ))}
@@ -325,42 +360,44 @@ export function SettingsView({
             <div className="rounded-xl bg-secondary p-3">
               <p className="flex items-center gap-1.5 text-[11px] font-semibold">
                 <Folder size={13} />
-                Model folder
+                {t("Model folder")}
               </p>
               <code className="mt-2 block break-all text-[10px] text-muted-foreground">
                 {status.model_directory}
               </code>
               <p className="mt-2 text-[11px] leading-relaxed text-muted-foreground">
-                Install the model files using the repository setup instructions,
-                then refresh. File presence does not guarantee successful
-                inference.
+                {t(
+                  "Install the model files using the repository setup instructions, then refresh. File presence does not guarantee successful inference.",
+                )}
               </p>
             </div>
           )}
           <p className="border-t border-border pt-4 text-xs leading-relaxed text-muted-foreground">
             {capabilities.system_audio === true
-              ? "This build supports system audio capture."
-              : "System audio capture is not available in this build."}{" "}
+              ? t("This build supports system audio capture.")
+              : t("System audio capture is not available in this build.")}{" "}
             {capabilities.diarization === true
-              ? "Speaker separation is available."
-              : "Automatic speaker separation is not available."}{" "}
+              ? t("Speaker separation is available.")
+              : t("Automatic speaker separation is not available.")}{" "}
             {capabilities.calendar === true
-              ? "Calendar integration is available."
-              : "Calendar integration is not connected."}
+              ? t("Calendar integration is available.")
+              : t("Calendar integration is not connected.")}
           </p>
         </Section>
         <Section
-          title="Import your notes"
-          description="Bring your existing conversations with you."
+          title={t("Import your notes")}
+          description={t("Bring your existing conversations with you.")}
           icon={<FileUp size={16} className="text-primary" />}
         >
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="max-w-md">
-              <h3 className="text-[13px] font-semibold">Granola JSON export</h3>
+              <h3 className="text-[13px] font-semibold">
+                {t("Granola JSON export")}
+              </h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Choose an exported JSON file up to 20 MB. Imported notes will
-                appear in your desktop library. Other export formats are not
-                currently supported.
+                {t(
+                  "Choose an exported JSON file up to 20 MB. Imported notes will appear in your desktop library. Other export formats are not currently supported.",
+                )}
               </p>
             </div>
             <input
@@ -368,7 +405,7 @@ export function SettingsView({
               type="file"
               accept=".json,application/json"
               className="hidden"
-              aria-label="Choose Granola JSON export"
+              aria-label={t("Choose Granola JSON export")}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) void importFile(file);
@@ -381,27 +418,32 @@ export function SettingsView({
               className="button-secondary shrink-0 gap-2"
             >
               <FileUp size={15} />
-              {busy ? "Working…" : "Choose JSON export"}
+              {busy ? t("Working…") : t("Choose JSON export")}
             </button>
           </div>
         </Section>
         <Section
-          title="Library retention"
-          description="Choose how long your conversations stay."
+          title={t("Library retention")}
+          description={t("Choose how long your conversations stay.")}
           icon={<HardDrive size={16} className="text-primary" />}
         >
           <p className="text-xs leading-relaxed text-muted-foreground">
             {typeof status?.retention_days === "number"
               ? status.retention_days === 0
-                ? "Current policy: keep all notes."
-                : `Current policy: remove notes older than ${status.retention_days} days.`
-              : "The current retention policy is not available in this view."}{" "}
-            Deleting notes also removes their transcripts and related items.
-            Export any notes you want to keep first.
+                ? t("Current policy: keep all notes.")
+                : t("Current policy: remove notes older than {days} days.", {
+                    days: status.retention_days,
+                  })
+              : t(
+                  "The current retention policy is not available in this view.",
+                )}{" "}
+            {t(
+              "Deleting notes also removes their transcripts and related items. Export any notes you want to keep first.",
+            )}
           </p>
           <div className="flex flex-wrap items-center gap-3">
             <label className="text-xs font-medium" htmlFor="retention-policy">
-              Keep notes for
+              {t("Keep notes for")}
             </label>
             <select
               id="retention-policy"
@@ -410,12 +452,14 @@ export function SettingsView({
               onChange={(e) => setRetention(e.target.value)}
               className="min-h-11 rounded-xl border border-border bg-background px-3 py-2 text-xs"
             >
-              <option value="0">Forever</option>
-              <option value="30">30 days</option>
-              <option value="90">90 days</option>
-              <option value="365">1 year</option>
+              <option value="0">{t("Forever")}</option>
+              <option value="30">{t("30 days")}</option>
+              <option value="90">{t("90 days")}</option>
+              <option value="365">{t("1 year")}</option>
               {!["0", "30", "90", "365"].includes(retention) && (
-                <option value={retention}>{retention} days</option>
+                <option value={retention}>
+                  {t("{days} days", { days: Number(retention) })}
+                </option>
               )}
             </select>
             <button
@@ -428,16 +472,16 @@ export function SettingsView({
               }}
               className="button-secondary"
             >
-              Review change
+              {t("Review change")}
             </button>
           </div>
           <div className="flex flex-wrap items-center justify-between gap-4 rounded-xl border border-destructive/15 bg-destructive/[0.025] p-4">
             <div>
               <h3 className="text-[13px] font-semibold">
-                Delete meeting library
+                {t("Delete meeting library")}
               </h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
-                Permanently remove saved meetings and their related data.
+                {t("Permanently remove saved meetings and their related data.")}
               </p>
             </div>
             <button
@@ -451,12 +495,14 @@ export function SettingsView({
               className="flex min-h-11 items-center gap-2 rounded-xl border border-destructive/30 px-3 py-2 text-xs font-semibold text-destructive transition-colors hover:bg-destructive/10 dark:text-red-400"
             >
               <Trash2 size={14} />
-              Delete library
+              {t("Delete library")}
             </button>
           </div>
         </Section>
         <p className="text-center text-[10px] text-muted-foreground">
-          Open Granola · Apache 2.0 · Built for conversations worth keeping
+          {t(
+            "Open Granola · Apache 2.0 · Built for conversations worth keeping",
+          )}
         </p>
         <Dialog
           open={confirmation !== null}
@@ -482,22 +528,26 @@ export function SettingsView({
             </span>
             <DialogTitle className="pr-5 text-xl leading-snug">
               {confirmation === "purge"
-                ? "Delete your meeting library?"
-                : "Change note retention?"}
+                ? t("Delete your meeting library?")
+                : t("Change note retention?")}
             </DialogTitle>
             <DialogDescription className="text-sm leading-relaxed">
               {confirmation === "purge"
-                ? "This permanently deletes saved meetings, transcripts, action items, and commitments, and resets library settings. Export anything you want to keep before continuing."
+                ? t(
+                    "This permanently deletes saved meetings, transcripts, action items, and commitments, and resets library settings. Export anything you want to keep before continuing.",
+                  )
                 : Number(retention)
-                  ? `Notes older than ${retention} days may be permanently deleted. Export anything you want to keep before applying this policy.`
-                  : "Notes will be kept until you delete them. Previously deleted notes cannot be recovered."}
+                  ? t(
+                      "Notes older than {days} days may be permanently deleted. Export anything you want to keep before applying this policy.",
+                      { days: Number(retention) },
+                    )
+                  : t(
+                      "Notes will be kept until you delete them. Previously deleted notes cannot be recovered.",
+                    )}
             </DialogDescription>
             {(confirmation === "purge" || Number(retention) > 0) && (
               <label className="space-y-2 text-xs">
-                <span>
-                  Type <strong className="font-semibold">DELETE</strong> to
-                  confirm
-                </span>
+                <span>{t("Type DELETE to confirm")}</span>
                 <input
                   autoComplete="off"
                   autoCapitalize="off"
@@ -514,7 +564,7 @@ export function SettingsView({
                 role="alert"
                 className="text-xs text-destructive dark:text-red-400"
               >
-                {error}
+                {t(error)}
               </p>
             )}
             <div className="mt-1 flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
@@ -523,7 +573,7 @@ export function SettingsView({
                 onClick={() => setConfirmation(null)}
                 className="button-secondary justify-center"
               >
-                Cancel
+                {t("Cancel")}
               </button>
               <button
                 disabled={
@@ -536,10 +586,10 @@ export function SettingsView({
               >
                 {busy && <Loader2 size={14} className="animate-spin" />}
                 {busy
-                  ? "Applying…"
+                  ? t("Applying…")
                   : confirmation === "purge"
-                    ? "Delete library"
-                    : "Apply policy"}
+                    ? t("Delete library")
+                    : t("Apply policy")}
               </button>
             </div>
           </DialogContent>
