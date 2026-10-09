@@ -5,6 +5,7 @@ import { HomeView } from "./HomeView";
 import { NoteView } from "./NoteView";
 import { ProcessingHistory } from "./ProcessingHistory";
 import type { Meeting } from "../lib/types";
+import { translationCatalogs } from "../i18n/locales";
 
 const meeting: Meeting = {
   id: "example",
@@ -33,6 +34,44 @@ beforeEach(() => {
 });
 
 describe("translated workspace", () => {
+  it.each(["ja", "zh-CN", "zh-TW"] as const)(
+    "shows translated %s workspace and transcript controls while preserving source content",
+    (locale) => {
+      window.localStorage.setItem("open-granola-language", locale);
+      const t = (message: string) => translationCatalogs[locale][message];
+      const home = render(
+        <LanguageProvider>
+          <HomeView
+            meetings={[meeting]}
+            brief={null}
+            onOpenMeeting={vi.fn()}
+            onRecord={vi.fn()}
+            onAsk={vi.fn()}
+          />
+        </LanguageProvider>,
+      );
+      expect(
+        screen.getByRole("heading", { name: t("Your meeting library") }),
+      ).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: meeting.title }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(meeting.summary)).toBeInTheDocument();
+      home.unmount();
+      render(
+        <LanguageProvider>
+          <NoteView meeting={meeting} onToggleAction={vi.fn()} />
+        </LanguageProvider>,
+      );
+      fireEvent.click(
+        screen.getByRole("tab", { name: new RegExp(t("Transcript")) }),
+      );
+      expect(
+        screen.getByRole("textbox", { name: t("Search this transcript") }),
+      ).toBeInTheDocument();
+      expect(screen.getByText(meeting.transcript[0].text)).toBeInTheDocument();
+    },
+  );
   it("translates Spanish controls and sends the typed question without changing meeting content", () => {
     window.localStorage.setItem("open-granola-language", "es");
     const onAsk = vi.fn();

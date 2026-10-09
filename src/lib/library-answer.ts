@@ -14,6 +14,7 @@ export function sampleLibraryAnswer(
   t: Translate = (message) => message,
 ): LibraryAnswer {
   if (
+    question.trim() === t("What needs a follow-up?") ||
     /action|follow.up|next step|\bdue\b|\bowe\b|seguimiento|tarea|pr[oó]xim|आगे ध्यान|अगले कदम|बाकी कार्य/i.test(
       question,
     )
@@ -72,7 +73,9 @@ export function sampleLibraryAnswer(
     .sort((a, b) => b.score - a.score)
     .slice(0, 3)
     .map(({ meeting }) => meeting);
-  const asksForDecisions = /decisi|decid|फ़ैसल|फैसल|निर्णय/i.test(question);
+  const asksForDecisions =
+    question.trim() === t("What did we decide?") ||
+    /decisi|decid|फ़ैसल|फैसल|निर्णय/i.test(question);
   const selected =
     asksForDecisions && matches.length === 0 ? meetings : matches;
   return {

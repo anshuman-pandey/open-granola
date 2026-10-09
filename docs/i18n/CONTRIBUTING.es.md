@@ -1,6 +1,6 @@
 # Contribuir a Open Granola
 
-[English](../../CONTRIBUTING.md) · [हिन्दी](CONTRIBUTING.hi.md) · **Español** · [Guía de traducción](../I18N.md)
+[English](../../CONTRIBUTING.md) · [हिन्दी](CONTRIBUTING.hi.md) · **Español** · [日本語](CONTRIBUTING.ja.md) · [简体中文](CONTRIBUTING.zh-CN.md) · [繁體中文](CONTRIBUTING.zh-TW.md) · [Guía de traducción](../I18N.md)
 
 <!-- English source: CONTRIBUTING.md at 6127b7f34b2e3ea786481953cfe57a7179a214c6; reviewed 2026-10-10. -->
 
