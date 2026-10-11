@@ -20,6 +20,7 @@
 [English](../../README.md) · **हिन्दी** · [Español](README.es.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [अनुवाद में योगदान](../I18N.md)
 
 <!-- English source: README.md at 6127b7f34b2e3ea786481953cfe57a7179a214c6; reviewed 2026-10-10. -->
+<!-- Setup/export links updated with the adoption-readiness branch on 2026-10-12. -->
 
 **विकासाधीन प्रीव्यू।** Open Granola आपके माइक्रोफ़ोन की आवाज़ रिकॉर्ड करता है, स्थानीय Whisper से उसे लिखित ट्रांसक्रिप्ट में बदलता है और स्थानीय मॉडल या आपके जोड़े हुए प्रदाता से नोट्स बनाता है। आपकी लाइब्रेरी स्थानीय SQLite डेटाबेस में रहती है। क्लाउड से सारांश बनवाने पर ट्रांसक्रिप्ट का टेक्स्ट चुने हुए प्रदाता को भेजा जाता है।
 
@@ -58,7 +59,7 @@ Claude को API key से जोड़ा जाता है; इस ऐप 
 
 ### सारांश मॉडल जोड़ें
 
-सेटअप गाइड: [LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)।
+सेटअप गाइड: [LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)। निर्यात गाइड: [Obsidian](../integrations/OBSIDIAN.md)।
 
 1. डेस्कटॉप ऐप में **Settings → Models & connections** खोलें।
 2. प्रदाता चुनें और उसकी सटीक मॉडल ID डालें। कस्टम सर्वर के लिए उसके दस्तावेज़ में दिया API base URL डालें।
@@ -101,6 +102,8 @@ npm run tauri build
 ```
 
 बिल्ड फ़ाइलें `src-tauri/target/release/bundle` में मिलेंगी। Signing, notarization और इंस्टॉल/अपग्रेड परीक्षण रिलीज़ के अलग काम हैं। तैयार होने पर सत्यापित फ़ाइलें [Releases](https://github.com/anshuman-pandey/open-granola/releases) में प्रकाशित करें; यह README तैयार इंस्टॉलर उपलब्ध होने का वादा नहीं करता।
+
+Apple Silicon के परीक्षण बिल्ड और पहली बार सेटअप की जाँच के लिए [प्रीव्यू बिल्ड गाइड](../RELEASING.md) देखें। सार्वजनिक रिलीज़ से पहले मॉडल फ़ाइलें और वास्तविक हार्डवेयर पर परीक्षण आवश्यक हैं।
 
 ### स्थानीय मॉडल इंस्टॉल करें
 

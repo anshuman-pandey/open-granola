@@ -1,5 +1,6 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import userEvent from "@testing-library/user-event";
 import { NoteView } from "./NoteView";
 import { meetingMarkdown } from "./meeting-export";
 import type { Meeting } from "../lib/types";
@@ -33,6 +34,28 @@ beforeEach(() => {
 });
 
 describe("meeting details", () => {
+  it("downloads an Obsidian note through the export menu without opening a vault", async () => {
+    Object.assign(URL, { createObjectURL: vi.fn(), revokeObjectURL: vi.fn() });
+    const url = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:note");
+    const clicked: HTMLAnchorElement[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clicked.push(this);
+    });
+    render(<NoteView meeting={meeting} onToggleAction={vi.fn()} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Export" }));
+    await user.click(screen.getByRole("menuitem", { name: "Obsidian note" }));
+    expect(url).toHaveBeenCalledOnce();
+    expect(clicked).toHaveLength(1);
+    expect(clicked[0].download).toMatch(
+      /^2026-09-30 Project review [a-f0-9]{16}\.md$/,
+    );
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Move it into your vault.",
+    );
+  });
   it("renders native speaker IDs and unknown speakers without crashing", () => {
     render(<NoteView meeting={meeting} onToggleAction={vi.fn()} />);
     fireEvent.keyDown(screen.getByRole("tab", { name: "Notes" }), {
@@ -157,35 +180,42 @@ describe("meeting details", () => {
   });
 
   it("exports source transcript, decisions, checkbox state and summary provenance", () => {
-    const markdown = meetingMarkdown({
-      ...meeting,
-      processingHistory: [{
-        provider: "lm_studio",
-        model: "reviewed-local-model",
-        endpoint: "http://127.0.0.1:1234/v1",
-        off_device: false,
-        status: "completed",
-        error: null,
-        started_at: "2026-09-30T11:00:00Z",
-        completed_at: "2026-09-30T11:00:06Z",
-      }],
-    }, [
+    const markdown = meetingMarkdown(
       {
-        id: "action",
-        text: "Ship release",
-        owner: "You",
-        done: true,
-        due: "Friday",
-        meetingId: meeting.id,
-        meetingTitle: meeting.title,
+        ...meeting,
+        processingHistory: [
+          {
+            provider: "lm_studio",
+            model: "reviewed-local-model",
+            endpoint: "http://127.0.0.1:1234/v1",
+            off_device: false,
+            status: "completed",
+            error: null,
+            started_at: "2026-09-30T11:00:00Z",
+            completed_at: "2026-09-30T11:00:06Z",
+          },
+        ],
       },
-    ]);
+      [
+        {
+          id: "action",
+          text: "Ship release",
+          owner: "You",
+          done: true,
+          due: "Friday",
+          meetingId: meeting.id,
+          meetingTitle: meeting.title,
+        },
+      ],
+    );
     expect(markdown).toContain("# Project review");
     expect(markdown).toContain("- Launch on Friday");
     expect(markdown).toContain("- [x] Ship release (You · Friday)");
     expect(markdown).toContain("01:00 · Speaker 2");
     expect(markdown).toContain("01:15 · Unknown speaker");
-    expect(markdown).toContain("- 2026-09-30T11:00:00Z: completed; lm_studio; model: reviewed-local-model; destination: http://127.0.0.1:1234/v1; local processing route");
+    expect(markdown).toContain(
+      "- 2026-09-30T11:00:00Z: completed; lm_studio; model: reviewed-local-model; destination: http://127.0.0.1:1234/v1; local processing route",
+    );
     expect(markdown).toContain("The release is ready.");
   });
 });

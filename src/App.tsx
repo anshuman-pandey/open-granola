@@ -337,7 +337,7 @@ export default function App() {
         data-capturing={live.active}
         id="workspace"
         tabIndex={-1}
-        className="flex min-w-0 flex-1 flex-col outline-none"
+        className="flex min-w-0 flex-1 flex-col outline-hidden"
       >
         {backend.mode === "demo" && (
           <div className="demo-notice">

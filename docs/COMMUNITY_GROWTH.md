@@ -1,5 +1,7 @@
 # Community contributions and discoverability
 
+Current implementation, installer validation and named listing gates are recorded in [ADOPTION_STATUS.md](ADOPTION_STATUS.md). The contribution-specific policies below still apply.
+
 Research date: **2026-10-10**. These are proposed contributions and unsent drafts. No upstream issue, pull request, discussion or promotional message has been submitted as part of this work. This plan supplements [LAUNCH_KIT.md](LAUNCH_KIT.md) and the [competitive research](COMPETITIVE_RESEARCH.md); their evidence requirements still apply.
 
 The useful offer is a reproducible local-model integration, clearer language support and fixes that help users of the dependencies. Measure successful setup and maintained contributions. Stars are voluntary; this plan makes no star-growth guarantee.

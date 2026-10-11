@@ -65,6 +65,40 @@ jobs:
       - run: cargo audit
         working-directory: src-tauri
 
+  macos-preview:
+    needs: [frontend, rust, rust-audit]
+    if: github.event_name == 'pull_request' || github.event_name == 'workflow_dispatch' || github.ref == 'refs/heads/main'
+    runs-on: macos-15
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-apple-darwin
+      - uses: Swatinem/rust-cache@v2
+        with:
+          workspaces: src-tauri
+          key: preview-aarch64
+      - run: npm ci
+      - name: Build Apple Silicon preview
+        env:
+          APPLE_SIGNING_IDENTITY: '-'
+        run: npm run tauri build -- --target aarch64-apple-darwin --bundles app,dmg
+      - name: Verify bundle and prepare checksums
+        env:
+          OPEN_GRANOLA_BUILD_COMMIT: ${{ github.sha }}
+        run: node scripts/package-macos-preview.mjs
+      - uses: actions/upload-artifact@v4
+        with:
+          name: open-granola-macos-arm64-preview-${{ github.sha }}
+          path: artifacts/macos-preview/
+          if-no-files-found: error
+          retention-days: 14
+
   release:
     needs: [frontend, rust, rust-audit]
     if: startsWith(github.ref, 'refs/tags/v')
@@ -94,3 +128,8 @@ jobs:
           tagName: ${{ github.ref_name }}
           releaseName: "Open Granola ${{ github.ref_name }}"
           releaseDraft: true
+          prerelease: true
+          releaseBody: |
+            Development preview: microphone-only recording with manually installed Whisper models.
+            These bundles require install, permission, recording and recovery validation on real hardware.
+            See docs/RELEASING.md for signing and validation requirements before publishing.

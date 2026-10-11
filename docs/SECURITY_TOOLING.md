@@ -1,8 +1,18 @@
 # Frontend dependency security
 
-Reviewed on **2026-10-10**. Audit results are a snapshot of the npm advisory database, not a complete security assessment.
+Reviewed on **2026-10-12**. Audit results are a snapshot of the npm advisory database, not a complete security assessment.
 
-## Applied fixes
+## Current build toolchain
+
+The frontend now uses Tailwind **4.3.3** through its Vite plugin. Tailwind 3's vulnerable glob dependency chain (`braces`, `micromatch`, `fast-glob` and Chokidar) is absent from the installed tree. The full `npm audit --audit-level=high` reports **zero vulnerabilities** on this review date. The CI threshold is unchanged; no advisory is suppressed.
+
+The migration removes the old PostCSS integration and `tailwindcss-animate`, uses `tw-animate-css`, and retains the existing theme through `tailwind.config.cjs`. Shadow, outline and bare-radius utilities were adjusted to retain their previous values, and the status colors remain explicitly pinned. The obsolete selector-parser override is removed because its dependency path is gone.
+
+Validation: clean dependency installations, frontend lint/tests/security checks and a production build pass. Generated CSS was compared for workspace spacing, card shadows, button styling, typography and theme radii. This is not a completed browser or native visual review. Tailwind 4 requires [modern browsers](https://tailwindcss.com/docs/upgrade-guide): Safari 16.4+, Chrome 111+ and Firefox 128+. The macOS minimum remains 14.4; older Linux WebKit runtimes need review before promising compatible installers.
+
+The records below describe the preceding Tailwind 3 patch and its unresolved finding at that time.
+
+## Previous Tailwind 3 fixes
 
 | Dependency | Change | Advisory |
 | --- | --- | --- |
@@ -21,7 +31,7 @@ Two isolated dependency installations used Tailwind 3.4.19 with parser 6.1.4 and
 
 These checks cover the tested source snapshot. Future Tailwind/plugin changes still need build and visual review. Revisit the override when upstream supports a fixed parser version directly.
 
-## Remaining audit finding
+## Previous audit finding (resolved by migration)
 
 The full audit reports **five high-severity package entries**, all stemming from [GHSA-vfj7-8cjw-p6xm: braces stack exhaustion](https://github.com/advisories/GHSA-vfj7-8cjw-p6xm). They are `braces`, `chokidar`, `micromatch`, `fast-glob` and `tailwindcss`. The production-only audit (`npm audit --omit=dev`) reports zero findings.
 
@@ -29,4 +39,4 @@ The latest published `braces` is 3.0.3, with no official patched release. Tailwi
 
 These packages run in development and CSS builds. The current Tailwind content patterns are fixed repository configuration; no meeting-input path to these parsers was identified. This does not make untrusted builds safe: attacker-controlled source, CSS, configuration or glob patterns require separate review. Do not process arbitrary external CSS or source through the build toolchain as a trusted service.
 
-**CI's `npm audit --audit-level=high` still fails.** Its threshold is unchanged, and no advisory is suppressed. Resolving this requires an upstream fix or a deliberate, tested toolchain migration. A [Tailwind 4 migration](https://tailwindcss.com/docs/upgrade-guide) changes CSS behavior, build integration and browser requirements; it is outside this dependency patch.
+At the 2026-10-10 review, **CI's `npm audit --audit-level=high` failed**. The Tailwind 4 migration described above removes that dependency chain without suppressing its advisory or changing the audit threshold.

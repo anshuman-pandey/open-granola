@@ -87,7 +87,7 @@ export function CommitmentsView({ onOpenMeeting }: Props) {
                 key={value}
                 aria-pressed={filter === value}
                 onClick={() => setFilter(value)}
-                className={`flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors ${filter === value ? "bg-foreground text-background shadow-sm" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
+                className={`flex min-h-10 items-center gap-2 rounded-lg px-3 text-xs font-semibold transition-colors ${filter === value ? "bg-foreground text-background shadow-xs" : "text-muted-foreground hover:bg-secondary hover:text-foreground"}`}
               >
                 {value === "open" ? t("Open") : t("All")}
                 <span
