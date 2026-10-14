@@ -10,6 +10,7 @@ import {
 } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { readEntitlements, requireEntitlements } from "./macos-entitlements.mjs";
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
 if (process.platform !== "darwin")
@@ -50,20 +51,7 @@ for (const [path, required] of [
   ],
   [worker, ["com.apple.security.app-sandbox", "com.apple.security.inherit"]],
 ]) {
-  const entitlements = run(
-    "/usr/bin/codesign",
-    ["--display", "--entitlements", "-", path],
-    true,
-  );
-  for (const key of required) {
-    const property = `<key>${key}</key>`;
-    if (
-      !entitlements.includes(property) ||
-      !/^\s*<true\s*\/>/.test(entitlements.split(property)[1])
-    ) {
-      throw new Error(`Required entitlement missing: ${key}`);
-    }
-  }
+  requireEntitlements(readEntitlements(path), required, { exact: path === worker });
 }
 const architecture = run("/usr/bin/lipo", ["-archs", worker], true).trim();
 if (architecture !== "arm64")

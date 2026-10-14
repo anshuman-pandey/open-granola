@@ -88,6 +88,8 @@ jobs:
         env:
           APPLE_SIGNING_IDENTITY: '-'
         run: npm run tauri build -- --target aarch64-apple-darwin --bundles app,dmg
+      - name: Test signing entitlement inspection
+        run: node --test scripts/macos-entitlements.test.mjs
       - name: Verify bundle and prepare checksums
         env:
           OPEN_GRANOLA_BUILD_COMMIT: ${{ github.sha }}
