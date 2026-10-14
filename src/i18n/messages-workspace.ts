@@ -1,4 +1,14 @@
 export const workspaceMessages: Record<string, { hi: string; es: string }> = {
+  "Markdown file": { hi: "Markdown फ़ाइल", es: "Archivo Markdown" },
+  "Obsidian note": { hi: "Obsidian नोट", es: "Nota de Obsidian" },
+  "Obsidian note downloaded. Move it into your vault.": {
+    hi: "Obsidian नोट डाउनलोड हो गया। इसे अपने वॉल्ट में रखें।",
+    es: "Nota de Obsidian descargada. Muévela a tu bóveda.",
+  },
+  "The export could not be downloaded. Try copying the Markdown instead.": {
+    hi: "निर्यात डाउनलोड नहीं हो सका। Markdown कॉपी करके देखें।",
+    es: "No se pudo descargar la exportación. Prueba a copiar el Markdown.",
+  },
   "A fresh page for your conversations. Capture a meeting or bring your notes along.":
     {
       hi: "आपकी बातचीत के लिए एक नई शुरुआत। मीटिंग रिकॉर्ड करें या अपने नोट्स लाएँ।",

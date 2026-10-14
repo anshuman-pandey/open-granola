@@ -1,0 +1,65 @@
+name: First-run validation
+description: Report a successful setup or a blocker using synthetic meeting content.
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Follow docs/RELEASING.md and docs/integrations/VALIDATION.md.
+        Share synthetic results only. Do not upload recordings, databases, transcripts, API keys, account details or private hostnames.
+        Report security vulnerabilities using SECURITY.md.
+  - type: input
+    id: build
+    attributes:
+      label: Build commit and installation method
+      description: Full commit from BUILD.json, or source-build commit. State DMG, app ZIP or source build.
+    validations:
+      required: true
+  - type: input
+    id: environment
+    attributes:
+      label: OS, architecture and RAM
+      description: For example, macOS version, Apple Silicon or Intel, and RAM. No device serial numbers.
+    validations:
+      required: true
+  - type: input
+    id: models
+    attributes:
+      label: Model and provider versions
+      description: Whisper model identity, summary model ID/quantization, provider/server version and requested languages. No keys or private paths.
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Results
+      value: |
+        Fresh install and first launch: pass / fail / not run
+        Microphone permission and synthetic recording: pass / fail / not run
+        Correct saved transcript, decision and task: pass / fail / not run
+        Restart and search: pass / fail / not run
+        Markdown export: pass / fail / not run
+        Obsidian export opened (Obsidian version): pass / fail / not run
+        Provider failure and saved-summary retry: pass / fail / not run
+        Long session (duration and outcome): pass / fail / not run
+        Upgrade and uninstall/reinstall: pass / fail / not run
+    validations:
+      required: true
+  - type: input
+    id: time
+    attributes:
+      label: Time to first useful saved notes (optional)
+      description: Approximate minutes from starting installation; say whether model download time is included.
+  - type: textarea
+    id: feedback
+    attributes:
+      label: Steps, blockers and repeat use (optional)
+      description: What helped or stopped you? Include sanitized errors. Mention whether you used it again if you wish.
+  - type: checkboxes
+    id: review
+    attributes:
+      label: Before submitting
+      options:
+        - label: I used synthetic content and removed private data and credentials.
+          required: true
+        - label: I marked checks I did not run as not run.
+          required: true

@@ -1,4 +1,5 @@
 <!-- Translation of README.md at a25a58aece9c5337340c352eb431b83a041d1d47; reviewed 2026-10-10. English is the source of truth. -->
+<!-- Setup/export links updated with the adoption-readiness branch on 2026-10-12. -->
 <p align="center">
   <img src="../assets/logo.svg" width="72" alt="Open Granola 標誌" />
 </p>
@@ -58,7 +59,7 @@ Claude 透過 API 金鑰連接；此應用程式不提供 Claude 個人帳號登
 
 ### 連接摘要工具
 
-設定指南：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。
+設定指南：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。 匯出指南：[Obsidian](../integrations/OBSIDIAN.md)。
 
 1. 在桌面版應用程式中開啟**設定 → 模型與連線**。
 2. 選擇供應商並輸入完整的模型 ID。若使用自訂伺服器，請輸入其文件指定的 API 基底 URL。
@@ -100,6 +101,8 @@ npm run tauri build
 ```
 
 建置輸出位於 `src-tauri/target/release/bundle`。簽署、公證，以及安裝／升級測試屬於另外的發行工作。準備好後，將驗證過的檔案發布至 [Releases](https://github.com/anshuman-pandey/open-granola/releases)；本 README 不保證提供預先建置的安裝程式。
+
+關於 Apple Silicon 驗證版本和首次使用測試，請參閱[預覽版本指南](../RELEASING.md)。這些版本需要模型檔案，並須在公開發行前完成實際硬體測試。
 
 ### 安裝本機模型
 

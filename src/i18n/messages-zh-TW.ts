@@ -1,5 +1,11 @@
 // Traditional Chinese interface messages. Keep placeholders and confirmation tokens unchanged.
 export const traditionalChineseMessages: Record<string, string> = {
+  "Markdown file": "Markdown 檔案",
+  "Obsidian note": "Obsidian 筆記",
+  "Obsidian note downloaded. Move it into your vault.":
+    "Obsidian 筆記已下載。請將它移入你的儲存庫。",
+  "The export could not be downloaded. Try copying the Markdown instead.":
+    "無法下載匯出檔案。請嘗試複製 Markdown。",
   "A fresh page for your conversations. Capture a meeting or bring your notes along.":
     "為每一段對話展開新的一頁。錄製會議，或匯入既有筆記。",
   "A home for your conversations. Saved meetings will appear here.":

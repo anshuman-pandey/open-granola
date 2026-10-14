@@ -1,5 +1,11 @@
 // Simplified Chinese interface messages. Preserve source content outside this catalog.
 export const simplifiedChineseMessages: Record<string, string> = {
+  "Markdown file": "Markdown 文件",
+  "Obsidian note": "Obsidian 笔记",
+  "Obsidian note downloaded. Move it into your vault.":
+    "Obsidian 笔记已下载。请将其移入你的仓库。",
+  "The export could not be downloaded. Try copying the Markdown instead.":
+    "无法下载导出文件。请尝试复制 Markdown。",
   "A fresh page for your conversations. Capture a meeting or bring your notes along.":
     "为每次交流翻开新的一页。录制会议，或导入已有笔记。",
   "A home for your conversations. Saved meetings will appear here.":

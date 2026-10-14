@@ -142,7 +142,7 @@ export function HomeView({
               onChange={(event) => setQuestion(event.target.value)}
               maxLength={4000}
               placeholder={t("Ask across your meetings…")}
-              className="min-h-8 min-w-0 flex-1 bg-transparent text-[13px] outline-none placeholder:text-muted-foreground/80"
+              className="min-h-8 min-w-0 flex-1 bg-transparent text-[13px] outline-hidden placeholder:text-muted-foreground/80"
             />
             <button
               type="submit"
@@ -230,7 +230,7 @@ export function HomeView({
             aria-labelledby="brief-heading"
           >
             <div className="flex items-center gap-3 px-4 py-4 sm:px-5">
-              <div className="ember-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-sm">
+              <div className="ember-gradient flex h-9 w-9 shrink-0 items-center justify-center rounded-xl text-white shadow-xs">
                 <Video size={17} />
               </div>
               <div className="min-w-0 flex-1">
@@ -331,7 +331,7 @@ export function HomeView({
                 <div className="flex flex-wrap items-start justify-between gap-3 border-t border-primary/10 px-4 py-3 sm:px-5">
                   {brief.worthRaising.length > 0 && (
                     <details className="group min-w-0 flex-1">
-                      <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded text-[10px] font-medium text-primary md:min-h-0 [&::-webkit-details-marker]:hidden">
+                      <summary className="flex min-h-11 w-fit cursor-pointer list-none items-center gap-1.5 rounded-[0.25rem] text-[10px] font-medium text-primary md:min-h-0 [&::-webkit-details-marker]:hidden">
                         <Lightbulb size={12} />
                         {plural(
                           "{count} topic worth raising",
@@ -431,7 +431,7 @@ export function HomeView({
                 value={query}
                 onChange={(event) => setQuery(event.target.value)}
                 placeholder={t("Find a meeting, person, or topic…")}
-                className="min-h-11 min-w-0 flex-1 bg-transparent text-[12px] outline-none md:min-h-10"
+                className="min-h-11 min-w-0 flex-1 bg-transparent text-[12px] outline-hidden md:min-h-10"
               />
               {query && (
                 <button
@@ -451,7 +451,7 @@ export function HomeView({
               <select
                 value={sort}
                 onChange={(event) => setSort(event.target.value as typeof sort)}
-                className="min-h-11 min-w-0 bg-transparent text-[11px] outline-none md:min-h-10"
+                className="min-h-11 min-w-0 bg-transparent text-[11px] outline-hidden md:min-h-10"
               >
                 <option value="newest">{t("Newest first")}</option>
                 <option value="oldest">{t("Oldest first")}</option>

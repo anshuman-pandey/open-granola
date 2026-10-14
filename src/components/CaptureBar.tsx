@@ -93,7 +93,7 @@ export function CaptureBar({
               {lines.length > 0 && (
                 <button
                   onClick={latest}
-                  className="flex items-center gap-1 rounded px-1 py-0.5 text-[9px] text-muted-foreground hover:text-primary"
+                  className="flex items-center gap-1 rounded-[0.25rem] px-1 py-0.5 text-[9px] text-muted-foreground hover:text-primary"
                 >
                   {t("Latest")}
                   <ArrowDown size={10} aria-hidden="true" />
