@@ -58,6 +58,8 @@ Claude is connected with an API key; this app has no Claude consumer-account log
 
 Setup guides: [LM Studio](docs/integrations/LM_STUDIO.md) · [Ollama](docs/integrations/OLLAMA.md). Export guide: [Obsidian](docs/integrations/OBSIDIAN.md).
 
+Developer workflow: [Import SRT/VTT/TXT, validate Transcript JSON, and export from Node](docs/DEVELOPER_WORKFLOWS.md) without models or a native build.
+
 1. Open **Settings → Models & connections** in the desktop app.
 2. Choose a provider and enter its exact model ID. For a custom server, enter the API base URL it documents.
 3. For ChatGPT, connect your account and use **Load available models**, or enter a model ID supported by your account. For an off-device destination, enable the setting that permits sending text to it. This also covers relevant saved notes used by the assistant and recipes.

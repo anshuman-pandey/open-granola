@@ -61,6 +61,8 @@ Claude se conecta con una clave API; esta aplicación no permite iniciar sesión
 
 Guías de configuración: [LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md). Guía de exportación: [Obsidian](../integrations/OBSIDIAN.md).
 
+Flujo para desarrolladores: [importa SRT/VTT/TXT, valida JSON de transcripción y exporta con Node](../DEVELOPER_WORKFLOWS.md), sin modelos ni compilación nativa. Guía en inglés.
+
 1. Abre **Settings → Models & connections** en la aplicación de escritorio.
 2. Elige un proveedor e introduce el ID exacto de su modelo. Para un servidor personalizado, introduce la URL base de la API que indique su documentación.
 3. Para ChatGPT, conecta tu cuenta y usa **Load available models**, o introduce un ID de modelo disponible para tu cuenta. Si el destino está fuera del dispositivo, activa la opción que permite enviarle texto. Esto también incluye las notas guardadas relevantes que utilicen el asistente y las instrucciones reutilizables.

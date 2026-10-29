@@ -1,0 +1,2112 @@
+{
+  "retrieved_at": "2026-10-29T14:37:40.048966+00:00",
+  "method": "Scoped refresh: three repository searches capped at 30, eleven selected repositories, up to 25 recent open issue/PR records with PRs excluded, and up to 10 open issues sorted by reactions per repo. Readmes are implementation claims, not hardware tests.",
+  "searches": [
+    {
+      "query": "\"granola\" in:readme stars:>50 fork:false archived:false",
+      "total_count": 106,
+      "results": [
+        {
+          "repo": "screenpipe/screenpipe",
+          "stars": 22153,
+          "url": "https://github.com/screenpipe/screenpipe"
+        },
+        {
+          "repo": "Evolink-AI/awesome-gpt-image-2-API-Prompts",
+          "stars": 17358,
+          "url": "https://github.com/Evolink-AI/awesome-gpt-image-2-API-Prompts"
+        },
+        {
+          "repo": "OpenWhispr/openwhispr",
+          "stars": 10297,
+          "url": "https://github.com/OpenWhispr/openwhispr"
+        },
+        {
+          "repo": "YouMind-OpenLab/awesome-gpt-image-2",
+          "stars": 10191,
+          "url": "https://github.com/YouMind-OpenLab/awesome-gpt-image-2"
+        },
+        {
+          "repo": "fastrepl/anarlog",
+          "stars": 9620,
+          "url": "https://github.com/fastrepl/anarlog"
+        },
+        {
+          "repo": "HarnessMD/munder-difflin",
+          "stars": 9175,
+          "url": "https://github.com/HarnessMD/munder-difflin"
+        },
+        {
+          "repo": "bruin-data/ingestr",
+          "stars": 4031,
+          "url": "https://github.com/bruin-data/ingestr"
+        },
+        {
+          "repo": "mustbeperfect/definitive-opensource",
+          "stars": 3656,
+          "url": "https://github.com/mustbeperfect/definitive-opensource"
+        },
+        {
+          "repo": "Anil-matcha/awesome-open-source-saas-alternatives",
+          "stars": 3438,
+          "url": "https://github.com/Anil-matcha/awesome-open-source-saas-alternatives"
+        },
+        {
+          "repo": "matthartman/ghost-pepper",
+          "stars": 3235,
+          "url": "https://github.com/matthartman/ghost-pepper"
+        },
+        {
+          "repo": "heidihoward/distributed-consensus-reading-list",
+          "stars": 2657,
+          "url": "https://github.com/heidihoward/distributed-consensus-reading-list"
+        },
+        {
+          "repo": "noamseg/interview-coach-skill",
+          "stars": 2455,
+          "url": "https://github.com/noamseg/interview-coach-skill"
+        },
+        {
+          "repo": "trailofbits/claude-code-config",
+          "stars": 2143,
+          "url": "https://github.com/trailofbits/claude-code-config"
+        },
+        {
+          "repo": "mvanhorn/printing-press-library",
+          "stars": 2090,
+          "url": "https://github.com/mvanhorn/printing-press-library"
+        },
+        {
+          "repo": "krishhgg/Insomnia",
+          "stars": 1828,
+          "url": "https://github.com/krishhgg/Insomnia"
+        },
+        {
+          "repo": "HelixDB/helix-foundry",
+          "stars": 1774,
+          "url": "https://github.com/HelixDB/helix-foundry"
+        },
+        {
+          "repo": "lucasastorian/llmwiki",
+          "stars": 1728,
+          "url": "https://github.com/lucasastorian/llmwiki"
+        },
+        {
+          "repo": "silverstein/minutes",
+          "stars": 1578,
+          "url": "https://github.com/silverstein/minutes"
+        },
+        {
+          "repo": "raroque/boop-agent",
+          "stars": 1386,
+          "url": "https://github.com/raroque/boop-agent"
+        },
+        {
+          "repo": "jeffbarr/gridfinity-catalog",
+          "stars": 1354,
+          "url": "https://github.com/jeffbarr/gridfinity-catalog"
+        },
+        {
+          "repo": "stenolabs/stenoai",
+          "stars": 1350,
+          "url": "https://github.com/stenolabs/stenoai"
+        },
+        {
+          "repo": "rohitg00/awesome-claude-design",
+          "stars": 1181,
+          "url": "https://github.com/rohitg00/awesome-claude-design"
+        },
+        {
+          "repo": "jaw9c/awesome-remote-mcp-servers",
+          "stars": 1169,
+          "url": "https://github.com/jaw9c/awesome-remote-mcp-servers"
+        },
+        {
+          "repo": "coreyhaines31/makerskills",
+          "stars": 876,
+          "url": "https://github.com/coreyhaines31/makerskills"
+        },
+        {
+          "repo": "uhub/awesome-llm",
+          "stars": 867,
+          "url": "https://github.com/uhub/awesome-llm"
+        },
+        {
+          "repo": "viktorbezdek/awesome-github-projects",
+          "stars": 835,
+          "url": "https://github.com/viktorbezdek/awesome-github-projects"
+        },
+        {
+          "repo": "saragordic/window-sweaters",
+          "stars": 826,
+          "url": "https://github.com/saragordic/window-sweaters"
+        },
+        {
+          "repo": "alvinreal/awesome-openclaw",
+          "stars": 747,
+          "url": "https://github.com/alvinreal/awesome-openclaw"
+        },
+        {
+          "repo": "jau123/nanobanana-trending-prompts",
+          "stars": 746,
+          "url": "https://github.com/jau123/nanobanana-trending-prompts"
+        },
+        {
+          "repo": "redpanda-data/awesome-distributed-transactions",
+          "stars": 728,
+          "url": "https://github.com/redpanda-data/awesome-distributed-transactions"
+        }
+      ],
+      "error": null
+    },
+    {
+      "query": "\"meeting notes\" in:name,description,readme stars:>100 fork:false archived:false",
+      "total_count": 537,
+      "results": [
+        {
+          "repo": "msitarzewski/agency-agents",
+          "stars": 165070,
+          "url": "https://github.com/msitarzewski/agency-agents"
+        },
+        {
+          "repo": "jaywcjlove/awesome-mac",
+          "stars": 117316,
+          "url": "https://github.com/jaywcjlove/awesome-mac"
+        },
+        {
+          "repo": "serhii-londar/open-source-mac-os-apps",
+          "stars": 51109,
+          "url": "https://github.com/serhii-londar/open-source-mac-os-apps"
+        },
+        {
+          "repo": "sickn33/agentic-awesome-skills",
+          "stars": 48717,
+          "url": "https://github.com/sickn33/agentic-awesome-skills"
+        },
+        {
+          "repo": "anthropics/financial-services",
+          "stars": 40904,
+          "url": "https://github.com/anthropics/financial-services"
+        },
+        {
+          "repo": "patchy631/ai-engineering-hub",
+          "stars": 38461,
+          "url": "https://github.com/patchy631/ai-engineering-hub"
+        },
+        {
+          "repo": "k3s-io/k3s",
+          "stars": 34276,
+          "url": "https://github.com/k3s-io/k3s"
+        },
+        {
+          "repo": "Zackriya-Solutions/meetily",
+          "stars": 32292,
+          "url": "https://github.com/Zackriya-Solutions/meetily"
+        },
+        {
+          "repo": "hesamsheikh/awesome-openclaw-usecases",
+          "stars": 31638,
+          "url": "https://github.com/hesamsheikh/awesome-openclaw-usecases"
+        },
+        {
+          "repo": "tobi/qmd",
+          "stars": 30728,
+          "url": "https://github.com/tobi/qmd"
+        },
+        {
+          "repo": "e2b-dev/awesome-ai-agents",
+          "stars": 30701,
+          "url": "https://github.com/e2b-dev/awesome-ai-agents"
+        },
+        {
+          "repo": "goharbor/harbor",
+          "stars": 29643,
+          "url": "https://github.com/goharbor/harbor"
+        },
+        {
+          "repo": "phuryn/pm-skills",
+          "stars": 27510,
+          "url": "https://github.com/phuryn/pm-skills"
+        },
+        {
+          "repo": "cilium/cilium",
+          "stars": 25732,
+          "url": "https://github.com/cilium/cilium"
+        },
+        {
+          "repo": "lima-vm/lima",
+          "stars": 22199,
+          "url": "https://github.com/lima-vm/lima"
+        },
+        {
+          "repo": "screenpipe/screenpipe",
+          "stars": 22153,
+          "url": "https://github.com/screenpipe/screenpipe"
+        },
+        {
+          "repo": "agent0ai/agent-zero",
+          "stars": 19596,
+          "url": "https://github.com/agent0ai/agent-zero"
+        },
+        {
+          "repo": "tc39/proposals",
+          "stars": 19205,
+          "url": "https://github.com/tc39/proposals"
+        },
+        {
+          "repo": "rowboatlabs/rowboat",
+          "stars": 18094,
+          "url": "https://github.com/rowboatlabs/rowboat"
+        },
+        {
+          "repo": "dexteryy/spellbook-of-modern-webdev",
+          "stars": 17943,
+          "url": "https://github.com/dexteryy/spellbook-of-modern-webdev"
+        },
+        {
+          "repo": "memvid/memvid",
+          "stars": 17295,
+          "url": "https://github.com/memvid/memvid"
+        },
+        {
+          "repo": "cjbarber/ToolsOfTheTrade",
+          "stars": 17201,
+          "url": "https://github.com/cjbarber/ToolsOfTheTrade"
+        },
+        {
+          "repo": "composio-community/awesome-codex-skills",
+          "stars": 17112,
+          "url": "https://github.com/composio-community/awesome-codex-skills"
+        },
+        {
+          "repo": "Arindam200/awesome-ai-apps",
+          "stars": 16652,
+          "url": "https://github.com/Arindam200/awesome-ai-apps"
+        },
+        {
+          "repo": "jupyterlab/jupyterlab",
+          "stars": 15380,
+          "url": "https://github.com/jupyterlab/jupyterlab"
+        },
+        {
+          "repo": "rook/rook",
+          "stars": 13697,
+          "url": "https://github.com/rook/rook"
+        },
+        {
+          "repo": "Portkey-AI/gateway",
+          "stars": 13289,
+          "url": "https://github.com/Portkey-AI/gateway"
+        },
+        {
+          "repo": "codexu/note-gen",
+          "stars": 12935,
+          "url": "https://github.com/codexu/note-gen"
+        },
+        {
+          "repo": "steven2358/awesome-generative-ai",
+          "stars": 12784,
+          "url": "https://github.com/steven2358/awesome-generative-ai"
+        },
+        {
+          "repo": "dotnet/csharplang",
+          "stars": 12727,
+          "url": "https://github.com/dotnet/csharplang"
+        }
+      ],
+      "error": null
+    },
+    {
+      "query": "\"meeting\" \"MCP\" in:readme stars:>50 fork:false archived:false",
+      "total_count": 1113,
+      "results": [
+        {
+          "repo": "public-apis/public-apis",
+          "stars": 493161,
+          "url": "https://github.com/public-apis/public-apis"
+        },
+        {
+          "repo": "microsoft/markitdown",
+          "stars": 192842,
+          "url": "https://github.com/microsoft/markitdown"
+        },
+        {
+          "repo": "Significant-Gravitas/AutoGPT",
+          "stars": 187809,
+          "url": "https://github.com/Significant-Gravitas/AutoGPT"
+        },
+        {
+          "repo": "msitarzewski/agency-agents",
+          "stars": 165070,
+          "url": "https://github.com/msitarzewski/agency-agents"
+        },
+        {
+          "repo": "farion1231/cc-switch",
+          "stars": 150016,
+          "url": "https://github.com/farion1231/cc-switch"
+        },
+        {
+          "repo": "Shubhamsaboo/awesome-llm-apps",
+          "stars": 143401,
+          "url": "https://github.com/Shubhamsaboo/awesome-llm-apps"
+        },
+        {
+          "repo": "ripienaar/free-for-dev",
+          "stars": 140582,
+          "url": "https://github.com/ripienaar/free-for-dev"
+        },
+        {
+          "repo": "Graphify-Labs/graphify",
+          "stars": 138352,
+          "url": "https://github.com/Graphify-Labs/graphify"
+        },
+        {
+          "repo": "jaywcjlove/awesome-mac",
+          "stars": 117316,
+          "url": "https://github.com/jaywcjlove/awesome-mac"
+        },
+        {
+          "repo": "nexu-io/open-design",
+          "stars": 104816,
+          "url": "https://github.com/nexu-io/open-design"
+        },
+        {
+          "repo": "ruvnet/RuView",
+          "stars": 101487,
+          "url": "https://github.com/ruvnet/RuView"
+        },
+        {
+          "repo": "punkpeye/awesome-mcp-servers",
+          "stars": 97024,
+          "url": "https://github.com/punkpeye/awesome-mcp-servers"
+        },
+        {
+          "repo": "ChatGPTNextWeb/NextChat",
+          "stars": 88916,
+          "url": "https://github.com/ChatGPTNextWeb/NextChat"
+        },
+        {
+          "repo": "ComposioHQ/awesome-claude-skills",
+          "stars": 78250,
+          "url": "https://github.com/ComposioHQ/awesome-claude-skills"
+        },
+        {
+          "repo": "fffaraz/awesome-cpp",
+          "stars": 74089,
+          "url": "https://github.com/fffaraz/awesome-cpp"
+        },
+        {
+          "repo": "vuejs/awesome-vue",
+          "stars": 73498,
+          "url": "https://github.com/vuejs/awesome-vue"
+        },
+        {
+          "repo": "mvanhorn/last30days-skill",
+          "stars": 65843,
+          "url": "https://github.com/mvanhorn/last30days-skill"
+        },
+        {
+          "repo": "rust-unofficial/awesome-rust",
+          "stars": 60186,
+          "url": "https://github.com/rust-unofficial/awesome-rust"
+        },
+        {
+          "repo": "HKUDS/CLI-Anything",
+          "stars": 57662,
+          "url": "https://github.com/HKUDS/CLI-Anything"
+        },
+        {
+          "repo": "coreyhaines31/marketingskills",
+          "stars": 57248,
+          "url": "https://github.com/coreyhaines31/marketingskills"
+        },
+        {
+          "repo": "VoltAgent/awesome-openclaw-skills",
+          "stars": 53426,
+          "url": "https://github.com/VoltAgent/awesome-openclaw-skills"
+        },
+        {
+          "repo": "dkhamsing/open-source-ios-apps",
+          "stars": 52892,
+          "url": "https://github.com/dkhamsing/open-source-ios-apps"
+        },
+        {
+          "repo": "serhii-londar/open-source-mac-os-apps",
+          "stars": 51109,
+          "url": "https://github.com/serhii-londar/open-source-mac-os-apps"
+        },
+        {
+          "repo": "lukasz-madon/awesome-remote-job",
+          "stars": 50098,
+          "url": "https://github.com/lukasz-madon/awesome-remote-job"
+        },
+        {
+          "repo": "sickn33/agentic-awesome-skills",
+          "stars": 48717,
+          "url": "https://github.com/sickn33/agentic-awesome-skills"
+        },
+        {
+          "repo": "GitHubDaily/GitHubDaily",
+          "stars": 48317,
+          "url": "https://github.com/GitHubDaily/GitHubDaily"
+        },
+        {
+          "repo": "anthropics/financial-services",
+          "stars": 40904,
+          "url": "https://github.com/anthropics/financial-services"
+        },
+        {
+          "repo": "deepseek-ai/awesome-deepseek-integration",
+          "stars": 39611,
+          "url": "https://github.com/deepseek-ai/awesome-deepseek-integration"
+        },
+        {
+          "repo": "ashishpatel26/500-AI-Agents-Projects",
+          "stars": 39117,
+          "url": "https://github.com/ashishpatel26/500-AI-Agents-Projects"
+        },
+        {
+          "repo": "patchy631/ai-engineering-hub",
+          "stars": 38461,
+          "url": "https://github.com/patchy631/ai-engineering-hub"
+        }
+      ],
+      "error": null
+    }
+  ],
+  "repositories": [
+    {
+      "repo": "Zackriya-Solutions/meetily",
+      "url": "https://github.com/Zackriya-Solutions/meetily",
+      "stars": 32292,
+      "pushed_at": "2026-10-28T11:04:30Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "65e0ab4ad685cc45cd651d24f192cb2ddd24e3f6",
+      "readme_url": "https://github.com/Zackriya-Solutions/meetily/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 892,
+          "title": "[FEATURE] Editing the transcript to delete rows or multiple rows (entire parts)",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/892",
+          "state": "open",
+          "updated_at": "2026-10-29T08:29:56Z",
+          "reactions": 0
+        },
+        {
+          "number": 891,
+          "title": "Zombie (<defunct>) processes leaked by fire-and-forget Command::spawn() on macOS/Linux",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/891",
+          "state": "open",
+          "updated_at": "2026-10-28T21:15:58Z",
+          "reactions": 0
+        },
+        {
+          "number": 886,
+          "title": "[FEATURE] Persist recording sessions natively and reconcile recovery with saved meetings",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/886",
+          "state": "open",
+          "updated_at": "2026-10-28T17:28:22Z",
+          "reactions": 0
+        },
+        {
+          "number": 885,
+          "title": "[BUG] Native audio startup and device-monitor shutdown can hold callers indefinitely",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/885",
+          "state": "open",
+          "updated_at": "2026-10-28T17:28:21Z",
+          "reactions": 0
+        },
+        {
+          "number": 884,
+          "title": "[FEATURE] Defer the summary editor to reduce meeting-details initial JavaScript",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/884",
+          "state": "open",
+          "updated_at": "2026-10-28T17:28:19Z",
+          "reactions": 0
+        },
+        {
+          "number": 883,
+          "title": "[FEATURE] Record audio from a selected application on macOS",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/883",
+          "state": "open",
+          "updated_at": "2026-10-28T17:28:18Z",
+          "reactions": 0
+        },
+        {
+          "number": 230,
+          "title": "Speaker Diarization / Identification",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/230",
+          "state": "open",
+          "updated_at": "2026-10-28T01:59:19Z",
+          "reactions": 7
+        },
+        {
+          "number": 838,
+          "title": "[BUG] Linux: audible static/pops on audio output while Meetily is open, worst in Recording settings (likely device enumeration probing raw ALSA devices)",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/838",
+          "state": "open",
+          "updated_at": "2026-10-27T23:46:30Z",
+          "reactions": 0
+        },
+        {
+          "number": 881,
+          "title": "Feat: Support Voxtral-Small-24B as STT provider",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/881",
+          "state": "open",
+          "updated_at": "2026-10-27T14:01:10Z",
+          "reactions": 0
+        },
+        {
+          "number": 879,
+          "title": "[FEATURE] Rename the meeting while recording (happy to build it)",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/879",
+          "state": "open",
+          "updated_at": "2026-10-26T19:19:02Z",
+          "reactions": 1
+        },
+        {
+          "number": 878,
+          "title": "[FEATURE] Add Video Recording and Import with Timestamp-Linked Playback, Summaries, and Chat",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/878",
+          "state": "open",
+          "updated_at": "2026-10-26T06:22:04Z",
+          "reactions": 0
+        },
+        {
+          "number": 876,
+          "title": "[FEATURE] Support OpenCode endpoints in the Custom OpenAI provider (user agent + x-opencode-session)",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/876",
+          "state": "open",
+          "updated_at": "2026-10-24T20:22:01Z",
+          "reactions": 0
+        },
+        {
+          "number": 863,
+          "title": "[FEATURE] User-configurable summary generation timeout",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/863",
+          "state": "open",
+          "updated_at": "2026-10-24T17:56:24Z",
+          "reactions": 1
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 32,
+          "title": "Linux suport",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/32",
+          "state": "open",
+          "updated_at": "2025-10-23T19:30:40Z",
+          "reactions": 46
+        },
+        {
+          "number": 226,
+          "title": "[FEATURE] - Identify the speaker in the transcriptions",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/226",
+          "state": "open",
+          "updated_at": "2026-10-08T16:17:37Z",
+          "reactions": 15
+        },
+        {
+          "number": 376,
+          "title": "[BUG] - Cannot change Meeting Recordings folder location in Community Edition - only \"Open\" button available",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/376",
+          "state": "open",
+          "updated_at": "2026-04-02T09:47:24Z",
+          "reactions": 12
+        },
+        {
+          "number": 243,
+          "title": "[FEATURE] Make summary templates configurable",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/243",
+          "state": "open",
+          "updated_at": "2026-03-23T17:54:54Z",
+          "reactions": 11
+        },
+        {
+          "number": 241,
+          "title": "[FEATURE] multitrack audio",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/241",
+          "state": "open",
+          "updated_at": "2025-11-07T18:54:36Z",
+          "reactions": 9
+        },
+        {
+          "number": 301,
+          "title": "[FEATURE] Custom OpenAI Compatible API Option for TRANSCRIPTIONS",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/301",
+          "state": "open",
+          "updated_at": "2026-05-21T23:52:53Z",
+          "reactions": 8
+        },
+        {
+          "number": 333,
+          "title": "[BUG] Meetly not using CUDA/GPU with provided models",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/333",
+          "state": "open",
+          "updated_at": "2026-04-03T11:11:44Z",
+          "reactions": 6
+        },
+        {
+          "number": 230,
+          "title": "Speaker Diarization / Identification",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/230",
+          "state": "open",
+          "updated_at": "2026-10-28T01:59:19Z",
+          "reactions": 7
+        },
+        {
+          "number": 474,
+          "title": "[FEATURE] Meeting Domain vocabulary hints for Whisper (initial_prompt)",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/474",
+          "state": "open",
+          "updated_at": "2026-08-23T23:31:06Z",
+          "reactions": 6
+        },
+        {
+          "number": 218,
+          "title": "[FEATURE] Auto Record - Detect Meeting",
+          "url": "https://github.com/Zackriya-Solutions/meetily/issues/218",
+          "state": "open",
+          "updated_at": "2026-05-18T11:08:02Z",
+          "reactions": 6
+        }
+      ]
+    },
+    {
+      "repo": "silverstein/minutes",
+      "url": "https://github.com/silverstein/minutes",
+      "stars": 1578,
+      "pushed_at": "2026-10-28T20:35:51Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "6e5b06f6ab6342edec8c48680c511c4ab1d06e38",
+      "readme_url": "https://github.com/silverstein/minutes/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 1266,
+          "title": "Warn live when the remote side of a call isn't being captured (FaceTime Audio records mic-only, silently)",
+          "url": "https://github.com/silverstein/minutes/issues/1266",
+          "state": "open",
+          "updated_at": "2026-10-28T17:49:05Z",
+          "reactions": 0
+        },
+        {
+          "number": 1256,
+          "title": "Windows: whisper transcription runs ~10x slower than expected on CPU (all models)",
+          "url": "https://github.com/silverstein/minutes/issues/1256",
+          "state": "open",
+          "updated_at": "2026-10-27T19:00:05Z",
+          "reactions": 0
+        },
+        {
+          "number": 411,
+          "title": "Make the 'winning combo' (parakeet + native call capture) the macOS flagship default \u2014 evaluation + phased plan",
+          "url": "https://github.com/silverstein/minutes/issues/411",
+          "state": "open",
+          "updated_at": "2026-10-27T13:56:31Z",
+          "reactions": 1
+        },
+        {
+          "number": 1223,
+          "title": "Dictation: streaming long-form dictation and the default backend",
+          "url": "https://github.com/silverstein/minutes/issues/1223",
+          "state": "open",
+          "updated_at": "2026-10-27T13:56:29Z",
+          "reactions": 0
+        },
+        {
+          "number": 268,
+          "title": "Feature Request: Possibility to change the standard title of a recording",
+          "url": "https://github.com/silverstein/minutes/issues/268",
+          "state": "open",
+          "updated_at": "2026-10-27T13:56:28Z",
+          "reactions": 1
+        },
+        {
+          "number": 1250,
+          "title": "Windows Clippy still skips --all-targets for PocketStation capture",
+          "url": "https://github.com/silverstein/minutes/issues/1250",
+          "state": "open",
+          "updated_at": "2026-10-26T22:20:06Z",
+          "reactions": 0
+        },
+        {
+          "number": 508,
+          "title": "Security hardening: scope Apple signing secrets to gated environments",
+          "url": "https://github.com/silverstein/minutes/issues/508",
+          "state": "open",
+          "updated_at": "2026-10-25T14:24:03Z",
+          "reactions": 0
+        },
+        {
+          "number": 789,
+          "title": "Lift or chunk the 2h diarization cap",
+          "url": "https://github.com/silverstein/minutes/issues/789",
+          "state": "open",
+          "updated_at": "2026-10-25T14:19:43Z",
+          "reactions": 0
+        },
+        {
+          "number": 645,
+          "title": "Ship the sherpa engine on Windows",
+          "url": "https://github.com/silverstein/minutes/issues/645",
+          "state": "open",
+          "updated_at": "2026-10-25T14:19:40Z",
+          "reactions": 0
+        },
+        {
+          "number": 496,
+          "title": "[Epic] First-class voice enrollment (active + passive + on-device)",
+          "url": "https://github.com/silverstein/minutes/issues/496",
+          "state": "open",
+          "updated_at": "2026-10-25T14:19:38Z",
+          "reactions": 0
+        },
+        {
+          "number": 1057,
+          "title": "core-audio-tap: Bluetooth HFP mic stem is digitally silent (the #815 fix never covered this backend)",
+          "url": "https://github.com/silverstein/minutes/issues/1057",
+          "state": "open",
+          "updated_at": "2026-10-25T14:16:31Z",
+          "reactions": 0
+        },
+        {
+          "number": 1222,
+          "title": "Mic stem goes to zeros after an input-device change (cpal dual-source path)",
+          "url": "https://github.com/silverstein/minutes/issues/1222",
+          "state": "open",
+          "updated_at": "2026-10-25T14:15:17Z",
+          "reactions": 0
+        },
+        {
+          "number": 1221,
+          "title": "Block or confirm Start Recording while the settings-repair banner is showing",
+          "url": "https://github.com/silverstein/minutes/issues/1221",
+          "state": "open",
+          "updated_at": "2026-10-25T14:15:12Z",
+          "reactions": 0
+        },
+        {
+          "number": 1220,
+          "title": "Warn when an outdated Claude Desktop extension runs next to a newer minutes-mcp",
+          "url": "https://github.com/silverstein/minutes/issues/1220",
+          "state": "open",
+          "updated_at": "2026-10-25T14:15:08Z",
+          "reactions": 0
+        },
+        {
+          "number": 1209,
+          "title": "Microphone capture never recovers after AirPods disconnect while system audio continues",
+          "url": "https://github.com/silverstein/minutes/issues/1209",
+          "state": "open",
+          "updated_at": "2026-10-23T18:46:25Z",
+          "reactions": 0
+        },
+        {
+          "number": 879,
+          "title": "Processing errors should name the stage that failed; document the `status` values",
+          "url": "https://github.com/silverstein/minutes/issues/879",
+          "state": "open",
+          "updated_at": "2026-10-21T17:46:48Z",
+          "reactions": 0
+        },
+        {
+          "number": 286,
+          "title": "Native call capture is gated on detection: Google Meet / Teams-web are opt-in, and plain Start silently falls back to mic-only",
+          "url": "https://github.com/silverstein/minutes/issues/286",
+          "state": "open",
+          "updated_at": "2026-10-20T23:33:44Z",
+          "reactions": 0
+        },
+        {
+          "number": 1178,
+          "title": "hide_from_screen_share (on by default) makes the app invisible to screenshots, with no hint why",
+          "url": "https://github.com/silverstein/minutes/issues/1178",
+          "state": "open",
+          "updated_at": "2026-10-20T12:47:40Z",
+          "reactions": 0
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 268,
+          "title": "Feature Request: Possibility to change the standard title of a recording",
+          "url": "https://github.com/silverstein/minutes/issues/268",
+          "state": "open",
+          "updated_at": "2026-10-27T13:56:28Z",
+          "reactions": 1
+        },
+        {
+          "number": 411,
+          "title": "Make the 'winning combo' (parakeet + native call capture) the macOS flagship default \u2014 evaluation + phased plan",
+          "url": "https://github.com/silverstein/minutes/issues/411",
+          "state": "open",
+          "updated_at": "2026-10-27T13:56:31Z",
+          "reactions": 1
+        },
+        {
+          "number": 867,
+          "title": "Opt-in auto-record / auto-stop on detected calls (Microsoft Teams first)",
+          "url": "https://github.com/silverstein/minutes/issues/867",
+          "state": "open",
+          "updated_at": "2026-10-15T19:01:59Z",
+          "reactions": 1
+        },
+        {
+          "number": 1223,
+          "title": "Dictation: streaming long-form dictation and the default backend",
+          "url": "https://github.com/silverstein/minutes/issues/1223",
+          "state": "open",
+          "updated_at": "2026-10-27T13:56:29Z",
+          "reactions": 0
+        },
+        {
+          "number": 64,
+          "title": "Wayland: show compositor keybinding instructions instead of shortcut picker",
+          "url": "https://github.com/silverstein/minutes/issues/64",
+          "state": "open",
+          "updated_at": "2026-04-03T14:11:57Z",
+          "reactions": 0
+        },
+        {
+          "number": 184,
+          "title": "Verify downloaded CLI binary with SHA256 (and minisign signature) in MCP auto-installer",
+          "url": "https://github.com/silverstein/minutes/issues/184",
+          "state": "open",
+          "updated_at": "2026-04-29T19:49:48Z",
+          "reactions": 0
+        },
+        {
+          "number": 267,
+          "title": "Feature Request: Possibility to pause recordings in the desktop app",
+          "url": "https://github.com/silverstein/minutes/issues/267",
+          "state": "open",
+          "updated_at": "2026-06-02T15:29:29Z",
+          "reactions": 0
+        },
+        {
+          "number": 305,
+          "title": "Idle-tail recordings: hours of trailing silence after real content ends (auto-stop heuristics + processing robustness)",
+          "url": "https://github.com/silverstein/minutes/issues/305",
+          "state": "open",
+          "updated_at": "2026-06-11T20:26:17Z",
+          "reactions": 0
+        },
+        {
+          "number": 63,
+          "title": "Settings dialog: section organization and dark theme on Linux",
+          "url": "https://github.com/silverstein/minutes/issues/63",
+          "state": "open",
+          "updated_at": "2026-07-03T03:52:41Z",
+          "reactions": 0
+        },
+        {
+          "number": 413,
+          "title": "Persist call-intent into the batch pipeline so silent-remote-audio detection can distinguish call from in-person",
+          "url": "https://github.com/silverstein/minutes/issues/413",
+          "state": "open",
+          "updated_at": "2026-07-04T03:16:43Z",
+          "reactions": 0
+        }
+      ]
+    },
+    {
+      "repo": "fastrepl/anarlog",
+      "url": "https://github.com/fastrepl/anarlog",
+      "stars": 9620,
+      "pushed_at": "2026-10-29T07:54:18Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "81d30dda99a5174120780f0219130c4578410ac0",
+      "readme_url": "https://github.com/fastrepl/anarlog/blob/main/README.md",
+      "recent_issues": [],
+      "reacted_issues": []
+    },
+    {
+      "repo": "OpenWhispr/openwhispr",
+      "url": "https://github.com/OpenWhispr/openwhispr",
+      "stars": 10297,
+      "pushed_at": "2026-10-29T11:43:45Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "1203b8e7689c38173b6b8946735e1573ca8d320f",
+      "readme_url": "https://github.com/OpenWhispr/openwhispr/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 3014,
+          "title": "Feature request: Minimal voice-only keyboard for iOS (PR ready)",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/3014",
+          "state": "open",
+          "updated_at": "2026-10-29T12:31:13Z",
+          "reactions": 0
+        },
+        {
+          "number": 3013,
+          "title": "Chats started from a note should reference the source note",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/3013",
+          "state": "open",
+          "updated_at": "2026-10-29T12:01:27Z",
+          "reactions": 0
+        },
+        {
+          "number": 3004,
+          "title": "Transcription speed on RTX 5080.",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/3004",
+          "state": "open",
+          "updated_at": "2026-10-29T08:20:18Z",
+          "reactions": 0
+        },
+        {
+          "number": 2856,
+          "title": "Ctrl+Super toggle shortcut cannot be assigned on Linux Mint 22.3 Cinnamon/X11 (1.10.2)",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/2856",
+          "state": "open",
+          "updated_at": "2026-10-29T05:45:29Z",
+          "reactions": 1
+        },
+        {
+          "number": 3006,
+          "title": "BYOK for X.Ai grok STT is out of date.",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/3006",
+          "state": "open",
+          "updated_at": "2026-10-29T04:28:47Z",
+          "reactions": 0
+        },
+        {
+          "number": 3007,
+          "title": "Anthropic cleanup fails with cleanupTruncated on Claude Sonnet 5.5 / Haiku 5.5",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/3007",
+          "state": "open",
+          "updated_at": "2026-10-29T04:27:01Z",
+          "reactions": 0
+        },
+        {
+          "number": 3003,
+          "title": "Specify what to log out and log back into after Hold to Speak setup",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/3003",
+          "state": "open",
+          "updated_at": "2026-10-29T00:27:23Z",
+          "reactions": 0
+        },
+        {
+          "number": 2998,
+          "title": "Local meeting/note recording: mic transcript much worse than dictation (Silero VAD + 5 s isolated chunks without context)",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/2998",
+          "state": "open",
+          "updated_at": "2026-10-28T20:27:44Z",
+          "reactions": 0
+        },
+        {
+          "number": 2999,
+          "title": "Output always starts with same phrase",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/2999",
+          "state": "open",
+          "updated_at": "2026-10-28T20:27:15Z",
+          "reactions": 0
+        },
+        {
+          "number": 2983,
+          "title": "Right Alt hotkey causes Chrome text fields to lose focus and prevents auto-paste",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/2983",
+          "state": "open",
+          "updated_at": "2026-10-28T20:11:55Z",
+          "reactions": 0
+        },
+        {
+          "number": 2996,
+          "title": "Let users skip an update version instead of always showing \"Update available\"",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/2996",
+          "state": "open",
+          "updated_at": "2026-10-28T14:33:26Z",
+          "reactions": 0
+        },
+        {
+          "number": 1860,
+          "title": "Support both Tap and Hold Activation Modes simultaneously",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/1860",
+          "state": "open",
+          "updated_at": "2026-10-28T12:39:59Z",
+          "reactions": 1
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 459,
+          "title": "Android Support",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/459",
+          "state": "open",
+          "updated_at": "2026-10-25T14:36:50Z",
+          "reactions": 13
+        },
+        {
+          "number": 1400,
+          "title": "Add a way to cancel dictation in hold/push-to-talk mode",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/1400",
+          "state": "open",
+          "updated_at": "2026-10-26T10:58:17Z",
+          "reactions": 7
+        },
+        {
+          "number": 233,
+          "title": "Support dual-language hotkey profiles",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/233",
+          "state": "open",
+          "updated_at": "2026-10-21T05:55:43Z",
+          "reactions": 7
+        },
+        {
+          "number": 1329,
+          "title": "Niri / Other Wayland Compositor Support \u2014 Proposed Adding CLI Toggle for Dictation",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/1329",
+          "state": "open",
+          "updated_at": "2026-10-24T21:08:18Z",
+          "reactions": 5
+        },
+        {
+          "number": 1427,
+          "title": "Support the new GPT-Live-Transcribe model for dictation",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/1427",
+          "state": "open",
+          "updated_at": "2026-09-23T08:27:06Z",
+          "reactions": 4
+        },
+        {
+          "number": 2020,
+          "title": "Auto-sync transcription language with active keyboard layout",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/2020",
+          "state": "open",
+          "updated_at": "2026-09-07T14:00:24Z",
+          "reactions": 3
+        },
+        {
+          "number": 1047,
+          "title": "meta: feature-parity gap map \u2014 OpenWhispr vs Wispr Flow, Superwhisper, MacWhisper, Voicetype, Willow",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/1047",
+          "state": "open",
+          "updated_at": "2026-07-16T11:10:59Z",
+          "reactions": 3
+        },
+        {
+          "number": 1764,
+          "title": "OpenRouter speech-to-text models (e.g. openai/gpt-4o-transcribe) never appear in the model picker \u2014 /api/v1/models queried without output_modalities=transcription",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/1764",
+          "state": "open",
+          "updated_at": "2026-10-02T14:37:49Z",
+          "reactions": 3
+        },
+        {
+          "number": 1546,
+          "title": "[Windows] Allow selecting/excluding system audio output devices \u2014 virtual outputs cause mixed/garbled transcription",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/1546",
+          "state": "open",
+          "updated_at": "2026-09-23T08:28:40Z",
+          "reactions": 2
+        },
+        {
+          "number": 2841,
+          "title": "Add Bark as local model option",
+          "url": "https://github.com/OpenWhispr/openwhispr/issues/2841",
+          "state": "open",
+          "updated_at": "2026-10-26T07:08:16Z",
+          "reactions": 2
+        }
+      ]
+    },
+    {
+      "repo": "chidiwilliams/buzz",
+      "url": "https://github.com/chidiwilliams/buzz",
+      "stars": 22263,
+      "pushed_at": "2026-10-27T12:42:50Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "09b838c1f0e2d3a58a43ac38012b1ab7faa264ec",
+      "readme_url": "https://github.com/chidiwilliams/buzz/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 1680,
+          "title": "Native Windows ARM64 Support (Snapdragon X / Windows on ARM)",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1680",
+          "state": "open",
+          "updated_at": "2026-10-29T09:22:16Z",
+          "reactions": 0
+        },
+        {
+          "number": 1679,
+          "title": "\u591a\u9009\u5e76\u91cd\u65b0\u5f00\u59cb\u4efb\u52a1\u53ea\u5bf9\u7b2c\u4e00\u9879\u6709\u6548",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1679",
+          "state": "open",
+          "updated_at": "2026-10-28T23:42:08Z",
+          "reactions": 0
+        },
+        {
+          "number": 1618,
+          "title": "Speaker Identification: audio playback, parallel processing, and batch workflow",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1618",
+          "state": "open",
+          "updated_at": "2026-10-25T13:47:42Z",
+          "reactions": 0
+        },
+        {
+          "number": 1646,
+          "title": "Feature: Auto run on startup + Minimize to tray",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1646",
+          "state": "open",
+          "updated_at": "2026-10-25T13:29:18Z",
+          "reactions": 0
+        },
+        {
+          "number": 1652,
+          "title": "Sign windows builds",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1652",
+          "state": "open",
+          "updated_at": "2026-10-17T07:34:20Z",
+          "reactions": 0
+        },
+        {
+          "number": 1386,
+          "title": "[Feature Request] Support for Multi-Track Audio Transcription in MP4 Containers",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1386",
+          "state": "open",
+          "updated_at": "2026-10-13T13:46:11Z",
+          "reactions": 0
+        },
+        {
+          "number": 1472,
+          "title": "Verify Flathub app",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1472",
+          "state": "open",
+          "updated_at": "2026-10-13T05:44:30Z",
+          "reactions": 0
+        },
+        {
+          "number": 1647,
+          "title": "Request for playback window improvements",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1647",
+          "state": "open",
+          "updated_at": "2026-10-06T05:50:04Z",
+          "reactions": 0
+        },
+        {
+          "number": 1570,
+          "title": "Idea: flag likely-hallucinated segments after transcription (fits the plugin system)",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1570",
+          "state": "open",
+          "updated_at": "2026-09-11T20:31:47Z",
+          "reactions": 0
+        },
+        {
+          "number": 1607,
+          "title": "Please support audio.cpp as engine",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1607",
+          "state": "open",
+          "updated_at": "2026-09-05T23:21:36Z",
+          "reactions": 0
+        },
+        {
+          "number": 1463,
+          "title": "New engines - CrispASR",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1463",
+          "state": "open",
+          "updated_at": "2026-07-24T16:24:40Z",
+          "reactions": 1
+        },
+        {
+          "number": 1557,
+          "title": "Function request: Bookmark sentences",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1557",
+          "state": "open",
+          "updated_at": "2026-07-24T14:41:46Z",
+          "reactions": 0
+        },
+        {
+          "number": 693,
+          "title": "Feature request: Auto-sync: Turn untimed transcript text into captions like YouTube Studio and Descript ",
+          "url": "https://github.com/chidiwilliams/buzz/issues/693",
+          "state": "open",
+          "updated_at": "2026-07-24T14:19:13Z",
+          "reactions": 1
+        },
+        {
+          "number": 1441,
+          "title": "Support for the Cohere Transcribe and MAI-Transcribe-1 models",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1441",
+          "state": "open",
+          "updated_at": "2026-04-03T14:20:04Z",
+          "reactions": 1
+        },
+        {
+          "number": 1429,
+          "title": "Feature Request: Persistent Speaker Profiles (Cross-file Speaker Recognition)",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1429",
+          "state": "open",
+          "updated_at": "2026-03-24T15:07:52Z",
+          "reactions": 2
+        },
+        {
+          "number": 1423,
+          "title": "Feature request: Add support to save an item or importing txt/vtt/srt files",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1423",
+          "state": "open",
+          "updated_at": "2026-03-18T10:28:06Z",
+          "reactions": 1
+        },
+        {
+          "number": 1252,
+          "title": "GPU Utilization",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1252",
+          "state": "open",
+          "updated_at": "2026-02-18T08:17:17Z",
+          "reactions": 0
+        },
+        {
+          "number": 1360,
+          "title": "Feature Request: Auto convert custom whisper models to Faster whisper format when downloading",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1360",
+          "state": "open",
+          "updated_at": "2026-01-24T18:14:50Z",
+          "reactions": 0
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 1429,
+          "title": "Feature Request: Persistent Speaker Profiles (Cross-file Speaker Recognition)",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1429",
+          "state": "open",
+          "updated_at": "2026-03-24T15:07:52Z",
+          "reactions": 2
+        },
+        {
+          "number": 693,
+          "title": "Feature request: Auto-sync: Turn untimed transcript text into captions like YouTube Studio and Descript ",
+          "url": "https://github.com/chidiwilliams/buzz/issues/693",
+          "state": "open",
+          "updated_at": "2026-07-24T14:19:13Z",
+          "reactions": 1
+        },
+        {
+          "number": 1463,
+          "title": "New engines - CrispASR",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1463",
+          "state": "open",
+          "updated_at": "2026-07-24T16:24:40Z",
+          "reactions": 1
+        },
+        {
+          "number": 1423,
+          "title": "Feature request: Add support to save an item or importing txt/vtt/srt files",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1423",
+          "state": "open",
+          "updated_at": "2026-03-18T10:28:06Z",
+          "reactions": 1
+        },
+        {
+          "number": 1441,
+          "title": "Support for the Cohere Transcribe and MAI-Transcribe-1 models",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1441",
+          "state": "open",
+          "updated_at": "2026-04-03T14:20:04Z",
+          "reactions": 1
+        },
+        {
+          "number": 1252,
+          "title": "GPU Utilization",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1252",
+          "state": "open",
+          "updated_at": "2026-02-18T08:17:17Z",
+          "reactions": 0
+        },
+        {
+          "number": 1360,
+          "title": "Feature Request: Auto convert custom whisper models to Faster whisper format when downloading",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1360",
+          "state": "open",
+          "updated_at": "2026-01-24T18:14:50Z",
+          "reactions": 0
+        },
+        {
+          "number": 1557,
+          "title": "Function request: Bookmark sentences",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1557",
+          "state": "open",
+          "updated_at": "2026-07-24T14:41:46Z",
+          "reactions": 0
+        },
+        {
+          "number": 1472,
+          "title": "Verify Flathub app",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1472",
+          "state": "open",
+          "updated_at": "2026-10-13T05:44:30Z",
+          "reactions": 0
+        },
+        {
+          "number": 1386,
+          "title": "[Feature Request] Support for Multi-Track Audio Transcription in MP4 Containers",
+          "url": "https://github.com/chidiwilliams/buzz/issues/1386",
+          "state": "open",
+          "updated_at": "2026-10-13T13:46:11Z",
+          "reactions": 0
+        }
+      ]
+    },
+    {
+      "repo": "Vexa-ai/vexa",
+      "url": "https://github.com/Vexa-ai/vexa",
+      "stars": 2927,
+      "pushed_at": "2026-10-29T13:32:15Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "Apache-2.0",
+      "readme_sha": "b77299a6a1054adc98d2c9762a3386c26055b8d0",
+      "readme_url": "https://github.com/Vexa-ai/vexa/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 1844,
+          "title": "bot: an external voice agent can talk in a meeting through one bot audio port (#333)",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1844",
+          "state": "open",
+          "updated_at": "2026-10-29T14:20:53Z",
+          "reactions": 0
+        },
+        {
+          "number": 1906,
+          "title": "[DEV] gate:licenses crashes (pkgs.map is not a function) when pnpm returns an error object \u2014 every Mac push aborts",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1906",
+          "state": "open",
+          "updated_at": "2026-10-28T15:02:54Z",
+          "reactions": 0
+        },
+        {
+          "number": 1902,
+          "title": "[DEV] Teams bots get a joinable link \u2014 a bare thread id is refused, 17-digit ids join at /meet/",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1902",
+          "state": "open",
+          "updated_at": "2026-10-28T14:47:30Z",
+          "reactions": 0
+        },
+        {
+          "number": 1894,
+          "title": "[DEV] One Zoom room gets one bot per user \u2014 the meeting ID must match the link",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1894",
+          "state": "open",
+          "updated_at": "2026-10-28T10:22:00Z",
+          "reactions": 0
+        },
+        {
+          "number": 1893,
+          "title": "[DEV] The flows worker rides out a database restart \u2014 it retries the connection instead of crash-looping",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1893",
+          "state": "open",
+          "updated_at": "2026-10-28T10:21:57Z",
+          "reactions": 0
+        },
+        {
+          "number": 1892,
+          "title": "[PLATFORM] A leaked or guessed API key can't be hammered \u2014 rate limit and bad-key throttle at the gateway",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1892",
+          "state": "open",
+          "updated_at": "2026-10-28T10:21:55Z",
+          "reactions": 0
+        },
+        {
+          "number": 1891,
+          "title": "[DEV] Stopping a bot before it's admitted counts as a stop, not a failure \u2014 `completed / stopped` instead of `failed / stopped`",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1891",
+          "state": "open",
+          "updated_at": "2026-10-28T10:21:53Z",
+          "reactions": 0
+        },
+        {
+          "number": 1890,
+          "title": "[DEV] A meeting tells you when transcription can't reach speech-to-text \u2014 STT reachability checked at spawn and during the call",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1890",
+          "state": "open",
+          "updated_at": "2026-10-28T10:21:51Z",
+          "reactions": 0
+        },
+        {
+          "number": 1889,
+          "title": "[DEV] A bot that loses its network says so \u2014 partitioned bots stop reporting active and end with the true reason",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1889",
+          "state": "open",
+          "updated_at": "2026-10-28T10:21:48Z",
+          "reactions": 0
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 1671,
+          "title": "[DEPLOYMENT] Four blockers hit in sequence on a first `make lite` install (clean machine)",
+          "url": "https://github.com/Vexa-ai/vexa/issues/1671",
+          "state": "open",
+          "updated_at": "2026-09-28T19:18:01Z",
+          "reactions": 1
+        },
+        {
+          "number": 374,
+          "title": "[Feature] Vexa meeting bot pod label configuration",
+          "url": "https://github.com/Vexa-ai/vexa/issues/374",
+          "state": "open",
+          "updated_at": "2026-08-20T16:36:40Z",
+          "reactions": 1
+        },
+        {
+          "number": 534,
+          "title": "docs-parity: no check maps what the docs claim to what the stack does \u2014 quickstart and API-reference claims drift silently (the F1/F2/F3/F6 class); build the claims\u2192probe harness, first increment: the pages readers actually follow",
+          "url": "https://github.com/Vexa-ai/vexa/issues/534",
+          "state": "open",
+          "updated_at": "2026-07-21T13:25:51Z",
+          "reactions": 0
+        },
+        {
+          "number": 518,
+          "title": "human-help path: sealed /b/{token} is unserved and the escalated bot's noVNC has no address chain \u2014 needs_help waits for a human who cannot arrive (k8s; #409)",
+          "url": "https://github.com/Vexa-ai/vexa/issues/518",
+          "state": "open",
+          "updated_at": "2026-07-17T16:52:12Z",
+          "reactions": 0
+        },
+        {
+          "number": 530,
+          "title": "probe: on a freshly autoscaled k8s node, do bots fail joins because the control plane is unreachable? \u2014 reproduce and attribute; give the bot a fail-fast reachability gate either way (2026-07-09 capacity-burst amplifier, never diagnosed)",
+          "url": "https://github.com/Vexa-ai/vexa/issues/530",
+          "state": "open",
+          "updated_at": "2026-07-20T14:58:57Z",
+          "reactions": 0
+        },
+        {
+          "number": 696,
+          "title": "live channel: converge ws.v1 and the agent-api SSE feed \u2014 two transports, two auth paths, one truth",
+          "url": "https://github.com/Vexa-ai/vexa/issues/696",
+          "state": "open",
+          "updated_at": "2026-07-17T16:53:23Z",
+          "reactions": 0
+        },
+        {
+          "number": 697,
+          "title": "CI-for-CI: the release machinery is untested code",
+          "url": "https://github.com/Vexa-ai/vexa/issues/697",
+          "state": "open",
+          "updated_at": "2026-07-17T23:41:55Z",
+          "reactions": 0
+        },
+        {
+          "number": 698,
+          "title": "fail-loud as structure: silent failure was the default in every bug this release found",
+          "url": "https://github.com/Vexa-ai/vexa/issues/698",
+          "state": "open",
+          "updated_at": "2026-07-17T16:53:59Z",
+          "reactions": 0
+        },
+        {
+          "number": 500,
+          "title": "MS Teams meeting chat: read and write",
+          "url": "https://github.com/Vexa-ai/vexa/issues/500",
+          "state": "open",
+          "updated_at": "2026-07-18T08:22:11Z",
+          "reactions": 0
+        },
+        {
+          "number": 512,
+          "title": "browser-session bots: Chromium fails to launch when MinIO env is set (0.10 lite report) \u2014 reproduce and attribute; v0.12 endpoints are sealed but unserved",
+          "url": "https://github.com/Vexa-ai/vexa/issues/512",
+          "state": "open",
+          "updated_at": "2026-07-18T10:23:12Z",
+          "reactions": 0
+        }
+      ]
+    },
+    {
+      "repo": "yazinsai/OpenOats",
+      "url": "https://github.com/yazinsai/OpenOats",
+      "stars": 2620,
+      "pushed_at": "2026-10-27T09:50:02Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "c5a04d04e40699ba1a783aed111cee3457b1cadd",
+      "readme_url": "https://github.com/yazinsai/OpenOats/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 739,
+          "title": "Add Cloudless Voice, Claude, ChatGPT, Gemini and Antigravity to the dictation-app list",
+          "url": "https://github.com/yazinsai/OpenOats/issues/739",
+          "state": "open",
+          "updated_at": "2026-10-29T09:31:43Z",
+          "reactions": 0
+        },
+        {
+          "number": 738,
+          "title": "Feature request: Add an OpenAI compatible endpoint selection to choose the LLM provider (i.e. llama.cpp)",
+          "url": "https://github.com/yazinsai/OpenOats/issues/738",
+          "state": "open",
+          "updated_at": "2026-10-28T18:27:37Z",
+          "reactions": 0
+        },
+        {
+          "number": 736,
+          "title": "Microphone capture stops permanently when output switches to a Bluetooth headset mid-session (system tap is rebuilt, mic is not)",
+          "url": "https://github.com/yazinsai/OpenOats/issues/736",
+          "state": "open",
+          "updated_at": "2026-10-28T14:01:17Z",
+          "reactions": 0
+        },
+        {
+          "number": 638,
+          "title": "Google Calendar sync for meeting detection",
+          "url": "https://github.com/yazinsai/OpenOats/issues/638",
+          "state": "open",
+          "updated_at": "2026-08-02T12:32:01Z",
+          "reactions": 3
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 638,
+          "title": "Google Calendar sync for meeting detection",
+          "url": "https://github.com/yazinsai/OpenOats/issues/638",
+          "state": "open",
+          "updated_at": "2026-08-02T12:32:01Z",
+          "reactions": 3
+        },
+        {
+          "number": 738,
+          "title": "Feature request: Add an OpenAI compatible endpoint selection to choose the LLM provider (i.e. llama.cpp)",
+          "url": "https://github.com/yazinsai/OpenOats/issues/738",
+          "state": "open",
+          "updated_at": "2026-10-28T18:27:37Z",
+          "reactions": 0
+        },
+        {
+          "number": 736,
+          "title": "Microphone capture stops permanently when output switches to a Bluetooth headset mid-session (system tap is rebuilt, mic is not)",
+          "url": "https://github.com/yazinsai/OpenOats/issues/736",
+          "state": "open",
+          "updated_at": "2026-10-28T14:01:17Z",
+          "reactions": 0
+        },
+        {
+          "number": 739,
+          "title": "Add Cloudless Voice, Claude, ChatGPT, Gemini and Antigravity to the dictation-app list",
+          "url": "https://github.com/yazinsai/OpenOats/issues/739",
+          "state": "open",
+          "updated_at": "2026-10-29T09:31:43Z",
+          "reactions": 0
+        }
+      ]
+    },
+    {
+      "repo": "stenolabs/stenoai",
+      "url": "https://github.com/stenolabs/stenoai",
+      "stars": 1350,
+      "pushed_at": "2026-10-29T13:39:01Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "89f7dc8a36fb376193b1e3b20038453e0721735d",
+      "readme_url": "https://github.com/stenolabs/stenoai/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 597,
+          "title": "Better Hebrew transcription with an optional ivrit.ai model",
+          "url": "https://github.com/stenolabs/stenoai/issues/597",
+          "state": "open",
+          "updated_at": "2026-10-28T10:48:46Z",
+          "reactions": 0
+        },
+        {
+          "number": 596,
+          "title": "List notes by start time",
+          "url": "https://github.com/stenolabs/stenoai/issues/596",
+          "state": "open",
+          "updated_at": "2026-10-27T23:27:16Z",
+          "reactions": 0
+        },
+        {
+          "number": 587,
+          "title": "Linux build fails because ffmpeg binary download site is unreachable",
+          "url": "https://github.com/stenolabs/stenoai/issues/587",
+          "state": "open",
+          "updated_at": "2026-10-24T14:34:11Z",
+          "reactions": 0
+        },
+        {
+          "number": 585,
+          "title": "Speakers review section doesn't appear after processing until you leave the note and come back",
+          "url": "https://github.com/stenolabs/stenoai/issues/585",
+          "state": "open",
+          "updated_at": "2026-10-16T14:44:59Z",
+          "reactions": 0
+        },
+        {
+          "number": 238,
+          "title": "Privacy Mode \u2014 local PII anonymization before cloud LLM",
+          "url": "https://github.com/stenolabs/stenoai/issues/238",
+          "state": "open",
+          "updated_at": "2026-10-14T13:00:11Z",
+          "reactions": 1
+        },
+        {
+          "number": 584,
+          "title": "Remove https requirement for cloud transcriptions",
+          "url": "https://github.com/stenolabs/stenoai/issues/584",
+          "state": "open",
+          "updated_at": "2026-10-14T09:47:19Z",
+          "reactions": 0
+        },
+        {
+          "number": 583,
+          "title": "A recording started right after a stop silently never captures",
+          "url": "https://github.com/stenolabs/stenoai/issues/583",
+          "state": "open",
+          "updated_at": "2026-10-12T18:51:31Z",
+          "reactions": 0
+        },
+        {
+          "number": 463,
+          "title": "Add \"Auto-record detected meetings\" setting (opt-in) for zero-tap capture",
+          "url": "https://github.com/stenolabs/stenoai/issues/463",
+          "state": "open",
+          "updated_at": "2026-10-10T18:12:08Z",
+          "reactions": 1
+        },
+        {
+          "number": 572,
+          "title": "Feature ideas (not scheduled)",
+          "url": "https://github.com/stenolabs/stenoai/issues/572",
+          "state": "open",
+          "updated_at": "2026-10-10T12:50:50Z",
+          "reactions": 0
+        },
+        {
+          "number": 531,
+          "title": "Installation fails on macOS 14.5 even though download page states macOS 14.4+ (Apple Silicon)",
+          "url": "https://github.com/stenolabs/stenoai/issues/531",
+          "state": "open",
+          "updated_at": "2026-10-09T16:48:21Z",
+          "reactions": 0
+        },
+        {
+          "number": 485,
+          "title": "[Question] re-sync to obsidian once note regerated?",
+          "url": "https://github.com/stenolabs/stenoai/issues/485",
+          "state": "open",
+          "updated_at": "2026-10-09T10:42:11Z",
+          "reactions": 0
+        },
+        {
+          "number": 376,
+          "title": "CI: add gradual Python type checking and evaluate a coverage floor",
+          "url": "https://github.com/stenolabs/stenoai/issues/376",
+          "state": "open",
+          "updated_at": "2026-10-02T20:22:02Z",
+          "reactions": 0
+        },
+        {
+          "number": 537,
+          "title": "Evaluate chunk-based summarization with Apple Foundation Models",
+          "url": "https://github.com/stenolabs/stenoai/issues/537",
+          "state": "open",
+          "updated_at": "2026-10-02T20:22:00Z",
+          "reactions": 0
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 417,
+          "title": "Rebindable global record shortcut (shortcut recorder in Settings)",
+          "url": "https://github.com/stenolabs/stenoai/issues/417",
+          "state": "open",
+          "updated_at": "2026-09-09T16:25:47Z",
+          "reactions": 2
+        },
+        {
+          "number": 542,
+          "title": "Optional structured data fields in report templates",
+          "url": "https://github.com/stenolabs/stenoai/issues/542",
+          "state": "open",
+          "updated_at": "2026-10-02T20:21:59Z",
+          "reactions": 1
+        },
+        {
+          "number": 463,
+          "title": "Add \"Auto-record detected meetings\" setting (opt-in) for zero-tap capture",
+          "url": "https://github.com/stenolabs/stenoai/issues/463",
+          "state": "open",
+          "updated_at": "2026-10-10T18:12:08Z",
+          "reactions": 1
+        },
+        {
+          "number": 238,
+          "title": "Privacy Mode \u2014 local PII anonymization before cloud LLM",
+          "url": "https://github.com/stenolabs/stenoai/issues/238",
+          "state": "open",
+          "updated_at": "2026-10-14T13:00:11Z",
+          "reactions": 1
+        },
+        {
+          "number": 522,
+          "title": "Apple on-device integration: release-readiness checklist",
+          "url": "https://github.com/stenolabs/stenoai/issues/522",
+          "state": "open",
+          "updated_at": "2026-09-02T15:02:53Z",
+          "reactions": 0
+        },
+        {
+          "number": 485,
+          "title": "[Question] re-sync to obsidian once note regerated?",
+          "url": "https://github.com/stenolabs/stenoai/issues/485",
+          "state": "open",
+          "updated_at": "2026-10-09T10:42:11Z",
+          "reactions": 0
+        },
+        {
+          "number": 376,
+          "title": "CI: add gradual Python type checking and evaluate a coverage floor",
+          "url": "https://github.com/stenolabs/stenoai/issues/376",
+          "state": "open",
+          "updated_at": "2026-10-02T20:22:02Z",
+          "reactions": 0
+        },
+        {
+          "number": 537,
+          "title": "Evaluate chunk-based summarization with Apple Foundation Models",
+          "url": "https://github.com/stenolabs/stenoai/issues/537",
+          "state": "open",
+          "updated_at": "2026-10-02T20:22:00Z",
+          "reactions": 0
+        },
+        {
+          "number": 543,
+          "title": "Export structured report fields as Obsidian properties",
+          "url": "https://github.com/stenolabs/stenoai/issues/543",
+          "state": "open",
+          "updated_at": "2026-10-02T20:21:57Z",
+          "reactions": 0
+        },
+        {
+          "number": 548,
+          "title": "Store custom templates in the configured storage location",
+          "url": "https://github.com/stenolabs/stenoai/issues/548",
+          "state": "open",
+          "updated_at": "2026-10-02T20:21:55Z",
+          "reactions": 0
+        }
+      ]
+    },
+    {
+      "repo": "Muesli-HQ/muesli",
+      "url": "https://github.com/Muesli-HQ/muesli",
+      "stars": 1496,
+      "pushed_at": "2026-10-29T14:33:58Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "268ff870ebeac2178452a9ee17e2f47064434a09",
+      "readme_url": "https://github.com/Muesli-HQ/muesli/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 699,
+          "title": "Add latest Nvidia nemotron model",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/699",
+          "state": "open",
+          "updated_at": "2026-10-29T13:28:55Z",
+          "reactions": 0
+        },
+        {
+          "number": 673,
+          "title": "Scrawl-style feedback capture alongside Quill: record, draw and send context to an agent",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/673",
+          "state": "open",
+          "updated_at": "2026-10-29T08:19:29Z",
+          "reactions": 1
+        },
+        {
+          "number": 689,
+          "title": "SIDECOM qualification-only research question about OpenHands workflow evidence",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/689",
+          "state": "open",
+          "updated_at": "2026-10-28T19:54:37Z",
+          "reactions": 0
+        },
+        {
+          "number": 619,
+          "title": "Trigger post-meeting hook and Markdown export after re-summarize or notes edit",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/619",
+          "state": "open",
+          "updated_at": "2026-10-28T06:42:34Z",
+          "reactions": 0
+        },
+        {
+          "number": 585,
+          "title": "Meeting detection and reminders fire for canceled calendar events",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/585",
+          "state": "open",
+          "updated_at": "2026-10-24T06:08:38Z",
+          "reactions": 0
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 293,
+          "title": "enhancement: remember export preference and disable opening editor when saving",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/293",
+          "state": "open",
+          "updated_at": "2026-10-20T05:15:20Z",
+          "reactions": 2
+        },
+        {
+          "number": 412,
+          "title": "App icon renders oversized in the Dock (icon artwork has no transparent margin)",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/412",
+          "state": "open",
+          "updated_at": "2026-10-20T05:15:35Z",
+          "reactions": 1
+        },
+        {
+          "number": 596,
+          "title": "Feature request: allow multiple dictation shortcuts",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/596",
+          "state": "open",
+          "updated_at": "2026-10-20T05:16:08Z",
+          "reactions": 1
+        },
+        {
+          "number": 415,
+          "title": "Mute mic while recording non meeting like a youtube lecture or any other websites lecture",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/415",
+          "state": "open",
+          "updated_at": "2026-10-20T05:15:38Z",
+          "reactions": 1
+        },
+        {
+          "number": 330,
+          "title": "STT eval harness: first WER measurements show clean-English solved, 6x gap on real-world audio",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/330",
+          "state": "open",
+          "updated_at": "2026-10-20T05:15:24Z",
+          "reactions": 1
+        },
+        {
+          "number": 337,
+          "title": "Per-app dictation modes: enable/disable AI cleanup by frontmost app",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/337",
+          "state": "open",
+          "updated_at": "2026-10-20T05:15:25Z",
+          "reactions": 1
+        },
+        {
+          "number": 167,
+          "title": "Feature Request - Adding support to start/stop/transform via CLI",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/167",
+          "state": "open",
+          "updated_at": "2026-10-20T05:15:12Z",
+          "reactions": 1
+        },
+        {
+          "number": 638,
+          "title": "Roadmap: speaker identity in meetings",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/638",
+          "state": "open",
+          "updated_at": "2026-10-20T05:16:19Z",
+          "reactions": 1
+        },
+        {
+          "number": 673,
+          "title": "Scrawl-style feedback capture alongside Quill: record, draw and send context to an agent",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/673",
+          "state": "open",
+          "updated_at": "2026-10-29T08:19:29Z",
+          "reactions": 1
+        },
+        {
+          "number": 619,
+          "title": "Trigger post-meeting hook and Markdown export after re-summarize or notes edit",
+          "url": "https://github.com/Muesli-HQ/muesli/issues/619",
+          "state": "open",
+          "updated_at": "2026-10-28T06:42:34Z",
+          "reactions": 0
+        }
+      ]
+    },
+    {
+      "repo": "isjunrod/heed",
+      "url": "https://github.com/isjunrod/heed",
+      "stars": 20,
+      "pushed_at": "2026-07-06T06:31:33Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "83274baeeaed3b062265afe30ae42e3a29a383ae",
+      "readme_url": "https://github.com/isjunrod/heed/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 1,
+          "title": "Can not start transcription of any recording",
+          "url": "https://github.com/isjunrod/heed/issues/1",
+          "state": "open",
+          "updated_at": "2026-07-13T04:24:32Z",
+          "reactions": 0
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 1,
+          "title": "Can not start transcription of any recording",
+          "url": "https://github.com/isjunrod/heed/issues/1",
+          "state": "open",
+          "updated_at": "2026-07-13T04:24:32Z",
+          "reactions": 0
+        }
+      ]
+    },
+    {
+      "repo": "teng-lin/open-foresight",
+      "url": "https://github.com/teng-lin/open-foresight",
+      "stars": 4,
+      "pushed_at": "2026-10-29T14:30:18Z",
+      "default_branch": "main",
+      "archived": false,
+      "license_detected": "MIT",
+      "readme_sha": "91e0d18a51aa71f087498425feaca1b8998af32b",
+      "readme_url": "https://github.com/teng-lin/open-foresight/blob/main/README.md",
+      "recent_issues": [
+        {
+          "number": 192,
+          "title": "Improve cross-boundary testing and CI reproducibility",
+          "url": "https://github.com/teng-lin/open-foresight/issues/192",
+          "state": "open",
+          "updated_at": "2026-10-29T12:17:06Z",
+          "reactions": 0
+        },
+        {
+          "number": 142,
+          "title": "Complete installed-app acceptance for startup, audio permissions, and Drive batch imports",
+          "url": "https://github.com/teng-lin/open-foresight/issues/142",
+          "state": "open",
+          "updated_at": "2026-10-27T22:21:16Z",
+          "reactions": 0
+        },
+        {
+          "number": 193,
+          "title": "Add content revision history inspection and restore UI",
+          "url": "https://github.com/teng-lin/open-foresight/issues/193",
+          "state": "open",
+          "updated_at": "2026-10-27T22:20:46Z",
+          "reactions": 0
+        },
+        {
+          "number": 191,
+          "title": "Implement Zoom speaker-name attribution on macOS and Linux",
+          "url": "https://github.com/teng-lin/open-foresight/issues/191",
+          "state": "open",
+          "updated_at": "2026-10-27T22:11:57Z",
+          "reactions": 0
+        }
+      ],
+      "reacted_issues": [
+        {
+          "number": 193,
+          "title": "Add content revision history inspection and restore UI",
+          "url": "https://github.com/teng-lin/open-foresight/issues/193",
+          "state": "open",
+          "updated_at": "2026-10-27T22:20:46Z",
+          "reactions": 0
+        },
+        {
+          "number": 142,
+          "title": "Complete installed-app acceptance for startup, audio permissions, and Drive batch imports",
+          "url": "https://github.com/teng-lin/open-foresight/issues/142",
+          "state": "open",
+          "updated_at": "2026-10-27T22:21:16Z",
+          "reactions": 0
+        },
+        {
+          "number": 191,
+          "title": "Implement Zoom speaker-name attribution on macOS and Linux",
+          "url": "https://github.com/teng-lin/open-foresight/issues/191",
+          "state": "open",
+          "updated_at": "2026-10-27T22:11:57Z",
+          "reactions": 0
+        },
+        {
+          "number": 192,
+          "title": "Improve cross-boundary testing and CI reproducibility",
+          "url": "https://github.com/teng-lin/open-foresight/issues/192",
+          "state": "open",
+          "updated_at": "2026-10-29T12:17:06Z",
+          "reactions": 0
+        }
+      ]
+    }
+  ],
+  "selected_issues": [
+    {
+      "repo": "chidiwilliams/buzz",
+      "number": 1423,
+      "title": "Feature request: Add support to save an item or importing txt/vtt/srt files",
+      "state": "open",
+      "url": "https://github.com/chidiwilliams/buzz/issues/1423",
+      "updated_at": "2026-03-18T10:28:06Z",
+      "reactions": 1,
+      "body_sha256": "87bccacc69028de34e634908a4d702f59496368cce751e122525894bcbd6248b"
+    },
+    {
+      "repo": "Muesli-HQ/muesli",
+      "number": 293,
+      "title": "enhancement: remember export preference and disable opening editor when saving",
+      "state": "open",
+      "url": "https://github.com/Muesli-HQ/muesli/issues/293",
+      "updated_at": "2026-10-20T05:15:20Z",
+      "reactions": 2,
+      "body_sha256": "b0be246919efb697e606a9f19926df224015adefc2d78090de4d246a170dc5b2"
+    },
+    {
+      "repo": "stenolabs/stenoai",
+      "number": 542,
+      "title": "Optional structured data fields in report templates",
+      "state": "open",
+      "url": "https://github.com/stenolabs/stenoai/issues/542",
+      "updated_at": "2026-10-02T20:21:59Z",
+      "reactions": 1,
+      "body_sha256": "0dc15a600cbf74f0a88a20f371b5104edf5770bdf8da215d985d55237706389b"
+    },
+    {
+      "repo": "Vexa-ai/vexa",
+      "number": 1671,
+      "title": "[DEPLOYMENT] Four blockers hit in sequence on a first `make lite` install (clean machine)",
+      "state": "open",
+      "url": "https://github.com/Vexa-ai/vexa/issues/1671",
+      "updated_at": "2026-09-28T19:18:01Z",
+      "reactions": 1,
+      "body_sha256": "ffe4d938d2e12b82559acff70803df4a30fa37ef11e6abc6b58e2e9d3e6655a6"
+    },
+    {
+      "repo": "OpenWhispr/openwhispr",
+      "number": 1329,
+      "title": "Niri / Other Wayland Compositor Support \u2014 Proposed Adding CLI Toggle for Dictation",
+      "state": "open",
+      "url": "https://github.com/OpenWhispr/openwhispr/issues/1329",
+      "updated_at": "2026-10-24T21:08:18Z",
+      "reactions": 5,
+      "body_sha256": "ddc93a88b40772eb8919f73f9ba43157e2bdb7e970a140703b0759c660922c1c"
+    },
+    {
+      "repo": "silverstein/minutes",
+      "number": 865,
+      "title": "Coach fails silently when its prerequisites are missing; needs actionable setup errors and a preflight",
+      "state": "open",
+      "url": "https://github.com/silverstein/minutes/issues/865",
+      "updated_at": "2026-08-27T16:30:38Z",
+      "reactions": 0,
+      "body_sha256": "67b5fb34f22f86991fc15e78a226edcc5b2c3ca0199daf60932534ea39c84501"
+    }
+  ]
+}

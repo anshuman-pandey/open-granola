@@ -65,6 +65,8 @@ Claude には API キーで接続します。このアプリに Claude の一般
 
 セットアップガイド：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。 エクスポートガイド：[Obsidian](../integrations/OBSIDIAN.md)。
 
+開発者向け：[SRT/VTT/TXTの取り込み、文字起こしJSONの検証、Nodeからのエクスポート](../DEVELOPER_WORKFLOWS.md)を、モデルやネイティブビルドなしで試せます。ガイドは英語です。
+
 1. デスクトップアプリで**設定 → モデルと接続（Settings → Models & connections）**を開きます。
 2. プロバイダーを選択し、正確なモデル ID を入力します。カスタムサーバーの場合は、そのサーバーのドキュメントに記載された API ベース URL を入力します。
 3. ChatGPT の場合は、アカウントを接続して**利用可能なモデルを読み込む（Load available models）**を選ぶか、そのアカウントで使えるモデル ID を入力します。デバイス外の送信先を使う場合は、そこへのテキスト送信を許可する設定を有効にします。この許可は、アシスタントやレシピが使用する、関連する保存済みノートにも適用されます。

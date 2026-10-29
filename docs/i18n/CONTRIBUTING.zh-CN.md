@@ -68,3 +68,7 @@ cargo test --manifest-path src-tauri/Cargo.toml --locked --workspace
 - 在实际硬件上测试模型兼容性、无障碍体验和打包后的权限。
 
 请按 [SECURITY.md](../../SECURITY.md) 中的说明报告安全问题。保持友善、直接的交流。贡献内容采用 Apache-2.0 许可证。
+
+## 无需原生依赖即可开发转录工具
+
+使用 Node 22.12 或更高版本运行 `npm run test:tools`，并尝试[开发者工作流](../DEVELOPER_WORKFLOWS.md)（英文指南）。共享解析器、JSON Schema、合成示例和 CLI 的改进无需构建 Rust 或下载模型。报告格式问题时，请提供能复现错误的合成示例。原生音频或提供方相关改动仍需通过现有的平台检查。

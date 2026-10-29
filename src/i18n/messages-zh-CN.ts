@@ -1,5 +1,18 @@
 // Simplified Chinese interface messages. Preserve source content outside this catalog.
 export const simplifiedChineseMessages: Record<string, string> = {
+  "Transcript JSON": "转录 JSON",
+  "Transcript JSON downloaded.": "转录 JSON 已下载。",
+  "Choose a meeting import smaller than 20 MB.":
+    "请选择小于 20 MB 的会议导入文件。",
+  "Imported transcript": "导入的转录",
+  "Import failed. Check the file format, dates, and subtitle timestamps, then try again.":
+    "导入失败。请检查文件格式、日期和字幕时间戳后重试。",
+  "JSON or transcript file": "JSON 或转录文件",
+  "Choose JSON, SRT, VTT, or UTF-8 text up to 20 MB. Text imports use the filename as title and today's date. Imported transcripts are not summarized automatically.":
+    "选择不超过 20 MB 的 JSON、SRT、VTT 或 UTF-8 文本。文本导入使用文件名作为标题，并使用今天的日期。导入的转录不会自动生成摘要。",
+  "Choose meeting import": "选择会议导入文件",
+  "Choose import file": "选择导入文件",
+
   "Markdown file": "Markdown 文件",
   "Obsidian note": "Obsidian 笔记",
   "Obsidian note downloaded. Move it into your vault.":

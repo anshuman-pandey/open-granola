@@ -61,6 +61,8 @@ Claude 透過 API 金鑰連接；此應用程式不提供 Claude 個人帳號登
 
 設定指南：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。 匯出指南：[Obsidian](../integrations/OBSIDIAN.md)。
 
+開發者工作流程：[匯入 SRT/VTT/TXT、驗證逐字稿 JSON，並透過 Node 匯出](../DEVELOPER_WORKFLOWS.md)，無需模型或原生建置。指南為英文。
+
 1. 在桌面版應用程式中開啟**設定 → 模型與連線**。
 2. 選擇供應商並輸入完整的模型 ID。若使用自訂伺服器，請輸入其文件指定的 API 基底 URL。
 3. 若使用 ChatGPT，請連接帳號並選擇**載入可用模型**，或輸入帳號支援的模型 ID。若目的地位於裝置外，請啟用允許傳送文字的設定。這也涵蓋助理與配方使用的相關已儲存筆記。

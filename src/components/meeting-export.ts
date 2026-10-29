@@ -1,6 +1,46 @@
 import type { ActionItem, Meeting } from "../lib/types";
 import { fmtTs } from "../hooks/useLiveSession";
 import type { Translate } from "../i18n";
+import {
+  TRANSCRIPT_FORMAT,
+  exportTranscript,
+  transcriptDate,
+} from "../lib/transcript-interchange.mjs";
+
+/** Portable transcript and summary text; intentionally not a full-library backup. */
+export function meetingTranscriptJson(meeting: Meeting): string {
+  return exportTranscript(
+    {
+      format: TRANSCRIPT_FORMAT,
+      version: 1,
+      notes: [
+        {
+          title: meeting.title,
+          created_at: transcriptDate(meeting.date),
+          summary: meeting.summary,
+          transcript: meeting.transcript.map((segment) => ({
+            start: segment.start,
+            ...(segment.end === undefined ? {} : { end: segment.end }),
+            text: segment.text,
+            speaker:
+              meeting.participants.find(
+                (person) => person.id === segment.speakerId,
+              )?.name ?? "Unknown speaker",
+          })),
+        },
+      ],
+    },
+    "json",
+  );
+}
+
+export function downloadTranscriptJson(meeting: Meeting) {
+  downloadText(
+    meetingTranscriptJson(meeting),
+    obsidianFilename(meeting).replace(/\.md$/, ".transcript.json"),
+    "application/json;charset=utf-8",
+  );
+}
 
 export function meetingMarkdown(
   meeting: Meeting,
@@ -147,12 +187,7 @@ export function downloadMarkdown(
   markdown: string,
   filename?: string,
 ) {
-  const url = URL.createObjectURL(
-    new Blob([markdown], { type: "text/markdown;charset=utf-8" }),
-  );
-  const link = document.createElement("a");
-  link.href = url;
-  link.download =
+  const name =
     filename ??
     `${
       title
@@ -160,6 +195,14 @@ export function downloadMarkdown(
         .trim()
         .slice(0, 100) || "meeting"
     }.md`;
+  downloadText(markdown, name, "text/markdown;charset=utf-8");
+}
+
+function downloadText(content: string, filename: string, mime: string) {
+  const url = URL.createObjectURL(new Blob([content], { type: mime }));
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = filename;
   document.body.appendChild(link);
   link.click();
   link.remove();

@@ -23,6 +23,7 @@ import { ProcessingHistory } from "./ProcessingHistory";
 import { Avatar, AvatarStack } from "./Avatar";
 import {
   downloadMarkdown,
+  downloadTranscriptJson,
   meetingMarkdown,
   obsidianFilename,
   obsidianMarkdown,
@@ -133,8 +134,14 @@ export function NoteView({
       );
     }
   };
-  const exportMeeting = (format: "markdown" | "obsidian") => {
+  const exportMeeting = (format: "markdown" | "obsidian" | "json") => {
     try {
+      if (format === "json") {
+        downloadTranscriptJson(meeting);
+        setNotice("Transcript JSON downloaded.");
+        setError("");
+        return;
+      }
       const obsidian = format === "obsidian";
       downloadMarkdown(
         meeting.title,
@@ -262,6 +269,9 @@ export function NoteView({
                   </DropdownMenuItem>
                   <DropdownMenuItem onSelect={() => exportMeeting("obsidian")}>
                     {t("Obsidian note")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => exportMeeting("json")}>
+                    {t("Transcript JSON")}
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>

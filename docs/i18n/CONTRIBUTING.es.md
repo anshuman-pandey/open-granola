@@ -56,3 +56,7 @@ Incluye ambos archivos de bloqueo de dependencias en el commit. Describe el comp
 - Probar la compatibilidad de modelos, la accesibilidad y los permisos de la aplicación empaquetada en hardware real.
 
 Informa de los problemas de seguridad siguiendo [SECURITY.md](../../SECURITY.md). Sé amable y directo. Las contribuciones se publican bajo Apache-2.0.
+
+## Trabajar en las herramientas de transcripción sin dependencias nativas
+
+Con Node 22.12 o posterior, ejecuta `npm run test:tools` y prueba el [flujo para desarrolladores](../DEVELOPER_WORKFLOWS.md), documentado en inglés. Puedes mejorar el analizador compartido, el JSON Schema, los ejemplos sintéticos y la CLI sin compilar Rust ni descargar modelos. Incluye un ejemplo sintético que reproduzca los errores de formato. Los cambios en audio nativo o proveedores siguen requiriendo las comprobaciones de plataforma existentes.

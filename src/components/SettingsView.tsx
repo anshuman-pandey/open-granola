@@ -13,6 +13,10 @@ import {
 } from "lucide-react";
 import { useEffect, useRef, useState, type ReactNode } from "react";
 import { getBackend } from "../lib/backend";
+import {
+  importTranscript,
+  parseTranscriptDocument,
+} from "../lib/transcript-interchange.mjs";
 import { ProviderSettings } from "./ProviderSettings";
 import { LanguageSettings } from "./LanguageSettings";
 import {
@@ -125,16 +129,37 @@ export function SettingsView({
     }
   };
   const importFile = async (file: File) => {
+    if (demo || busy || captureLocked) return;
     if (file.size > 20 * 1024 * 1024) {
-      setError(t("Choose a JSON export smaller than 20 MB."));
+      setError(t("Choose a meeting import smaller than 20 MB."));
       return;
     }
     setBusy(true);
     setError("");
     setNotice("");
     try {
-      const content = await file.text();
-      JSON.parse(content);
+      let content = new TextDecoder("utf-8", { fatal: true }).decode(
+        await file.arrayBuffer(),
+      );
+      const extension = file.name.split(".").pop()?.toLowerCase();
+      if (extension === "srt" || extension === "vtt" || extension === "txt") {
+        content = JSON.stringify(
+          importTranscript(content, {
+            format: extension,
+            title:
+              file.name.replace(/\.[^.]+$/, "").trim() ||
+              t("Imported transcript"),
+            createdAt: new Date().toISOString(),
+          }),
+        );
+      } else if (extension === "json") {
+        const value = JSON.parse(content.replace(/^\uFEFF/, ""));
+        if (value?.format === "open-granola.transcript") {
+          content = JSON.stringify(parseTranscriptDocument(content));
+        }
+      } else {
+        throw new Error("Unsupported import extension");
+      }
       const count = await backend.importGranola(content);
       setNotice(
         plural(
@@ -147,7 +172,7 @@ export function SettingsView({
     } catch {
       setError(
         t(
-          "Import failed. Check that this is a supported Granola JSON export, then try again.",
+          "Import failed. Check the file format, dates, and subtitle timestamps, then try again.",
         ),
       );
     } finally {
@@ -392,20 +417,21 @@ export function SettingsView({
           <div className="flex flex-wrap items-center justify-between gap-4">
             <div className="max-w-md">
               <h3 className="text-[13px] font-semibold">
-                {t("Granola JSON export")}
+                {t("JSON or transcript file")}
               </h3>
               <p className="mt-1 text-xs leading-relaxed text-muted-foreground">
                 {t(
-                  "Choose an exported JSON file up to 20 MB. Imported notes will appear in your desktop library. Other export formats are not currently supported.",
+                  "Choose JSON, SRT, VTT, or UTF-8 text up to 20 MB. Text imports use the filename as title and today's date. Imported transcripts are not summarized automatically.",
                 )}
               </p>
             </div>
             <input
               ref={fileRef}
               type="file"
-              accept=".json,application/json"
+              disabled={demo || busy || captureLocked}
+              accept=".json,.srt,.vtt,.txt,application/json,text/plain,text/vtt"
               className="hidden"
-              aria-label={t("Choose Granola JSON export")}
+              aria-label={t("Choose meeting import")}
               onChange={(e) => {
                 const file = e.target.files?.[0];
                 if (file) void importFile(file);
@@ -413,12 +439,12 @@ export function SettingsView({
               }}
             />
             <button
-              disabled={demo || busy}
+              disabled={demo || busy || captureLocked}
               onClick={() => fileRef.current?.click()}
               className="button-secondary shrink-0 gap-2"
             >
               <FileUp size={15} />
-              {busy ? t("Working…") : t("Choose JSON export")}
+              {busy ? t("Working…") : t("Choose import file")}
             </button>
           </div>
         </Section>

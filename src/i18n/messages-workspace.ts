@@ -1,4 +1,40 @@
 export const workspaceMessages: Record<string, { hi: string; es: string }> = {
+  "Transcript JSON": { hi: "ट्रांसक्रिप्ट JSON", es: "JSON de transcripción" },
+  "Transcript JSON downloaded.": {
+    hi: "ट्रांसक्रिप्ट JSON डाउनलोड हो गया।",
+    es: "JSON de transcripción descargado.",
+  },
+  "Choose a meeting import smaller than 20 MB.": {
+    hi: "20 MB से छोटी मीटिंग आयात फ़ाइल चुनें।",
+    es: "Elige un archivo de reunión de menos de 20 MB.",
+  },
+  "Imported transcript": {
+    hi: "आयात की गई ट्रांसक्रिप्ट",
+    es: "Transcripción importada",
+  },
+  "Import failed. Check the file format, dates, and subtitle timestamps, then try again.":
+    {
+      hi: "आयात विफल हुआ। फ़ाइल का प्रारूप, तारीखें और उपशीर्षकों के समय जाँचकर फिर कोशिश करें।",
+      es: "La importación falló. Revisa el formato, las fechas y los tiempos de los subtítulos e inténtalo de nuevo.",
+    },
+  "JSON or transcript file": {
+    hi: "JSON या ट्रांसक्रिप्ट फ़ाइल",
+    es: "Archivo JSON o de transcripción",
+  },
+  "Choose JSON, SRT, VTT, or UTF-8 text up to 20 MB. Text imports use the filename as title and today's date. Imported transcripts are not summarized automatically.":
+    {
+      hi: "20 MB तक की JSON, SRT, VTT या UTF-8 टेक्स्ट फ़ाइल चुनें। टेक्स्ट आयात में फ़ाइल का नाम शीर्षक और आज की तारीख इस्तेमाल होती है। आयात की गई ट्रांसक्रिप्ट का सारांश अपने आप नहीं बनता।",
+      es: "Elige JSON, SRT, VTT o texto UTF-8 de hasta 20 MB. Al importar texto se usa el nombre del archivo como título y la fecha de hoy. No se genera un resumen automáticamente.",
+    },
+  "Choose meeting import": {
+    hi: "मीटिंग आयात फ़ाइल चुनें",
+    es: "Elegir archivo de reunión",
+  },
+  "Choose import file": {
+    hi: "आयात फ़ाइल चुनें",
+    es: "Elegir archivo para importar",
+  },
+
   "Markdown file": { hi: "Markdown फ़ाइल", es: "Archivo Markdown" },
   "Obsidian note": { hi: "Obsidian नोट", es: "Nota de Obsidian" },
   "Obsidian note downloaded. Move it into your vault.": {

@@ -814,6 +814,18 @@ fn parse_import(json: &str) -> Result<Vec<ImportNote>, String> {
     }
     let value: serde_json::Value =
         serde_json::from_str(json).map_err(|e| format!("Invalid JSON: {e}"))?;
+    if value
+        .get("format")
+        .and_then(|v| v.as_str())
+        .is_some_and(|format| format.starts_with("open-granola."))
+    {
+        if value.get("format").and_then(|v| v.as_str()) != Some("open-granola.transcript")
+            || value.get("version").and_then(|v| v.as_u64()) != Some(1)
+            || !value.get("notes").is_some_and(|v| v.is_array())
+        {
+            return Err("Unsupported Open Granola transcript format or version".into());
+        }
+    }
     let values = match value {
         serde_json::Value::Array(v) => v,
         serde_json::Value::Object(mut o) if o.contains_key("notes") => o
@@ -1188,6 +1200,41 @@ mod tests {
         assert_eq!(history[19]["model"], "run-5");
         assert!(history.iter().all(|run| run["model"] != "other-model"));
     }
+    #[test]
+    fn portable_transcript_fixture_imports_into_the_real_database() {
+        let notes =
+            parse_import(include_str!("../../examples/transcripts/standup.og.json")).unwrap();
+        assert_eq!(notes.len(), 1);
+        assert_eq!(notes[0].segments[1].start_ms, 4000);
+        assert_eq!(notes[0].segments[1].end_ms, 7250);
+        assert!(notes[0].segments[1].text.contains("我会"));
+        let db = Db::open(std::path::Path::new(":memory:")).unwrap();
+        assert_eq!(import_notes(&db, &notes).unwrap(), 1);
+        let count: i64 = db
+            .conn()
+            .query_row("SELECT count(*) FROM segments", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(count, 3);
+        let runs: i64 = db
+            .conn()
+            .query_row("SELECT count(*) FROM summary_runs", [], |r| r.get(0))
+            .unwrap();
+        assert_eq!(runs, 0);
+    }
+
+    #[test]
+    fn unsupported_portable_versions_cannot_fall_through_to_legacy_import() {
+        for json in [
+            r#"{"format":"open-granola.transcript","version":2,"notes":[{"title":"Reject"}]}"#,
+            r#"{"format":"open-granola.transcript","notes":[{"title":"Reject"}]}"#,
+            r#"{"format":"open-granola.backup","version":1,"notes":[{"title":"Reject"}]}"#,
+            r#"{"format":"open-granola.transcript","version":1,"title":"Reject"}"#,
+        ] {
+            assert!(parse_import(json).is_err());
+        }
+        assert!(parse_import(r#"{"title":"Legacy note"}"#).is_ok());
+    }
+
     #[test]
     fn import_rejects_invalid_shapes_and_ranges() {
         for json in [
