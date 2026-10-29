@@ -20,6 +20,7 @@
 [English](../../README.md) · [हिन्दी](README.hi.md) · [Español](README.es.md) · **日本語** · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [言語サポート](../I18N.md)
 
 <!-- English source: README.md at a25a58aece9c5337340c352eb431b83a041d1d47; reviewed 2026-10-10. -->
+<!-- Setup/export links updated with the adoption-readiness branch on 2026-10-12. -->
 
 **開発中のプレビューです。** Open Granola はマイク音声を録音し、ローカルの Whisper で文字起こしを行い、ローカルモデルまたは自分で接続したプロバイダーを使ってノートを作成します。ライブラリはローカルの SQLite データベースに保存されます。クラウドで要約する場合は、文字起こしのテキストを選択したプロバイダーへ送信します。
 
@@ -62,7 +63,7 @@ Claude には API キーで接続します。このアプリに Claude の一般
 
 ### 要約モデルを接続する
 
-セットアップガイド：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。
+セットアップガイド：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。 エクスポートガイド：[Obsidian](../integrations/OBSIDIAN.md)。
 
 1. デスクトップアプリで**設定 → モデルと接続（Settings → Models & connections）**を開きます。
 2. プロバイダーを選択し、正確なモデル ID を入力します。カスタムサーバーの場合は、そのサーバーのドキュメントに記載された API ベース URL を入力します。
@@ -109,6 +110,8 @@ npm run tauri build
 ```
 
 ビルドの出力先は `src-tauri/target/release/bundle` です。署名、公証、インストールとアップグレードのテストは、別途必要なリリース作業です。準備ができたら、検証済みの成果物を [Releases](https://github.com/anshuman-pandey/open-granola/releases) で公開してください。この README は、ビルド済みインストーラーの提供を約束するものではありません。
+
+Apple Silicon向けの検証用ビルドと初回セットアップの確認については、[プレビュービルドガイド](../RELEASING.md)を参照してください。公開リリース前にモデルファイルと実機でのテストが必要です。
 
 <a id="install-local-models"></a>
 

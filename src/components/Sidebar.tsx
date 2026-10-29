@@ -96,7 +96,7 @@ export function Sidebar(p: Props) {
     <>
       <div className="flex items-center gap-2.5 px-4 pb-4 pt-5">
         <div
-          className="ember-gradient flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-xl shadow-sm"
+          className="ember-gradient flex h-[34px] w-[34px] shrink-0 items-center justify-center rounded-xl shadow-xs"
           aria-hidden="true"
         >
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
@@ -135,7 +135,7 @@ export function Sidebar(p: Props) {
         <button
           disabled={p.busy}
           onClick={p.recording ? p.onStop : p.onRecord}
-          className={`flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-[12px] font-semibold shadow-sm md:min-h-10 ${p.recording ? "bg-destructive text-destructive-foreground" : "button-primary"}`}
+          className={`flex min-h-11 w-full items-center justify-center gap-2 rounded-xl px-3 text-[12px] font-semibold shadow-xs md:min-h-10 ${p.recording ? "bg-destructive text-destructive-foreground" : "button-primary"}`}
         >
           {p.recording ? (
             <Square size={13} fill="currentColor" />
@@ -166,7 +166,7 @@ export function Sidebar(p: Props) {
         >
           <Search size={13} />
           <span className="flex-1 text-left">{t("Search your notes")}</span>
-          <kbd className="rounded border border-sidebar-border/80 bg-background/70 px-1 py-0.5 text-[8px] leading-none">
+          <kbd className="rounded-[0.25rem] border border-sidebar-border/80 bg-background/70 px-1 py-0.5 text-[8px] leading-none">
             ⌘/Ctrl K
           </kbd>
         </button>
@@ -288,7 +288,7 @@ export function Sidebar(p: Props) {
   );
   return (
     <>
-      <div className="mobile-workspace-header fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur md:hidden">
+      <div className="mobile-workspace-header fixed inset-x-0 top-0 z-30 flex h-14 items-center gap-3 border-b border-border bg-background/95 px-4 backdrop-blur-sm md:hidden">
         <button
           onClick={() => setMobileOpen(true)}
           aria-label={t("Open navigation")}

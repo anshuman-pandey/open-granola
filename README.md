@@ -56,7 +56,7 @@ Claude is connected with an API key; this app has no Claude consumer-account log
 
 ### Connect a summarizer
 
-Setup guides: [LM Studio](docs/integrations/LM_STUDIO.md) · [Ollama](docs/integrations/OLLAMA.md).
+Setup guides: [LM Studio](docs/integrations/LM_STUDIO.md) · [Ollama](docs/integrations/OLLAMA.md). Export guide: [Obsidian](docs/integrations/OBSIDIAN.md).
 
 1. Open **Settings → Models & connections** in the desktop app.
 2. Choose a provider and enter its exact model ID. For a custom server, enter the API base URL it documents.
@@ -97,6 +97,8 @@ npm run tauri build
 ```
 
 Build output is under `src-tauri/target/release/bundle`. Signing, notarization and install/upgrade testing are separate release work. Publish verified assets under [Releases](https://github.com/anshuman-pandey/open-granola/releases) when ready; this README does not promise a prebuilt installer.
+
+For Apple Silicon validation candidates and first-run testing, see the [preview build guide](docs/RELEASING.md). These candidates require model files and hardware testing before a public release.
 
 ### Install local models
 

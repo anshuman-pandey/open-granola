@@ -174,7 +174,7 @@ export function CommandPalette({
               }
             }}
             placeholder={t("Search meetings, transcripts, actions…")}
-            className="min-w-0 flex-1 bg-transparent text-sm outline-none"
+            className="min-w-0 flex-1 bg-transparent text-sm outline-hidden"
           />
         </div>
         <div

@@ -20,6 +20,7 @@
 [English](../../README.md) · [हिन्दी](README.hi.md) · [Español](README.es.md) · [日本語](README.ja.md) · **简体中文** · [繁體中文](README.zh-TW.md) · [语言支持](../I18N.md)
 
 <!-- English source: README.md at a25a58aece9c5337340c352eb431b83a041d1d47; reviewed 2026-10-10. -->
+<!-- Setup/export links updated with the adoption-readiness branch on 2026-10-12. -->
 
 **开发预览版。** Open Granola 录制麦克风音频，通过本地 Whisper 转写，再使用本地模型或你连接的提供方将转写文本整理成笔记。资料库保存在本地 SQLite 数据库中。使用云端摘要功能时，转写文本会发送给所选提供方。
 
@@ -62,7 +63,7 @@ Claude 通过 API 密钥连接；本应用不提供 Claude 消费者账户登录
 
 ### 连接摘要模型
 
-设置指南：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。
+设置指南：[LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md)。 导出指南：[Obsidian](../integrations/OBSIDIAN.md)。
 
 1. 在桌面应用中打开 **设置 → 模型与连接**。
 2. 选择提供方，输入确切的模型 ID。如果使用自定义服务器，请输入其文档指定的 API 基础 URL。
@@ -109,6 +110,8 @@ npm run tauri build
 ```
 
 构建产物位于 `src-tauri/target/release/bundle`。签名、公证以及安装／升级测试是独立的发行工作。准备就绪后，可将已验证的产物发布到 [Releases](https://github.com/anshuman-pandey/open-granola/releases)；本 README 不承诺提供预编译安装程序。
+
+关于 Apple Silicon 验证构建和首次使用测试，请参阅[预览构建指南](../RELEASING.md)。这些构建需要模型文件，并须在公开发布前完成实际硬件测试。
 
 <a id="install-local-models"></a>
 

@@ -21,7 +21,18 @@ import { fmtTs } from "../hooks/useLiveSession";
 import type { ActionItem, ChatMessage, Meeting } from "../lib/types";
 import { ProcessingHistory } from "./ProcessingHistory";
 import { Avatar, AvatarStack } from "./Avatar";
-import { downloadMarkdown, meetingMarkdown } from "./meeting-export";
+import {
+  downloadMarkdown,
+  meetingMarkdown,
+  obsidianFilename,
+  obsidianMarkdown,
+} from "./meeting-export";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "./ui/dropdown-menu";
 
 interface Props {
   meeting: Meeting;
@@ -122,6 +133,28 @@ export function NoteView({
       );
     }
   };
+  const exportMeeting = (format: "markdown" | "obsidian") => {
+    try {
+      const obsidian = format === "obsidian";
+      downloadMarkdown(
+        meeting.title,
+        obsidian
+          ? obsidianMarkdown(meeting, items, { t, formatDate })
+          : meetingMarkdown(meeting, items, { t, formatDate }),
+        obsidian ? obsidianFilename(meeting) : undefined,
+      );
+      setNotice(
+        obsidian
+          ? "Obsidian note downloaded. Move it into your vault."
+          : "Markdown export downloaded.",
+      );
+      setError("");
+    } catch {
+      setError(
+        "The export could not be downloaded. Try copying the Markdown instead.",
+      );
+    }
+  };
   const toggle = async (item: ActionItem) => {
     setPending((prev) => [...prev, item.id]);
     setError("");
@@ -216,19 +249,22 @@ export function NoteView({
               >
                 {copied ? <Check size={15} /> : <Copy size={15} />}
               </button>
-              <button
-                onClick={() => {
-                  downloadMarkdown(
-                    meeting.title,
-                    meetingMarkdown(meeting, items, { t, formatDate }),
-                  );
-                  setNotice("Markdown export downloaded.");
-                }}
-                className="flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-medium sm:min-h-0 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground"
-              >
-                <Download size={14} />
-                {t("Export")}
-              </button>
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <button className="flex min-h-11 items-center gap-1.5 rounded-lg px-2.5 py-2 text-[11px] font-medium sm:min-h-0 text-muted-foreground transition-colors hover:bg-secondary hover:text-foreground">
+                    <Download size={14} aria-hidden="true" />
+                    {t("Export")}
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end">
+                  <DropdownMenuItem onSelect={() => exportMeeting("markdown")}>
+                    {t("Markdown file")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onSelect={() => exportMeeting("obsidian")}>
+                    {t("Obsidian note")}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
             </div>
           </div>
           <h1 className="font-display mt-4 max-w-3xl text-[34px] leading-[1.08] tracking-[-0.025em] sm:text-[42px]">
@@ -287,7 +323,7 @@ export function NoteView({
                   aria-controls={`${viewId}-meeting-${id}`}
                   id={`${viewId}-tab-${id}`}
                   onClick={() => setTab(id)}
-                  className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-medium sm:min-h-0 transition-colors ${tab === id ? "bg-card text-foreground shadow-sm ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"}`}
+                  className={`flex min-h-11 items-center gap-1.5 rounded-lg px-3 py-2 text-[11px] font-medium sm:min-h-0 transition-colors ${tab === id ? "bg-card text-foreground shadow-xs ring-1 ring-border/50" : "text-muted-foreground hover:text-foreground"}`}
                 >
                   <Icon size={14} aria-hidden="true" />
                   {label}
@@ -517,7 +553,7 @@ export function NoteView({
                     setHighlight(null);
                   }}
                   placeholder={t("Find a word or phrase…")}
-                  className="h-11 min-w-0 flex-1 bg-transparent text-[12px] outline-none"
+                  className="h-11 min-w-0 flex-1 bg-transparent text-[12px] outline-hidden"
                 />
                 {query && (
                   <button
@@ -632,7 +668,7 @@ export function NoteView({
         className={`${chatOpen ? "flex" : "hidden xl:flex"} min-h-0 w-full shrink-0 flex-col border-l border-border/80 bg-card/60 xl:w-[310px] 2xl:w-[330px]`}
       >
         <div className="flex items-center gap-2.5 border-b border-border/80 px-5 py-5">
-          <div className="ember-gradient flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-sm">
+          <div className="ember-gradient flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-white shadow-xs">
             <Sparkles size={15} aria-hidden="true" />
           </div>
           <div className="min-w-0">
@@ -731,7 +767,7 @@ export function NoteView({
         </div>
         <div className="border-t border-border/80 p-4">
           <form
-            className="rounded-xl border border-border bg-card p-3 shadow-sm focus-within:border-primary/40"
+            className="rounded-xl border border-border bg-card p-3 shadow-xs focus-within:border-primary/40"
             onSubmit={(event) => {
               event.preventDefault();
               void send(draft);
@@ -755,7 +791,7 @@ export function NoteView({
               }}
               aria-label={t("Ask the meeting assistant")}
               placeholder={t("Ask about this meeting…")}
-              className="block max-h-40 min-h-12 w-full resize-y bg-transparent text-[12px] leading-relaxed outline-none"
+              className="block max-h-40 min-h-12 w-full resize-y bg-transparent text-[12px] leading-relaxed outline-hidden"
             />
             <div className="mt-2 flex items-center justify-between gap-2">
               <span className="text-[9px] text-muted-foreground">

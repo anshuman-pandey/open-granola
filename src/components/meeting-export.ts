@@ -88,18 +88,78 @@ export function meetingMarkdown(
   return lines.join("\n");
 }
 
-export function downloadMarkdown(title: string, markdown: string) {
+type MarkdownOptions = Parameters<typeof meetingMarkdown>[2];
+
+function yamlValue(value: unknown): string {
+  return JSON.stringify(value).replace(
+    /[\u0085\u2028\u2029]/g,
+    (character) =>
+      `\\u${character.charCodeAt(0).toString(16).padStart(4, "0")}`,
+  );
+}
+
+/** JSON-quoted values are valid YAML and cannot introduce frontmatter keys. */
+export function obsidianMarkdown(
+  meeting: Meeting,
+  actions: ActionItem[],
+  options: MarkdownOptions = {},
+): string {
+  const date = new Date(meeting.date);
+  if (!Number.isFinite(date.getTime())) throw new Error("Invalid meeting date");
+  return [
+    "---",
+    `title: ${yamlValue(meeting.title)}`,
+    `date: ${yamlValue(date.toISOString())}`,
+    "source: Open Granola",
+    `open_granola_id: ${yamlValue(meeting.id)}`,
+    `duration_minutes: ${meeting.durationMin}`,
+    `participants: ${yamlValue(meeting.participants.map((person) => person.name))}`,
+    `tags: ${yamlValue([...new Set(["open-granola", ...meeting.tags.filter((tag) => /^[\p{L}\p{N}_-]+(?:\/[\p{L}\p{N}_-]+)*$/u.test(tag) && /[\p{L}_]/u.test(tag))])])}`,
+    `open_granola_tags: ${yamlValue(meeting.tags)}`,
+    "---",
+    "",
+    meetingMarkdown(meeting, actions, options),
+  ].join("\n");
+}
+
+export function obsidianFilename(meeting: Meeting): string {
+  const date = new Date(meeting.date);
+  if (!Number.isFinite(date.getTime())) throw new Error("Invalid meeting date");
+  // A stable ID suffix distinguishes meetings with the same date and title.
+  let hash = 0xcbf29ce484222325n;
+  for (const byte of new TextEncoder().encode(meeting.id)) {
+    hash = BigInt.asUintN(64, (hash ^ BigInt(byte)) * 0x100000001b3n);
+  }
+  const title =
+    [
+      ...meeting.title
+        .normalize("NFKC")
+        .replace(/[^\p{L}\p{N} _-]/gu, "")
+        .trim(),
+    ]
+      .slice(0, 40)
+      .join("") || "meeting";
+  return `${date.toISOString().slice(0, 10)} ${title} ${hash.toString(16).padStart(16, "0")}.md`;
+}
+
+export function downloadMarkdown(
+  title: string,
+  markdown: string,
+  filename?: string,
+) {
   const url = URL.createObjectURL(
     new Blob([markdown], { type: "text/markdown;charset=utf-8" }),
   );
   const link = document.createElement("a");
   link.href = url;
-  link.download = `${
-    title
-      .replace(/[^\p{L}\p{N} _-]/gu, "")
-      .trim()
-      .slice(0, 100) || "meeting"
-  }.md`;
+  link.download =
+    filename ??
+    `${
+      title
+        .replace(/[^\p{L}\p{N} _-]/gu, "")
+        .trim()
+        .slice(0, 100) || "meeting"
+    }.md`;
   document.body.appendChild(link);
   link.click();
   link.remove();

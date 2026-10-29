@@ -20,6 +20,7 @@
 [English](../../README.md) · [हिन्दी](README.hi.md) · **Español** · [日本語](README.ja.md) · [简体中文](README.zh-CN.md) · [繁體中文](README.zh-TW.md) · [Contribuir a las traducciones](../I18N.md)
 
 <!-- English source: README.md at 6127b7f34b2e3ea786481953cfe57a7179a214c6; reviewed 2026-10-10. -->
+<!-- Setup/export links updated with the adoption-readiness branch on 2026-10-12. -->
 
 **Versión preliminar en desarrollo.** Open Granola graba el micrófono, transcribe con Whisper en tu dispositivo y convierte la transcripción en notas mediante un modelo local o un proveedor que conectes. Tu biblioteca permanece en una base de datos SQLite local. Los resúmenes en la nube envían el texto de la transcripción al proveedor seleccionado.
 
@@ -58,7 +59,7 @@ Claude se conecta con una clave API; esta aplicación no permite iniciar sesión
 
 ### Conectar un modelo de resúmenes
 
-Guías de configuración: [LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md).
+Guías de configuración: [LM Studio](../integrations/LM_STUDIO.md) · [Ollama](../integrations/OLLAMA.md). Guía de exportación: [Obsidian](../integrations/OBSIDIAN.md).
 
 1. Abre **Settings → Models & connections** en la aplicación de escritorio.
 2. Elige un proveedor e introduce el ID exacto de su modelo. Para un servidor personalizado, introduce la URL base de la API que indique su documentación.
@@ -101,6 +102,8 @@ npm run tauri build
 ```
 
 Los archivos generados están en `src-tauri/target/release/bundle`. La firma, la notarización y las pruebas de instalación y actualización son tareas de publicación independientes. Publica los archivos verificados en [Releases](https://github.com/anshuman-pandey/open-granola/releases) cuando estén listos; este README no promete un instalador ya compilado.
+
+Para versiones de prueba en Apple Silicon y la validación inicial, consulta la [guía de compilaciones preliminares](../RELEASING.md). Estas versiones requieren archivos de modelos y pruebas en hardware real antes de una publicación pública.
 
 ### Instalar modelos locales
 

@@ -158,7 +158,7 @@ export function LibraryAssistant({
               value={draft}
               onChange={(event) => setDraft(event.target.value)}
               placeholder={t("Ask another question…")}
-              className="min-h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-none"
+              className="min-h-10 min-w-0 flex-1 bg-transparent text-[13px] outline-hidden"
             />
             <button
               disabled={!draft.trim() || state.pending}

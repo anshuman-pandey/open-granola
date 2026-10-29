@@ -1,5 +1,11 @@
 // Japanese interface translations. Keep keys and placeholders aligned with the English catalogs.
 export const japaneseMessages: Record<string, string> = {
+  "Markdown file": "Markdownファイル",
+  "Obsidian note": "Obsidianノート",
+  "Obsidian note downloaded. Move it into your vault.":
+    "Obsidianノートをダウンロードしました。保管庫に移動してください。",
+  "The export could not be downloaded. Try copying the Markdown instead.":
+    "エクスポートをダウンロードできませんでした。Markdownのコピーをお試しください。",
   "A fresh page for your conversations. Capture a meeting or bring your notes along.":
     "会話を残すための、新しいページ。会議を録音するか、ノートを取り込んで始めましょう。",
   "A home for your conversations. Saved meetings will appear here.":
