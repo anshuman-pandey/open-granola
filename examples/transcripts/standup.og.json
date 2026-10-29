@@ -1,0 +1,31 @@
+{
+  "format": "open-granola.transcript",
+  "version": 1,
+  "notes": [
+    {
+      "title": "Synthetic developer standup",
+      "created_at": "2026-10-29T09:00:00.000Z",
+      "summary": "Synthetic fixture: review the parser and document the import format. No real meeting or AI generation is represented.",
+      "transcript": [
+        {
+          "start": 0,
+          "end": 3.5,
+          "speaker": "Alex",
+          "text": "I will review the transcript parser today."
+        },
+        {
+          "start": 4,
+          "end": 7.25,
+          "speaker": "Mei",
+          "text": "我会更新导入说明。日本語とहिन्दीの例も確認します。"
+        },
+        {
+          "start": 8,
+          "end": 11,
+          "speaker": "Alex",
+          "text": "The import should preserve the source text and timestamps."
+        }
+      ]
+    }
+  ]
+}

@@ -1,5 +1,7 @@
 # OpenGranola competitive research
 
+A [29 October developer-adoption refresh](research/DEVELOPER_ADOPTION_2026_10_29.md) records current evidence and the implemented transcript workflow. The dated research below remains intact.
+
 Research date: **2 October 2026**. Repository metadata sampled at **00:39–00:42 UTC**; selected issue bodies and comments checked subsequently in the same session. Exact timestamps, search queries, ranks within each returned query, stars, issue states, reactions and primary-source URLs are in [the research snapshot](research/competitors-2026-10-02.json).
 
 ## Recommendation

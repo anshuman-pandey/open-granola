@@ -1,5 +1,18 @@
 // Traditional Chinese interface messages. Keep placeholders and confirmation tokens unchanged.
 export const traditionalChineseMessages: Record<string, string> = {
+  "Transcript JSON": "逐字稿 JSON",
+  "Transcript JSON downloaded.": "逐字稿 JSON 已下載。",
+  "Choose a meeting import smaller than 20 MB.":
+    "請選擇小於 20 MB 的會議匯入檔案。",
+  "Imported transcript": "匯入的逐字稿",
+  "Import failed. Check the file format, dates, and subtitle timestamps, then try again.":
+    "匯入失敗。請檢查檔案格式、日期及字幕時間戳記後重試。",
+  "JSON or transcript file": "JSON 或逐字稿檔案",
+  "Choose JSON, SRT, VTT, or UTF-8 text up to 20 MB. Text imports use the filename as title and today's date. Imported transcripts are not summarized automatically.":
+    "選擇不超過 20 MB 的 JSON、SRT、VTT 或 UTF-8 文字。文字匯入會以檔名作為標題，並使用今天的日期。匯入的逐字稿不會自動產生摘要。",
+  "Choose meeting import": "選擇會議匯入檔案",
+  "Choose import file": "選擇匯入檔案",
+
   "Markdown file": "Markdown 檔案",
   "Obsidian note": "Obsidian 筆記",
   "Obsidian note downloaded. Move it into your vault.":

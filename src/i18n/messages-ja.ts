@@ -1,5 +1,18 @@
 // Japanese interface translations. Keep keys and placeholders aligned with the English catalogs.
 export const japaneseMessages: Record<string, string> = {
+  "Transcript JSON": "文字起こしJSON",
+  "Transcript JSON downloaded.": "文字起こしJSONをダウンロードしました。",
+  "Choose a meeting import smaller than 20 MB.":
+    "20 MB未満の会議インポートファイルを選択してください。",
+  "Imported transcript": "取り込んだ文字起こし",
+  "Import failed. Check the file format, dates, and subtitle timestamps, then try again.":
+    "取り込みに失敗しました。ファイル形式、日付、字幕のタイムスタンプを確認して再試行してください。",
+  "JSON or transcript file": "JSONまたは文字起こしファイル",
+  "Choose JSON, SRT, VTT, or UTF-8 text up to 20 MB. Text imports use the filename as title and today's date. Imported transcripts are not summarized automatically.":
+    "20 MBまでのJSON、SRT、VTT、UTF-8テキストを選択してください。テキストの取り込みではファイル名をタイトルに、今日の日付を会議日時に使用します。要約は自動生成されません。",
+  "Choose meeting import": "会議インポートファイルを選択",
+  "Choose import file": "インポートファイルを選択",
+
   "Markdown file": "Markdownファイル",
   "Obsidian note": "Obsidianノート",
   "Obsidian note downloaded. Move it into your vault.":

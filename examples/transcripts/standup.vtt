@@ -1,0 +1,13 @@
+WEBVTT
+
+1
+00:00:00.000 --> 00:00:03.500
+<v Alex>I will review the transcript parser today.</v>
+
+2
+00:00:04.000 --> 00:00:07.250
+<v Mei>我会更新导入说明。日本語とहिन्दीの例も確認します。</v>
+
+3
+00:00:08.000 --> 00:00:11.000
+<v Alex>The import should preserve the source text and timestamps.</v>

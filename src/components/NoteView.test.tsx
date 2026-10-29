@@ -2,7 +2,8 @@ import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import userEvent from "@testing-library/user-event";
 import { NoteView } from "./NoteView";
-import { meetingMarkdown } from "./meeting-export";
+import { meetingMarkdown, meetingTranscriptJson } from "./meeting-export";
+import { parseTranscriptDocument } from "../lib/transcript-interchange.mjs";
 import type { Meeting } from "../lib/types";
 
 const meeting: Meeting = {
@@ -34,6 +35,35 @@ beforeEach(() => {
 });
 
 describe("meeting details", () => {
+  it("exports validated transcript JSON without presenting it as a library backup", async () => {
+    const document = parseTranscriptDocument(meetingTranscriptJson(meeting));
+    expect(document.notes[0].title).toBe(meeting.title);
+    expect(document.notes[0].transcript[0]).toEqual({
+      start: 60,
+      text: "The release is ready.",
+      speaker: "Speaker 2",
+    });
+    expect(document.notes[0]).not.toHaveProperty("processingHistory");
+    expect(document.notes[0]).not.toHaveProperty("actions");
+    Object.assign(URL, {
+      createObjectURL: vi.fn().mockReturnValue("blob:transcript"),
+      revokeObjectURL: vi.fn(),
+    });
+    const clicked: HTMLAnchorElement[] = [];
+    vi.spyOn(HTMLAnchorElement.prototype, "click").mockImplementation(function (
+      this: HTMLAnchorElement,
+    ) {
+      clicked.push(this);
+    });
+    render(<NoteView meeting={meeting} onToggleAction={vi.fn()} />);
+    const user = userEvent.setup();
+    await user.click(screen.getByRole("button", { name: "Export" }));
+    await user.click(screen.getByRole("menuitem", { name: "Transcript JSON" }));
+    expect(clicked[0].download).toMatch(/\.transcript\.json$/);
+    expect(screen.getByRole("status")).toHaveTextContent(
+      "Transcript JSON downloaded.",
+    );
+  });
   it("downloads an Obsidian note through the export menu without opening a vault", async () => {
     Object.assign(URL, { createObjectURL: vi.fn(), revokeObjectURL: vi.fn() });
     const url = vi.spyOn(URL, "createObjectURL").mockReturnValue("blob:note");

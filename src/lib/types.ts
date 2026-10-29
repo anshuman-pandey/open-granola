@@ -10,6 +10,7 @@ export interface TranscriptSegment {
   id: string;
   speakerId: string;
   start: number; // seconds
+  end?: number; // seconds, only when the source provides an end time
   text: string;
 }
 

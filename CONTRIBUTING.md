@@ -54,3 +54,7 @@ Commit both dependency lockfiles. Describe behavior, validation and remaining pl
 - Test model compatibility, accessibility and packaged permissions on actual hardware.
 
 Report security issues using [SECURITY.md](SECURITY.md). Be kind and direct. Contributions are licensed under Apache-2.0.
+
+## Work on transcript tools without native dependencies
+
+With Node 22.12 or later, run `npm run test:tools` and try the [developer workflow](docs/DEVELOPER_WORKFLOWS.md). The shared parser, JSON Schema, synthetic fixtures and CLI can be improved without a Rust build or downloaded models. Include a synthetic failing fixture for format bugs. Native audio/provider changes still require the existing platform checks.

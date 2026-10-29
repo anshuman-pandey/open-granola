@@ -256,7 +256,8 @@ export function adaptMeeting(
     transcript: segs.map((s) => ({
       id: s.id,
       speakerId: `sp-${s.speaker}`,
-      start: Math.round(s.start_ms / 1000),
+      start: s.start_ms / 1000,
+      ...(s.end_ms > s.start_ms ? { end: s.end_ms / 1000 } : {}),
       text: s.text,
     })),
     tags: [],
