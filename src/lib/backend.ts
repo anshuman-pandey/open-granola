@@ -257,7 +257,7 @@ export function adaptMeeting(
       id: s.id,
       speakerId: `sp-${s.speaker}`,
       start: s.start_ms / 1000,
-      end: s.end_ms / 1000,
+      ...(s.end_ms > s.start_ms ? { end: s.end_ms / 1000 } : {}),
       text: s.text,
     })),
     tags: [],

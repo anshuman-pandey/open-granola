@@ -14,10 +14,10 @@ On a feature branch, use that branch's source until it is merged. The checked-in
 
 ## Import an existing transcript
 
-The desktop's **Settings → Bring your notes** section accepts JSON, SRT, VTT and UTF-8 `.txt` files, up to 20 MiB. Imports are disabled during active capture. The whole file is validated before a single native import transaction is requested; malformed cues fail rather than importing only part of a transcript.
+The desktop's **Settings → Import your notes** section accepts JSON, SRT, VTT and UTF-8 `.txt` files, up to 20 MiB. Imports are disabled during active capture. The whole file is validated before a single native import transaction is requested; malformed cues fail rather than importing only part of a transcript.
 
 - SRT and VTT import retain cue start/end times and text. Basic styling is flattened, entities decoded, and VTT voice labels grouped by the desktop's existing speaker-number representation.
-- Plain text becomes one untimed segment at zero. No speech recognition or timing alignment is performed.
+- Plain text becomes one untimed segment at zero. No speech recognition or timing alignment is performed. Untimed imports do not acquire an invented end time when exported again.
 - Text/subtitle imports use the filename as the title and the import date. Use the CLI to supply the actual meeting date before importing JSON for historical records.
 - Import creates new meetings. Reimporting the same file creates another copy. Existing retention settings apply.
 - Import does not call a summarizer. In a saved desktop meeting, **Regenerate summary** lets you review the configured destination before explicitly generating notes. Remote providers can charge for those requests.

@@ -71,4 +71,22 @@ describe("meeting IPC adaptation", () => {
     expect(meeting.chapters).toHaveLength(1);
     expect(meeting.participants).toEqual([]);
   });
+  it("keeps unknown native end times absent in the portable export", () => {
+    const meeting = adaptMeeting("untimed", row, [
+      {
+        id: "s",
+        start_ms: 5000,
+        end_ms: 5000,
+        speaker: 0,
+        text: "No end supplied",
+      },
+    ]);
+    expect(meeting.transcript[0].end).toBeUndefined();
+    const exported = JSON.parse(meetingTranscriptJson(meeting));
+    expect(exported.notes[0].transcript[0]).toEqual({
+      start: 5,
+      text: "No end supplied",
+      speaker: "Speaker 0",
+    });
+  });
 });

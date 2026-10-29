@@ -814,17 +814,14 @@ fn parse_import(json: &str) -> Result<Vec<ImportNote>, String> {
     }
     let value: serde_json::Value =
         serde_json::from_str(json).map_err(|e| format!("Invalid JSON: {e}"))?;
-    if value
-        .get("format")
-        .and_then(|v| v.as_str())
-        .is_some_and(|format| format.starts_with("open-granola."))
-    {
-        if value.get("format").and_then(|v| v.as_str()) != Some("open-granola.transcript")
+    let format = value.get("format").and_then(|v| v.as_str());
+    let portable = format == Some("open-granola.transcript");
+    if format.is_some_and(|format| format.starts_with("open-granola."))
+        && (format != Some("open-granola.transcript")
             || value.get("version").and_then(|v| v.as_u64()) != Some(1)
-            || !value.get("notes").is_some_and(|v| v.is_array())
-        {
-            return Err("Unsupported Open Granola transcript format or version".into());
-        }
+            || !value.get("notes").is_some_and(|v| v.is_array()))
+    {
+        return Err("Unsupported Open Granola transcript format or version".into());
     }
     let values = match value {
         serde_json::Value::Array(v) => v,
@@ -890,7 +887,14 @@ fn parse_import(json: &str) -> Result<Vec<ImportNote>, String> {
                         .to_string();
                     validate_text(&text, 100_000, "Segment", false)?;
                     let start_ms = import_timestamp(entry, "start", j as u64 * 1000)?;
-                    let end_ms = import_timestamp(entry, "end", start_ms.saturating_add(1000))?;
+                    // The portable contract permits untimed text. Store an unknown
+                    // end as zero duration rather than inventing a subtitle cue.
+                    let default_end = if portable {
+                        start_ms
+                    } else {
+                        start_ms.saturating_add(1000)
+                    };
+                    let end_ms = import_timestamp(entry, "end", default_end)?;
                     if end_ms < start_ms {
                         return Err(invalid("segment end precedes start"));
                     }
@@ -1233,6 +1237,26 @@ mod tests {
             assert!(parse_import(json).is_err());
         }
         assert!(parse_import(r#"{"title":"Legacy note"}"#).is_ok());
+    }
+
+    #[test]
+    fn untimed_portable_text_does_not_acquire_a_synthetic_duration() {
+        let notes = parse_import(r#"{"format":"open-granola.transcript","version":1,"notes":[{"title":"Untimed","created_at":"2026-10-29T09:00:00Z","transcript":[{"start":0,"text":"Plain text"},{"start":5,"text":"No end supplied"}]}]}"#).unwrap();
+        let db = Db::open(std::path::Path::new(":memory:")).unwrap();
+        import_notes(&db, &notes).unwrap();
+        let unknown: i64 = db
+            .conn()
+            .query_row(
+                "SELECT count(*) FROM segments WHERE end_ms = start_ms",
+                [],
+                |r| r.get(0),
+            )
+            .unwrap();
+        assert_eq!(unknown, 2);
+        // Preserve the existing behavior of unversioned imports.
+        let legacy =
+            parse_import(r#"{"title":"Legacy","transcript":[{"text":"Plain text"}]}"#).unwrap();
+        assert_eq!(legacy[0].segments[0].end_ms, 1000);
     }
 
     #[test]
