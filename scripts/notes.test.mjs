@@ -43,8 +43,11 @@ const fixture = () => JSON.parse(sample);
 
 test("the public example validates and its caption text/times/voices survive VTT round trips", () => {
   const document = parseTranscriptDocument(sample);
-  const imported = importTranscript(vtt.replaceAll("\n", "\r\n"), options);
-  assert.deepEqual(imported.notes[0].transcript, document.notes[0].transcript);
+  const normalized = vtt.replace(/\r\n?/g, "\n");
+  for (const ending of ["\n", "\r\n", "\r"]) {
+    const imported = importTranscript(normalized.replaceAll("\n", ending), options);
+    assert.deepEqual(imported.notes[0].transcript, document.notes[0].transcript);
+  }
   const again = importTranscript(exportTranscript(document, "vtt"), options);
   assert.deepEqual(again.notes[0].transcript, document.notes[0].transcript);
 });
