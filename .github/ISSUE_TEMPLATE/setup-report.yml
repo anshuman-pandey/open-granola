@@ -1,0 +1,56 @@
+name: Voluntary setup and adoption report
+description: Tell us whether a first run worked and what would make you return.
+title: "[Setup report]: "
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This optional report helps improve setup and repeat use. GitHub issues are public.
+        Share synthetic examples only. Do not include meeting content, credentials, email addresses, device identifiers or private server URLs.
+  - type: input
+    id: version
+    attributes:
+      label: App version or commit
+      description: Use a release tag or commit, not a private build path.
+    validations:
+      required: true
+  - type: dropdown
+    id: route
+    attributes:
+      label: What did you try?
+      options:
+        - Transcript CLI only
+        - Desktop with local summaries
+        - Desktop with a connected provider
+        - Browser demo only
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: OS and runtime version
+      description: For example macOS 15 / Apple Silicon, or Linux / Node 24. No device identifier needed.
+  - type: dropdown
+    id: outcome
+    attributes:
+      label: Outcome
+      options:
+        - Completed a useful import or export
+        - Completed a saved recording and summary
+        - Blocked before a useful result
+        - Only explored the demo
+    validations:
+      required: true
+  - type: dropdown
+    id: returned
+    attributes:
+      label: Have you returned to use it?
+      options:
+        - First attempt
+        - Returned on another day
+        - Prefer not to say
+  - type: textarea
+    id: friction
+    attributes:
+      label: What helped or blocked you?
+      description: Optional approximate setup time and the step that needs improvement. Keep examples synthetic.
