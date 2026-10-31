@@ -1,0 +1,38 @@
+{
+  "format": "open-granola.adoption-snapshot",
+  "version": 1,
+  "captured_at": "2026-10-31T21:18:48.902Z",
+  "repository": "anshuman-pandey/open-granola",
+  "discovery": {
+    "stars": 16,
+    "forks": 1
+  },
+  "adoption_proxies": {
+    "published_releases": {
+      "status": "available",
+      "count": 0,
+      "prereleases": 0,
+      "asset_downloads": 0
+    },
+    "non_owner_contributors": {
+      "status": "available",
+      "count": 0
+    }
+  },
+  "verified_adoption": {
+    "independent_first_runs": null,
+    "repeat_use": null
+  },
+  "sources": {
+    "metadata": "https://api.github.com/repos/anshuman-pandey/open-granola",
+    "releases": "https://api.github.com/repos/anshuman-pandey/open-granola/releases",
+    "contributors": "https://api.github.com/repos/anshuman-pandey/open-granola/contributors"
+  },
+  "limitations": [
+    "Stars and forks measure interest, not users or installs.",
+    "Release asset downloads are cumulative events, include prereleases, and are not unique installs or active users. Drafts and CI artifacts are excluded.",
+    "Non-owner contributors are a collaboration proxy, not users; other maintainers may be included and anonymous authors are not counted.",
+    "Verified first runs and repeat use require reviewed voluntary evidence; unknown is null. API failures never become zero.",
+    "No app telemetry, meeting content, GitHub traffic data, or contributor identities are stored."
+  ]
+}

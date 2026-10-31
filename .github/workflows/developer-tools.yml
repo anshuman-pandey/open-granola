@@ -25,4 +25,5 @@ jobs:
           node-version: ${{ matrix.node }}
       # This deliberately exercises the advertised path without npm ci or Rust.
       - run: node --test scripts/notes.test.mjs
+      - run: node --test scripts/adoption-snapshot.test.mjs
       - run: node scripts/notes.mjs validate examples/transcripts/standup.og.json

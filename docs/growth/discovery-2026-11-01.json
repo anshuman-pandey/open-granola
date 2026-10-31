@@ -1,0 +1,223 @@
+{
+  "reviewed_on": "2026-11-01",
+  "review_timezone": "Asia/Kolkata",
+  "method": "Four GitHub repository discovery queries, relevance-ranked and capped at 12 each; candidates are not endorsements or an exhaustive market ranking.",
+  "queries": [
+    {
+      "query": "\"awesome\" \"speech\" in:name,description fork:false archived:false",
+      "per_page": 12,
+      "candidates": [
+        {
+          "repository": "zzw922cn/awesome-speech-recognition-speech-synthesis-papers",
+          "url": "https://github.com/zzw922cn/awesome-speech-recognition-speech-synthesis-papers"
+        },
+        {
+          "repository": "WenzheLiu-Speech/awesome-speech-enhancement",
+          "url": "https://github.com/WenzheLiu-Speech/awesome-speech-enhancement"
+        },
+        {
+          "repository": "nanahou/Awesome-Speech-Enhancement",
+          "url": "https://github.com/nanahou/Awesome-Speech-Enhancement"
+        },
+        {
+          "repository": "ga642381/speech-trident",
+          "url": "https://github.com/ga642381/speech-trident"
+        },
+        {
+          "repository": "sindresorhus/awesome-whisper",
+          "url": "https://github.com/sindresorhus/awesome-whisper"
+        },
+        {
+          "repository": "ishandutta2007/Awesome-Text-to-Speech",
+          "url": "https://github.com/ishandutta2007/Awesome-Text-to-Speech"
+        },
+        {
+          "repository": "AwesomeTTS/awesometts-anki-addon",
+          "url": "https://github.com/AwesomeTTS/awesometts-anki-addon"
+        },
+        {
+          "repository": "rtzr/Awesome-Korean-Speech-Recognition",
+          "url": "https://github.com/rtzr/Awesome-Korean-Speech-Recognition"
+        },
+        {
+          "repository": "alphacep/awesome-russian-speech",
+          "url": "https://github.com/alphacep/awesome-russian-speech"
+        },
+        {
+          "repository": "hzoo/awesome-gametalks",
+          "url": "https://github.com/hzoo/awesome-gametalks"
+        },
+        {
+          "repository": "dreamtheater123/Awesome-SpeechLM-Survey",
+          "url": "https://github.com/dreamtheater123/Awesome-SpeechLM-Survey"
+        },
+        {
+          "repository": "guanpengchn/awesome-pronunciation",
+          "url": "https://github.com/guanpengchn/awesome-pronunciation"
+        }
+      ]
+    },
+    {
+      "query": "\"awesome\" \"local-first\" in:name,description fork:false archived:false",
+      "per_page": 12,
+      "candidates": [
+        {
+          "repository": "alexanderop/awesome-local-first",
+          "url": "https://github.com/alexanderop/awesome-local-first"
+        },
+        {
+          "repository": "schickling/awesome-local-first",
+          "url": "https://github.com/schickling/awesome-local-first"
+        },
+        {
+          "repository": "gdamdam/awesome-decentralized-web",
+          "url": "https://github.com/gdamdam/awesome-decentralized-web"
+        },
+        {
+          "repository": "alantriesagain/awesome-local-first",
+          "url": "https://github.com/alantriesagain/awesome-local-first"
+        },
+        {
+          "repository": "zhongkechen/awesome-local-first",
+          "url": "https://github.com/zhongkechen/awesome-local-first"
+        },
+        {
+          "repository": "ejboy/awesome-efficient-devtools",
+          "url": "https://github.com/ejboy/awesome-efficient-devtools"
+        },
+        {
+          "repository": "ZihangDong/awesome-browser-based-tools",
+          "url": "https://github.com/ZihangDong/awesome-browser-based-tools"
+        },
+        {
+          "repository": "charmfrog/awesome-singlefile-tools",
+          "url": "https://github.com/charmfrog/awesome-singlefile-tools"
+        },
+        {
+          "repository": "foreverseapp/awesome-ai-fiction",
+          "url": "https://github.com/foreverseapp/awesome-ai-fiction"
+        },
+        {
+          "repository": "radical-data/awesome-local-first",
+          "url": "https://github.com/radical-data/awesome-local-first"
+        },
+        {
+          "repository": "robertfeng33/awesome-e-rechnung-deutschland",
+          "url": "https://github.com/robertfeng33/awesome-e-rechnung-deutschland"
+        },
+        {
+          "repository": "Scientia07/awesome-local-ai",
+          "url": "https://github.com/Scientia07/awesome-local-ai"
+        }
+      ]
+    },
+    {
+      "query": "\"awesome\" \"productivity\" in:name,description fork:false archived:false",
+      "per_page": 12,
+      "candidates": [
+        {
+          "repository": "jyguyomarch/awesome-productivity",
+          "url": "https://github.com/jyguyomarch/awesome-productivity"
+        },
+        {
+          "repository": "eastlakeside/awesome-productivity-cn",
+          "url": "https://github.com/eastlakeside/awesome-productivity-cn"
+        },
+        {
+          "repository": "ProductivityDirectory/awesome-productivity-tools",
+          "url": "https://github.com/ProductivityDirectory/awesome-productivity-tools"
+        },
+        {
+          "repository": "devtoolsd/awesome-devtools",
+          "url": "https://github.com/devtoolsd/awesome-devtools"
+        },
+        {
+          "repository": "open-saas-directory/awesome-native-macosx-apps",
+          "url": "https://github.com/open-saas-directory/awesome-native-macosx-apps"
+        },
+        {
+          "repository": "OpenMindClub/awesome-scholarly-productivity",
+          "url": "https://github.com/OpenMindClub/awesome-scholarly-productivity"
+        },
+        {
+          "repository": "taielab/awesome-hacking-lists",
+          "url": "https://github.com/taielab/awesome-hacking-lists"
+        },
+        {
+          "repository": "unpluggedcoder/awesome-rust-tools",
+          "url": "https://github.com/unpluggedcoder/awesome-rust-tools"
+        },
+        {
+          "repository": "karanb192/awesome-claude-skills",
+          "url": "https://github.com/karanb192/awesome-claude-skills"
+        },
+        {
+          "repository": "aliammari1/awesome-ai-tools",
+          "url": "https://github.com/aliammari1/awesome-ai-tools"
+        },
+        {
+          "repository": "super-productivity/awesome-super-productivity",
+          "url": "https://github.com/super-productivity/awesome-super-productivity"
+        },
+        {
+          "repository": "ctrlaltvikas/Awesome-Bash-Aliases",
+          "url": "https://github.com/ctrlaltvikas/Awesome-Bash-Aliases"
+        }
+      ]
+    },
+    {
+      "query": "\"awesome\" \"meeting\" in:name,description fork:false archived:false",
+      "per_page": 12,
+      "candidates": [
+        {
+          "repository": "gcruchon/awesome-kahoot",
+          "url": "https://github.com/gcruchon/awesome-kahoot"
+        },
+        {
+          "repository": "CSLab208/Awesome-Community-Detecion-Weekly-Meetings",
+          "url": "https://github.com/CSLab208/Awesome-Community-Detecion-Weekly-Meetings"
+        },
+        {
+          "repository": "ishandutta2007/Awesome-AI-Meeting-Notes",
+          "url": "https://github.com/ishandutta2007/Awesome-AI-Meeting-Notes"
+        },
+        {
+          "repository": "6missedcalls/awesome-agent-skills",
+          "url": "https://github.com/6missedcalls/awesome-agent-skills"
+        },
+        {
+          "repository": "shivam1317/awesome-goal-tracker",
+          "url": "https://github.com/shivam1317/awesome-goal-tracker"
+        },
+        {
+          "repository": "ishandutta2007/Awesome-Public-Meeting-Management",
+          "url": "https://github.com/ishandutta2007/Awesome-Public-Meeting-Management"
+        },
+        {
+          "repository": "awesome-it-ternopil/scala-meetings",
+          "url": "https://github.com/awesome-it-ternopil/scala-meetings"
+        },
+        {
+          "repository": "yahyaabdurrahman/JU_PDCT_APP",
+          "url": "https://github.com/yahyaabdurrahman/JU_PDCT_APP"
+        },
+        {
+          "repository": "Antim21/AI-Meeting-Summarizer",
+          "url": "https://github.com/Antim21/AI-Meeting-Summarizer"
+        },
+        {
+          "repository": "NEOrose/AwesomeBot",
+          "url": "https://github.com/NEOrose/AwesomeBot"
+        },
+        {
+          "repository": "ppsdatta/AwesomeMeetingsApp",
+          "url": "https://github.com/ppsdatta/AwesomeMeetingsApp"
+        },
+        {
+          "repository": "laratalks/awesome-laratalks",
+          "url": "https://github.com/laratalks/awesome-laratalks"
+        }
+      ]
+    }
+  ]
+}

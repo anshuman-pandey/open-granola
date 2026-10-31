@@ -1,0 +1,114 @@
+{
+  "version": 1,
+  "reviewed_on": "2026-11-01",
+  "review_timezone": "Asia/Kolkata",
+  "authorizations": {
+    "merge_tested_loop_prs": true,
+    "submit_eligible_upstream_prs": true,
+    "project_business_mailbox": null
+  },
+  "submission_policy": {
+    "max_new_upstream_prs_per_rolling_seven_days": 2,
+    "no_duplicate_open_or_rejected_submissions": true,
+    "accepted_listing_requires_upstream_merge": true
+  },
+  "opportunities": [
+    {
+      "repository": "ishandutta2007/Awesome-AI-Meeting-Notes",
+      "kind": "curated_listing",
+      "status": "submitted",
+      "policy": "https://github.com/ishandutta2007/Awesome-AI-Meeting-Notes/blob/main/CONTRIBUTING.md",
+      "policy_checked_on": "2026-11-01",
+      "evidence": "Explicitly accepts factual meeting-tool additions. Current README and issue/PR search contain no OpenGranola duplicate. One entry under Local Transcription Tools, explicitly labeled development preview, matches the delivered source workflow.",
+      "submission_url": "https://github.com/ishandutta2007/Awesome-AI-Meeting-Notes/pull/12",
+      "submitted_at": "2026-10-31T21:25:26Z",
+      "submission_local_date": "2026-11-01",
+      "next_action": "Track the existing PR and address concrete maintainer feedback. Count as accepted only after upstream merge; do not create another suggestion."
+    },
+    {
+      "repository": "joeblau/subvox",
+      "kind": "adjacent_project",
+      "status": "watch_technical_fit",
+      "sources": [
+        "https://github.com/joeblau/subvox",
+        "https://github.com/joeblau/subvox/blob/main/Subvox/Recording/SessionRecorder.swift"
+      ],
+      "checked_on": "2026-11-01",
+      "evidence": "Owner-confirmed reference. Small-vocabulary AirPods motion-to-text prototype. Recorder exports start,end,kind,label,confidence events and motion/audio metadata, not a supported OpenGranola meeting-note integration.",
+      "next_action": "Watch for a real text-export integration need, supported compatible format or maintainer request. Do not insert a promotional dependency or claim compatibility."
+    },
+    {
+      "repository": "pedramnj/awesome-local-ai",
+      "kind": "curated_listing",
+      "status": "validation_required",
+      "policy": "https://github.com/pedramnj/awesome-local-ai/blob/main/CONTRIBUTING.md",
+      "policy_checked_on": "2026-11-01",
+      "evidence": "Requires genuine local operation, active maintenance, installation in under an hour and a concrete distinction from current entries. Source/CLI tests alone do not prove the complete local AI setup.",
+      "next_action": "Complete a reproducible synthetic local-model/desktop setup record, then recheck entries and submit only if all criteria are met."
+    },
+    {
+      "repository": "sindresorhus/awesome-whisper",
+      "kind": "curated_listing",
+      "status": "below_star_threshold",
+      "policy": "https://github.com/sindresorhus/awesome-whisper/blob/main/contributing.md",
+      "policy_checked_on": "2026-11-01",
+      "evidence": "Open-source GitHub suggestions require at least 100 stars and a complete, ready submission. OpenGranola has 16 at the initial snapshot.",
+      "next_action": "Skip until the live star threshold and usable-app readiness criteria are met; never buy or exchange stars to qualify."
+    },
+    {
+      "repository": "tauri-apps/awesome-tauri",
+      "kind": "curated_listing",
+      "status": "applications_closed",
+      "policy": "https://github.com/tauri-apps/awesome-tauri/blob/dev/.github/contributing.md",
+      "policy_checked_on": "2026-11-01",
+      "evidence": "Current policy explicitly stops application submissions. A separate, independently useful engineering resource would need its own eligibility review.",
+      "next_action": "Do not submit the desktop app or relabel it as a plugin."
+    },
+    {
+      "repository": "alexanderop/awesome-local-first",
+      "kind": "curated_listing",
+      "status": "submissions_closed",
+      "policy": "https://github.com/alexanderop/awesome-local-first#-contributing",
+      "policy_checked_on": "2026-11-01",
+      "evidence": "README explicitly closes contributions, PRs and project suggestions, including addition requests in issues.",
+      "next_action": "Skip; do not open an issue as a workaround."
+    },
+    {
+      "repository": "schickling/awesome-local-first",
+      "kind": "curated_listing",
+      "status": "deprioritized_inactive",
+      "checked_on": "2026-11-01",
+      "last_push_observed": "2024-06-10T18:40:42Z",
+      "evidence": "Application list exists, but no recent maintenance or separately verified submission policy was established by this review.",
+      "next_action": "Prioritize maintained, explicitly accepting targets. Reconsider only with new maintenance evidence."
+    },
+    {
+      "repository": "ProductivityDirectory/awesome-productivity-tools",
+      "kind": "curated_listing",
+      "status": "deprioritized_inactive",
+      "checked_on": "2026-11-01",
+      "last_push_observed": "2024-08-13T07:39:53Z",
+      "evidence": "README invites entries, but the observed update history is stale and the directory is broad.",
+      "next_action": "Prefer the actively relevant meeting-tools category and fresh maintained distribution paths."
+    },
+    {
+      "repository": "ollama/ollama",
+      "kind": "provider_integration",
+      "status": "validation_required",
+      "prior_review": "../ADOPTION_STATUS.md",
+      "evidence": "Existing project plan requires an actual local-model summary/parsing and saved-summary retry record. The prior review is dated evidence, not a current rules check.",
+      "next_action": "Validate with synthetic inputs and exact versions; re-read current upstream policy and entries before any submission."
+    }
+  ],
+  "experiments": [
+    {
+      "id": "measurable-first-run-and-distribution-loop",
+      "hypothesis": "Separating interest from validated first-run/return-use evidence and checking target fit will prioritize useful changes and maintained referrals.",
+      "started_local_date": "2026-11-01",
+      "review_not_before": "2026-11-15",
+      "baseline_file": "baseline-2026-11-01.json",
+      "outcome": "not_yet_observed",
+      "causal_growth_claim": false
+    }
+  ]
+}

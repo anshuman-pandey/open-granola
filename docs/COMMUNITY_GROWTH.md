@@ -1,5 +1,7 @@
 # Community contributions and discoverability
 
+The [continuous discovery and adoption loop](growth/LOOP.md) records the current recurring process, aggregate metrics, merge authorization and distribution receipts. The dated research below remains historical evidence and its target-specific gates still apply.
+
 Current implementation, installer validation and named listing gates are recorded in [ADOPTION_STATUS.md](ADOPTION_STATUS.md). The contribution-specific policies below still apply.
 
 Research date: **2026-10-10**. These are proposed contributions and unsent drafts. No upstream issue, pull request, discussion or promotional message has been submitted as part of this work. This plan supplements [LAUNCH_KIT.md](LAUNCH_KIT.md) and the [competitive research](COMPETITIVE_RESEARCH.md); their evidence requirements still apply.
