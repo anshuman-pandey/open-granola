@@ -96,7 +96,7 @@ jobs:
         env:
           OPEN_GRANOLA_BUILD_COMMIT: ${{ github.sha }}
         run: node scripts/package-macos-preview.mjs
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@v7
         with:
           name: open-granola-macos-arm64-preview-${{ github.sha }}
           path: artifacts/macos-preview/
