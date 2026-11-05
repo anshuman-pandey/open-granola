@@ -100,11 +100,6 @@ function Carousel({
     setApi(api)
   }, [api, setApi])
 
-  return () => {
-      api?.off("select", onSelect)
-    }
-  }, [api, onSelect])
-
   return (
     <CarouselContext.Provider
       value={{
