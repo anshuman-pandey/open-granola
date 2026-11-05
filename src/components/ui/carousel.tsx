@@ -56,14 +56,23 @@ function Carousel({
     },
     plugins
   )
-  const [canScrollPrev, setCanScrollPrev] = React.useState(false)
-  const [canScrollNext, setCanScrollNext] = React.useState(false)
-
-  const onSelect = React.useCallback((api: CarouselApi) => {
-    if (!api) return
-    setCanScrollPrev(api.canScrollPrev())
-    setCanScrollNext(api.canScrollNext())
-  }, [])
+  const subscribe = React.useCallback((onChange: () => void) => {
+    if (!api) return () => {}
+    api.on("reInit", onChange)
+    api.on("select", onChange)
+    return () => {
+      api.off("reInit", onChange)
+      api.off("select", onChange)
+    }
+  }, [api])
+  // A primitive snapshot stays stable until the external carousel changes.
+  const scrollState = React.useSyncExternalStore(
+    subscribe,
+    () => (api?.canScrollPrev() ? 1 : 0) | (api?.canScrollNext() ? 2 : 0),
+    () => 0,
+  )
+  const canScrollPrev = (scrollState & 1) !== 0
+  const canScrollNext = (scrollState & 2) !== 0
 
   const scrollPrev = React.useCallback(() => {
     api?.scrollPrev()
@@ -91,13 +100,7 @@ function Carousel({
     setApi(api)
   }, [api, setApi])
 
-  React.useEffect(() => {
-    if (!api) return
-    onSelect(api)
-    api.on("reInit", onSelect)
-    api.on("select", onSelect)
-
-    return () => {
+  return () => {
       api?.off("select", onSelect)
     }
   }, [api, onSelect])
