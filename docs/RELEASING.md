@@ -51,3 +51,13 @@ For a publisher-verified Mac installer, the maintainer needs a **Developer ID Ap
 Configure credentials as repository Actions secrets; never commit or paste them into issues. Follow [Tauri's signing and notarization instructions](https://v2.tauri.app/distribute/sign/macos/). Import the signing identity before building so `scripts/prepare-inference.mjs` signs the helper using its own `app-sandbox` and `inherit` entitlements. The main app uses `src-tauri/entitlements.plist`. Then verify notarization and test on a different Mac before publishing the draft.
 
 The ad-hoc preview job intentionally uses no signing secrets and has read-only repository permissions. A Developer ID release needs its own controlled signing environment; adding secrets alone does not change this preview job into a notarized build.
+
+## Verify the manual Whisper download
+
+With Node 22.12+ and no npm installation, check the downloaded file before copying it into the app's models directory:
+
+```sh
+node scripts/verify-whisper-model.mjs /path/to/ggml-large-v3-turbo.bin
+```
+
+The read-only helper checks the exact size and SHA-256 of [this pinned upstream artifact](https://huggingface.co/ggerganov/whisper.cpp/blob/5359861c739e955e79d9a303bcbc70fb988958b1/ggml-large-v3-turbo.bin), identified from publisher LFS metadata on 2026-11-04 (MIT model repository). It reads in bounded chunks, makes no network requests, and never installs, changes or executes the file. After success, follow the manual copy and filename instructions above. A different quantization or compatible model revision will fail this particular identity check; do not bypass a failure by renaming the file. Verification does not establish transcription quality, hardware compatibility, or an independent first run. Exit codes: 0 verified/help, 1 file or verification failure, 2 invalid arguments. Tests use synthetic bytes, not a downloaded model.

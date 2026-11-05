@@ -109,6 +109,16 @@
       "baseline_file": "baseline-2026-11-01.json",
       "outcome": "not_yet_observed",
       "causal_growth_claim": false
+    },
+    {
+      "id": "offline-whisper-artifact-verification",
+      "started_local_date": "2026-11-05",
+      "review_not_before": "2026-11-19",
+      "hypothesis": "An offline size/checksum command makes the existing manual model setup easier to validate before launching native inference.",
+      "outcome": "pending_ci",
+      "evidence": "RELEASING manual checksum gate; upstream ggerganov/whisper.cpp LFS metadata revision 5359861c739e955e79d9a303bcbc70fb988958b1, checked 2026-11-04.",
+      "limitations": "Synthetic tests only; no real model download, transcription or independent setup report.",
+      "causal_growth_claim": false
     }
   ]
 }
