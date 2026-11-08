@@ -16,14 +16,17 @@
     {
       "repository": "ishandutta2007/Awesome-AI-Meeting-Notes",
       "kind": "curated_listing",
-      "status": "submitted",
+      "status": "updated_awaiting_upstream_reopen",
       "policy": "https://github.com/ishandutta2007/Awesome-AI-Meeting-Notes/blob/main/CONTRIBUTING.md",
-      "policy_checked_on": "2026-11-01",
+      "policy_checked_on": "2026-11-08",
       "evidence": "Explicitly accepts factual meeting-tool additions. Current README and issue/PR search contain no OpenGranola duplicate. One entry under Local Transcription Tools, explicitly labeled development preview, matches the delivered source workflow.",
       "submission_url": "https://github.com/ishandutta2007/Awesome-AI-Meeting-Notes/pull/12",
       "submitted_at": "2026-10-31T21:25:26Z",
       "submission_local_date": "2026-11-01",
-      "next_action": "Track the existing PR and address concrete maintainer feedback. Count as accepted only after upstream merge; do not create another suggestion."
+      "next_action": "Existing fork branch merged latest upstream main and entry adapted to current list format. Reopen API was denied; replied on existing PR asking maintainer to reopen. Do not create a duplicate submission.",
+      "maintainer_feedback": "Approved then closed due to conflicts on 2026-11-07; maintainer requested updating against latest branch.",
+      "updated_head": "4dc2d9e",
+      "feedback_url": "https://github.com/ishandutta2007/Awesome-AI-Meeting-Notes/pull/12#issuecomment-6702042410"
     },
     {
       "repository": "joeblau/subvox",
