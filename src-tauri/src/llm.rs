@@ -46,9 +46,15 @@ const ENHANCE_SYSTEM: &str = "\
 You are Open Granola, a meeting-notes engine. \
 Given a timestamped transcript, produce STRICT JSON with keys: title, summary, \
 chapters[{title,timestamp,body}], decisions[], action_items[{text,owner,due}]. \
+Types: title and summary are strings; chapters is an array of objects with string title, timestamp and body; \
+decisions is an array of strings, NEVER objects; action_items is an array of objects with string text and nullable string owner and due. \
+Use empty arrays when there are no entries. \
 Rules: speaker labels may be unknown; never infer a person from a numeric label. Prefer concrete facts and exact numbers; never invent content; keep \
 chapter bodies under 45 words; timestamps as mm:ss; action items must have an \
-owner if any speaker volunteered or was assigned. Output JSON only.";
+owner if any speaker volunteered or was assigned. Include only explicit commitments or assignments as action items; \
+an unresolved question or undecided budget is not an assignment. Never invent owners or deadlines such as Project Team or ASAP. \
+Use null when an owner or deadline is unstated. Preserve deadline wording from the transcript. \
+Keep explicitly unresolved questions and undecided matters in the summary or chapters, without inventing answers or assignments. Output JSON only.";
 
 const COMMITMENTS_SYSTEM: &str = "\
 You are Open Granola's commitment extractor. From a transcript with possibly unidentified speakers, find every \
@@ -253,6 +259,32 @@ mod tests {
         );
         assert_eq!(extract_json("[not json] then [1,2]").unwrap(), "[1,2]");
     }
+    #[test]
+    fn enhancement_rejects_object_decisions_and_accepts_nullable_assignments() {
+        struct FixedCompletion(&'static str);
+        impl Completion for FixedCompletion {
+            fn complete(&self, _: &str, _: &str, _: usize) -> Result<String> {
+                Ok(self.0.into())
+            }
+        }
+        // Reduced synthetic live-model failure: syntactically valid JSON is not
+        // enough. Decisions must match the schema consumed by storage and UI.
+        let invalid = FixedCompletion(
+            r#"{"title":"Test","summary":"Budget undecided","chapters":[],"decisions":[{"decision":"Blue cover"}],"action_items":[]}"#,
+        );
+        assert!(NoteModel::new(&invalid).enhance(&[], "", "auto").is_err());
+        let valid = FixedCompletion(
+            r#"```json
+{"title":"Test","summary":"Budget undecided","chapters":[],"decisions":["Blue cover"],"action_items":[{"text":"Send draft","owner":"Asha","due":null}]}
+```"#,
+        );
+        let note = NoteModel::new(&valid).enhance(&[], "", "auto").unwrap();
+        assert_eq!(note.decisions, vec!["Blue cover"]);
+        assert_eq!(note.action_items[0].owner.as_deref(), Some("Asha"));
+        assert_eq!(note.action_items[0].due, None);
+        assert_eq!(note.summary, "Budget undecided");
+    }
+
     #[test]
     fn malformed_output_never_panics() {
         for raw in ["", "}{", "[", "hello", "{broken}"] {
