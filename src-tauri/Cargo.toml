@@ -43,7 +43,7 @@ whisper-rs = { version = "0.16", default-features = false }   # whisper.cpp bind
 # Inference reads local files; the app does not download models.
 
 # --- local storage ---
-rusqlite = { version = "0.40.2", features = ["bundled"] }
+rusqlite = { version = "0.41.1", features = ["bundled"] }
 
 # --- misc ---
 uuid = { version = "1", features = ["v4"] }
