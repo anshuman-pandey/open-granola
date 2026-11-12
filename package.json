@@ -64,7 +64,7 @@
     "react-day-picker": "^9.13.0",
     "react-dom": "^19.3.1",
     "react-hook-form": "^7.91.0",
-    "react-resizable-panels": "^4.16.1",
+    "react-resizable-panels": "^4.21.0",
     "recharts": "^2.15.4",
     "sonner": "^2.0.8",
     "tailwind-merge": "^3.7.0",
@@ -73,7 +73,7 @@
   },
   "devDependencies": {
     "@eslint/js": "^9.39.1",
-    "@tailwindcss/vite": "^4.3.3",
+    "@tailwindcss/vite": "^4.3.5",
     "@tauri-apps/cli": "^2.12.4",
     "@testing-library/jest-dom": "^6.9.1",
     "@testing-library/react": "^16.3.0",
