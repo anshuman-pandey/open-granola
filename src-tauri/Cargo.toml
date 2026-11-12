@@ -34,7 +34,7 @@ jsonwebtoken = { version = "10", features = ["aws_lc_rs"] }
 webbrowser = "1"
 
 # --- microphone capture ---
-cpal = "0.15"
+cpal = "0.18"
 rubato = "0.16"          # resampling to 16 kHz mono for whisper
 ringbuf = "0.5.2"
 
