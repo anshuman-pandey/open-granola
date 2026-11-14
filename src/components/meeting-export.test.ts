@@ -87,7 +87,7 @@ describe("Obsidian export", () => {
     }
   });
 
-  it.each(["hi", "es", "ja", "zh-CN", "zh-TW"] as const)(
+  it.each(["de", "es", "ja", "zh-CN", "zh-TW"] as const)(
     "keeps property names stable and localizes the note in %s",
     (locale) => {
       const meeting = MEETINGS[0];

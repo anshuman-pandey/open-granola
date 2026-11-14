@@ -20,7 +20,7 @@
 </p>
 
 <p align="center">
-  <a href="../../README.md">English</a> · <a href="README.hi.md">हिन्दी</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.zh-CN.md">简体中文</a> · 繁體中文 · <a href="../I18N.md">語言支援</a>
+  <a href="../../README.md">English</a> · <a href="README.de.md">Deutsch</a> · <a href="README.es.md">Español</a> · <a href="README.ja.md">日本語</a> · <a href="README.zh-CN.md">简体中文</a> · 繁體中文 · <a href="../I18N.md">語言支援</a>
 </p>
 
 **開發預覽版。** Open Granola 會錄製麥克風音訊，使用本機 Whisper 轉錄，再透過本機模型或您連接的供應商，將逐字稿整理成筆記。您的會議庫儲存在本機 SQLite 資料庫。使用雲端摘要時，逐字稿文字會傳送給所選的供應商。

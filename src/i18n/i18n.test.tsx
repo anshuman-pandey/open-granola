@@ -19,7 +19,7 @@ function LanguageExample() {
   const { locale, setLocale, t, plural, formatDate, formatNumber } = useI18n();
   return (
     <>
-      <button onClick={() => setLocale("hi")}>Hindi</button>
+      <button onClick={() => setLocale("de")}>Deutsch</button>
       <button onClick={() => setLocale("es")}>Spanish</button>
       <button onClick={() => setLocale("ja")}>日本語</button>
       <button onClick={() => setLocale("zh-CN")}>简体中文</button>
@@ -43,6 +43,16 @@ beforeEach(() => {
 });
 
 describe("workspace language", () => {
+  it("offers exactly the requested six locales and retires saved Hindi preferences", () => {
+    expect(interfaceLanguages.map(({ locale }) => locale)).toEqual([
+      "en", "de", "es", "ja", "zh-CN", "zh-TW",
+    ]);
+    window.localStorage.setItem("open-granola-language", "hi");
+    const { result } = renderHook(useI18n, { wrapper: LanguageProvider });
+    expect(result.current.locale).toBe("en");
+    expect(window.localStorage.getItem("open-granola-language")).toBe("en");
+  });
+
   it("provides English safely outside the provider and preserves unknown content", () => {
     const { result } = renderHook(useI18n);
     expect(result.current.locale).toBe("en");
@@ -79,15 +89,15 @@ describe("workspace language", () => {
     expect(window.localStorage.getItem("open-granola-language")).toBe("es");
   });
 
-  it("restores Hindi and responds to another window's language preference", () => {
-    window.localStorage.setItem("open-granola-language", "hi");
+  it("restores German and responds to another window's language preference", () => {
+    window.localStorage.setItem("open-granola-language", "de");
     render(
       <LanguageProvider>
         <LanguageExample />
       </LanguageProvider>,
     );
-    expect(screen.getByTestId("label")).toHaveTextContent("मीटिंग लाइब्रेरी");
-    expect(document.documentElement.lang).toBe("hi");
+    expect(screen.getByTestId("label")).toHaveTextContent("Meetingbibliothek");
+    expect(document.documentElement.lang).toBe("de");
     act(() =>
       window.dispatchEvent(
         new StorageEvent("storage", {
@@ -119,14 +129,14 @@ describe("workspace language", () => {
         <LanguageExample />
       </LanguageProvider>,
     );
-    fireEvent.click(screen.getByRole("button", { name: "Hindi" }));
-    expect(screen.getByTestId("label")).toHaveTextContent("मीटिंग लाइब्रेरी");
-    expect(document.documentElement.lang).toBe("hi");
+    fireEvent.click(screen.getByRole("button", { name: "Deutsch" }));
+    expect(screen.getByTestId("label")).toHaveTextContent("Meetingbibliothek");
+    expect(document.documentElement.lang).toBe("de");
   });
 
   it.each(
     interfaceLanguages.filter(({ locale }) =>
-      ["ja", "zh-CN", "zh-TW"].includes(locale),
+      ["de", "ja", "zh-CN", "zh-TW"].includes(locale),
     ),
   )(
     "switches, restores and synchronizes $locale with locale-aware formatting",
@@ -194,7 +204,7 @@ describe("workspace language", () => {
         .sort();
     for (const catalog of [workspaceMessages, settingsMessages]) {
       for (const [source, translated] of Object.entries(catalog)) {
-        for (const locale of ["hi", "es"] as const) {
+        for (const locale of ["es"] as const) {
           expect(translated[locale].trim(), `${source} (${locale})`).not.toBe(
             "",
           );

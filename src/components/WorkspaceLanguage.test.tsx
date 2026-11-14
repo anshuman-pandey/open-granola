@@ -101,18 +101,18 @@ describe("translated workspace", () => {
     expect(onAsk).toHaveBeenCalledWith("¿Qué decidimos?");
   });
 
-  it("translates Hindi transcript controls without translating the transcript", () => {
-    window.localStorage.setItem("open-granola-language", "hi");
+  it("translates German transcript controls without translating the transcript", () => {
+    window.localStorage.setItem("open-granola-language", "de");
     render(
       <LanguageProvider>
         <NoteView meeting={meeting} onToggleAction={vi.fn()} />
       </LanguageProvider>,
     );
-    fireEvent.click(screen.getByRole("tab", { name: /ट्रांसक्रिप्ट/ }));
+    fireEvent.click(screen.getByRole("tab", { name: /Transkript/ }));
     expect(
-      screen.getByRole("textbox", { name: "इस ट्रांसक्रिप्ट में खोजें" }),
+      screen.getByRole("textbox", { name: "Dieses Transkript durchsuchen" }),
     ).toBeInTheDocument();
-    expect(screen.getByText("अज्ञात वक्ता")).toBeInTheDocument();
+    expect(screen.getByText("Unbekannte sprechende Person")).toBeInTheDocument();
     expect(screen.getByText(meeting.transcript[0].text)).toBeInTheDocument();
   });
 
