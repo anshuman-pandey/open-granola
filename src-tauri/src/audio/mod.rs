@@ -70,7 +70,9 @@ impl CaptureSession {
             let mut freshness = InputFreshness::new();
             loop {
                 let stopping = !matches!(stopped.recv_timeout(Duration::from_millis(100)), Err(mpsc::RecvTimeoutError::Timeout));
-                let device_error = error.lock().take()
+                // Release the callback error mutex before querying Core Audio.
+                let callback_error = error.lock().take();
+                let device_error = callback_error
                     .or_else(|| system.as_ref().and_then(|capture| capture.check().err()).map(|e| e.to_string()))
                     .or_else(|| freshness.check(frames.load(Ordering::Relaxed), Instant::now()).err().map(|e| e.to_string()));
                 let overflow = dropped.swap(0, Ordering::Relaxed);
