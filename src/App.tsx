@@ -1,6 +1,7 @@
 import { useI18n, type TranslationValues } from "./i18n";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { AlertCircle, LoaderCircle, X } from "lucide-react";
+import { CaptureSourceDialog } from "./components/CaptureSourceDialog";
 import { CaptureBar } from "./components/CaptureBar";
 import { CommandPalette } from "./components/CommandPalette";
 import { HomeView } from "./components/HomeView";
@@ -40,6 +41,7 @@ export default function App() {
   const libraryGeneration = useRef(0);
   const [dark, setDark] = useState(initialTheme);
   const [view, setView] = useState<View>({ kind: "home" });
+  const [captureSourceOpen, setCaptureSourceOpen] = useState(false);
   const [paletteOpen, setPaletteOpen] = useState(false);
   const [assistant, setAssistant] = useState<LibraryQuestion | null>(null);
   const assistantRequest = useRef(0);
@@ -326,7 +328,7 @@ export default function App() {
         view={view}
         onNavigate={setView}
         onOpenSearch={() => setPaletteOpen(true)}
-        onRecord={live.start}
+        onRecord={() => backend.mode === "demo" ? demo.start() : setCaptureSourceOpen(true)}
         recording={live.active}
         onStop={live.stop}
         busy={busy}
@@ -434,7 +436,7 @@ export default function App() {
             actionItems={actionItems}
             brief={brief}
             onOpenMeeting={openMeeting}
-            onRecord={live.start}
+            onRecord={() => backend.mode === "demo" ? demo.start() : setCaptureSourceOpen(true)}
             onAsk={(question) => void askLibrary(question)}
             onSearch={() => setPaletteOpen(true)}
             busy={busy || loading}
@@ -519,11 +521,18 @@ export default function App() {
       </main>
       {live.active && (
         <CaptureBar
+          systemAudio={backend.mode === "tauri" && tauri.systemAudio}
           elapsed={live.elapsed}
           lines={live.lines}
           suggestions={live.suggestions}
           onStop={live.stop}
         />
+      )}
+      {captureSourceOpen && (
+        <CaptureSourceDialog onClose={() => setCaptureSourceOpen(false)} onStart={(systemAudio) => {
+          setCaptureSourceOpen(false);
+          void tauri.start(systemAudio);
+        }} />
       )}
       {paletteOpen && (
         <CommandPalette

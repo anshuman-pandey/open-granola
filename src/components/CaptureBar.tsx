@@ -11,6 +11,7 @@ interface Props {
   suggestions: LiveSuggestion[];
   onStop: () => void;
   busy?: boolean;
+  systemAudio?: boolean;
 }
 
 export function CaptureBar({
@@ -19,6 +20,7 @@ export function CaptureBar({
   suggestions,
   onStop,
   busy,
+  systemAudio = false,
 }: Props) {
   const { t } = useI18n();
   const demo = getBackend().mode === "demo";
@@ -68,12 +70,12 @@ export function CaptureBar({
                 ? t("Demo · no audio recorded")
                 : busy
                   ? t("Keeping your transcript on this device")
-                  : t("Microphone · transcribing on this device")}
+                  : systemAudio ? t("Microphone + system audio") : t("Microphone · transcribing on this device")}
             </p>
           </div>
           <span className="hidden shrink-0 items-center gap-1.5 rounded-full border border-border/80 bg-secondary/60 px-2.5 py-1 text-[9px] font-medium text-muted-foreground md:flex">
             <Mic size={11} aria-hidden="true" />
-            {demo ? t("Simulated session") : t("Microphone only")}
+            {demo ? t("Simulated session") : systemAudio ? t("Microphone + system audio") : t("Microphone only")}
           </span>
           <button
             disabled={busy}
@@ -108,7 +110,7 @@ export function CaptureBar({
               aria-label={
                 demo
                   ? t("Sample conversation transcript")
-                  : t("Live microphone transcript")
+                  : systemAudio ? t("Live transcript") : t("Live microphone transcript")
               }
               tabIndex={0}
               onScroll={(event) => {
@@ -134,7 +136,7 @@ export function CaptureBar({
                 >
                   <div className="flex shrink-0 items-baseline gap-2 sm:w-[108px] sm:flex-col sm:gap-0.5">
                     <span className="text-[10px] font-semibold leading-relaxed text-primary">
-                      {line.speaker}
+                      {t(line.speaker)}
                     </span>
                     {line.startMs !== undefined && (
                       <span className="font-mono2 text-[9px] text-muted-foreground">

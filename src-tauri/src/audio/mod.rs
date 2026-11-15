@@ -1,5 +1,5 @@
-//! Microphone capture. Streams stay on their owner thread; audio stays in RAM.
-//! System loopback and speaker identification are not implemented yet.
+//! Microphone or macOS microphone + system audio. Audio stays in RAM.
+//! The aggregate device synchronizes sources; speaker identification is not provided.
 mod loopback;
 
 use crate::transcribe::{Segment, WhisperEngine};
@@ -12,7 +12,7 @@ use std::path::PathBuf;
 use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::{mpsc, Arc};
 use std::thread::JoinHandle;
-use std::time::Duration;
+use std::time::{Duration, Instant};
 use tauri::{AppHandle, Emitter};
 
 pub const WHISPER_RATE: usize = 16_000;
@@ -31,6 +31,7 @@ pub struct CapturedMeeting {
 pub struct CaptureSession {
     stop: mpsc::Sender<()>,
     worker: Option<JoinHandle<CapturedMeeting>>,
+    pub system_audio: bool,
 }
 
 impl CaptureSession {
@@ -39,10 +40,11 @@ impl CaptureSession {
         model: PathBuf,
         title: Option<String>,
         language: String,
+        system_audio: bool,
     ) -> Result<Self> {
         let (stop, stopped) = mpsc::channel();
         let (ready, startup) = mpsc::sync_channel(1);
-        let worker = std::thread::Builder::new().name("microphone-capture".into()).spawn(move || {
+        let worker = std::thread::Builder::new().name("audio-capture".into()).spawn(move || {
             let mut result = CapturedMeeting {
                 transcript: Vec::new(), started_at: chrono::Utc::now().to_rfc3339(),
                 duration_s: 0, title,
@@ -51,11 +53,13 @@ impl CaptureSession {
                 let engine = WhisperEngine::load(&model, &language)?;
                 let dropped = Arc::new(AtomicUsize::new(0));
                 let error = Arc::new(Mutex::new(None));
-                let (stream, consumer, resampler) = microphone(dropped.clone(), error.clone())?;
-                stream.play().context("could not start microphone")?;
-                Ok((engine, stream, consumer, resampler, dropped, error))
+                let frames = Arc::new(AtomicUsize::new(0));
+                let system = if system_audio { Some(loopback::SystemAudio::open()?) } else { None };
+                let (stream, consumer, resampler) = microphone(dropped.clone(), error.clone(), frames.clone(), system.as_ref())?;
+                stream.play().context("could not start audio capture")?;
+                Ok((engine, system, stream, consumer, resampler, dropped, error, frames))
             })();
-            let (mut engine, stream, mut consumer, mut resampler, dropped, error) = match capture {
+            let (mut engine, system, stream, mut consumer, mut resampler, dropped, error, frames) = match capture {
                 Ok(c) => { let _ = ready.send(Ok(())); c }
                 Err(e) => { let _ = ready.send(Err(format!("{e:#}"))); return result; }
             };
@@ -63,9 +67,14 @@ impl CaptureSession {
             let mut pending = Vec::with_capacity(WINDOW_SAMPLES * 2);
             let mut offset = 0u64;
             let mut stream = Some(stream);
+            let mut freshness = InputFreshness::new();
             loop {
                 let stopping = !matches!(stopped.recv_timeout(Duration::from_millis(100)), Err(mpsc::RecvTimeoutError::Timeout));
-                let device_error = error.lock().take();
+                // Release the callback error mutex before querying Core Audio.
+                let callback_error = error.lock().take();
+                let device_error = callback_error
+                    .or_else(|| system.as_ref().and_then(|capture| capture.check().err()).map(|e| e.to_string()))
+                    .or_else(|| freshness.check(frames.load(Ordering::Relaxed), Instant::now()).err().map(|e| e.to_string()));
                 let overflow = dropped.swap(0, Ordering::Relaxed);
                 if stopping || device_error.is_some() || overflow > 0 {
                     // Stop callbacks before draining. The final partial window is
@@ -91,7 +100,7 @@ impl CaptureSession {
                     }
                     offset += size as u64 * 1000 / WHISPER_RATE as u64;
                 }
-                if let Some(e) = device_error { let _ = app.emit("capture-error", format!("Microphone disconnected: {e}. Stop to save the recovered transcript.")); }
+                if let Some(e) = device_error { let _ = app.emit("capture-error", format!("Audio capture stopped: {e}. Stop to save the recovered transcript.")); }
                 if overflow > 0 { let _ = app.emit("capture-error", "Capture stopped because transcription could not keep up. Stop to save the recovered transcript."); }
                 if final_window { break; }
             }
@@ -105,6 +114,7 @@ impl CaptureSession {
             Ok(()) => Ok(Self {
                 stop,
                 worker: Some(worker),
+                system_audio,
             }),
             Err(e) => {
                 let _ = worker.join();
@@ -132,29 +142,68 @@ impl Drop for CaptureSession {
 fn microphone(
     dropped: Arc<AtomicUsize>,
     error: Arc<Mutex<Option<String>>>,
+    frames: Arc<AtomicUsize>,
+    system: Option<&loopback::SystemAudio>,
 ) -> Result<(cpal::Stream, ringbuf::HeapCons<f32>, AudioResampler)> {
-    let mic = cpal::default_host()
-        .default_input_device()
-        .context("No microphone found. Connect an input device and check microphone permission.")?;
-    let config = mic
-        .default_input_config()
-        .context("could not read microphone configuration")?;
+    let host = cpal::default_host();
+    let mic = if let Some(system) = system {
+        host.input_devices()?.find(|device| device.name().ok().as_deref() == Some(&system.device_name))
+            .context("The private system-audio device is unavailable. No microphone-only fallback was started.")?
+    } else {
+        host.default_input_device().context(
+            "No microphone found. Connect an input device and check microphone permission.",
+        )?
+    };
+    let config = if system.is_some() {
+        let microphone = host
+            .default_input_device()
+            .context("Microphone disappeared during system-audio startup")?;
+        let rate = microphone.default_input_config()?.sample_rate();
+        let channels = microphone
+            .supported_input_configs()?
+            .next()
+            .context("Microphone has no supported input layout")?
+            .channels();
+        // Core Audio's legacy default stream format can expose only the first
+        // stream of an aggregate. Enumerated configs sum all input buffers.
+        combined_config(mic.supported_input_configs()?, channels, rate)?
+    } else {
+        mic.default_input_config()
+            .context("could not read microphone configuration")?
+    };
+    if config.channels() == 0 {
+        bail!("The capture device has no input channels.");
+    }
     let rate = config.sample_rate().0 as usize;
     let resampler = AudioResampler::new(rate)?;
     let (producer, consumer) = HeapRb::<f32>::new(rate * 60).split();
     let stream = match config.sample_format() {
         cpal::SampleFormat::F32 => {
-            build_stream::<f32>(&mic, config.into(), producer, dropped, error)?
+            build_stream::<f32>(&mic, config.into(), producer, dropped, error, frames)?
         }
         cpal::SampleFormat::I16 => {
-            build_stream::<i16>(&mic, config.into(), producer, dropped, error)?
+            build_stream::<i16>(&mic, config.into(), producer, dropped, error, frames)?
         }
         cpal::SampleFormat::U16 => {
-            build_stream::<u16>(&mic, config.into(), producer, dropped, error)?
+            build_stream::<u16>(&mic, config.into(), producer, dropped, error, frames)?
         }
         other => bail!("Unsupported microphone sample format: {other:?}"),
     };
     Ok((stream, consumer, resampler))
+}
+
+fn combined_config(
+    mut ranges: impl Iterator<Item = cpal::SupportedStreamConfigRange>,
+    microphone_channels: u16,
+    rate: cpal::SampleRate,
+) -> Result<cpal::SupportedStreamConfig> {
+    let channels = microphone_channels
+        .checked_add(1)
+        .context("Too many input channels")?;
+    let range = ranges.find(|range| {
+        range.channels() == channels && range.min_sample_rate() <= rate && rate <= range.max_sample_rate()
+    }).context("The private capture device does not expose the expected microphone and mono system-audio channels at the microphone rate. No microphone-only fallback was started.")?;
+    Ok(range.with_sample_rate(rate))
 }
 
 fn build_stream<T>(
@@ -163,6 +212,7 @@ fn build_stream<T>(
     mut producer: ringbuf::HeapProd<f32>,
     dropped: Arc<AtomicUsize>,
     error: Arc<Mutex<Option<String>>>,
+    frames: Arc<AtomicUsize>,
 ) -> Result<cpal::Stream>
 where
     T: cpal::SizedSample,
@@ -174,6 +224,7 @@ where
     Ok(device.build_input_stream(
         &config,
         move |data: &[T], _| {
+            frames.fetch_add(data.len() / channels, Ordering::Relaxed);
             for frame in data.chunks_exact(channels) {
                 let sample = frame
                     .iter()
@@ -259,11 +310,69 @@ impl AudioResampler {
     }
 }
 
+/// Callback arrival, not amplitude: legitimate silence must not cause failure.
+struct InputFreshness {
+    last_frames: usize,
+    last_seen: Instant,
+}
+impl InputFreshness {
+    fn new() -> Self {
+        Self {
+            last_frames: 0,
+            last_seen: Instant::now(),
+        }
+    }
+    fn check(&mut self, frames: usize, now: Instant) -> Result<()> {
+        if frames != self.last_frames {
+            self.last_frames = frames;
+            self.last_seen = now;
+        }
+        if now.duration_since(self.last_seen) > Duration::from_secs(5) {
+            bail!("No audio callbacks received for five seconds. Check recording permissions and devices, then start again.");
+        }
+        Ok(())
+    }
+}
+
 pub const SYSTEM_AUDIO_SUPPORTED: bool = loopback::SUPPORTED;
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn aggregate_uses_complete_layout_and_rejects_partial_or_wrong_rate() {
+        let range = |channels| {
+            cpal::SupportedStreamConfigRange::new(
+                channels,
+                cpal::SampleRate(44100),
+                cpal::SampleRate(48000),
+                cpal::SupportedBufferSize::Unknown,
+                cpal::SampleFormat::F32,
+            )
+        };
+        let selected = combined_config(
+            vec![range(2), range(3)].into_iter(),
+            2,
+            cpal::SampleRate(48000),
+        )
+        .unwrap();
+        assert_eq!(selected.channels(), 3);
+        assert_eq!(selected.sample_rate().0, 48000);
+        assert!(combined_config(vec![range(2)].into_iter(), 2, cpal::SampleRate(48000)).is_err());
+        assert!(combined_config(vec![range(3)].into_iter(), 2, cpal::SampleRate(96000)).is_err());
+    }
+    #[test]
+    fn callback_watchdog_accepts_silence_but_rejects_stalled_capture() {
+        let mut watch = InputFreshness::new();
+        let start = watch.last_seen;
+        assert!(watch.check(100, start + Duration::from_secs(4)).is_ok());
+        assert!(watch.check(200, start + Duration::from_secs(8)).is_ok());
+        assert!(watch.check(200, start + Duration::from_secs(14)).is_err());
+        let mut empty = InputFreshness::new();
+        assert!(empty
+            .check(0, empty.last_seen + Duration::from_secs(6))
+            .is_err());
+    }
     #[test]
     fn resampler_preserves_short_tail_and_sample_count() {
         for rate in [16000, 44100, 48000] {

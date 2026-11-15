@@ -19,6 +19,7 @@ pub async fn start_capture(
     app: AppHandle,
     state: State<'_, Arc<AppState>>,
     meeting_hint: Option<String>,
+    system_audio: Option<bool>,
 ) -> Result<(), String> {
     let _gate = state.capture_gate.lock().await;
     if state.session.lock().is_some() || state.pending_capture.lock().is_some() {
@@ -32,7 +33,13 @@ pub async fn start_capture(
         .map_err(|e| format!("{e:#}"))?
         .transcription_language;
     let session = tauri::async_runtime::spawn_blocking(move || {
-        CaptureSession::begin(app, model, meeting_hint, language)
+        CaptureSession::begin(
+            app,
+            model,
+            meeting_hint,
+            language,
+            system_audio.unwrap_or(false),
+        )
     })
     .await
     .map_err(|e| e.to_string())?
@@ -666,11 +673,19 @@ pub async fn model_status(state: State<'_, Arc<AppState>>) -> Result<serde_json:
             .metadata()
             .is_ok_and(|m| m.is_file() && m.len() > 0)
     };
+    let (recording, system_audio_active) = {
+        let session = state.session.lock();
+        (
+            session.is_some(),
+            session.as_ref().is_some_and(|s| s.system_audio),
+        )
+    };
     Ok(serde_json::json!({
         "whisper": has("whisper-large-v3-turbo.bin"), "llm": has("qwen3-4b-q4.gguf"), "embed": false,
         "model_directory": dir, "airlock": state.airlock, "retention_days": retention,
+        "system_audio_active": system_audio_active,
         "capabilities": { "system_audio": crate::audio::SYSTEM_AUDIO_SUPPORTED, "diarization": false, "calendar": false, "semantic_search": false },
-        "recording": state.session.lock().is_some(),
+        "recording": recording,
         "pending_capture": state.pending_capture.lock().is_some(),
     }))
 }

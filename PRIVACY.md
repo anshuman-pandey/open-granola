@@ -61,3 +61,7 @@ This removes data from the live application database. It does not guarantee fore
 ## Review and reporting
 
 The source implements no telemetry or Open Granola cloud-sync service. This is not a compliance certification or an independent security audit. [SECURITY.md](SECURITY.md) describes implemented controls, limits and vulnerability reporting.
+
+## Optional macOS system audio
+
+On macOS 14.4+, each recording starts with microphone-only selected. Explicitly opting into microphone + system audio captures other apps, including calls, media and notification sounds; it is not restricted to the meeting app. Obtain participant consent and use headphones. The app excludes its own process from the tap, uses a private aggregate device, and keeps raw samples in bounded memory buffers rather than audio files. Local transcription and existing summary-provider consent/settings still apply. Device changes and callback loss stop capture with a visible error; there is no silent microphone-only fallback. Code/mock API tests do not establish real permission, call or device behavior.

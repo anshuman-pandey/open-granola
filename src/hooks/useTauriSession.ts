@@ -18,6 +18,8 @@ type Phase =
 export function useTauriSession(
   onFinish: (meetingId: string) => Promise<void> | void,
 ) {
+  const [systemAudio, setSystemAudio] = useState(false);
+  const systemAudioRef = useRef(false);
   const [phase, setPhase] = useState<Phase>("idle");
   const [elapsed, setElapsed] = useState(0);
   const [lines, setLines] = useState<LiveLine[]>([]);
@@ -38,7 +40,7 @@ export function useTauriSession(
       const id = `seg-${segment.start_ms}`;
       const line: LiveLine = {
         id,
-        speaker: segment.speaker === 0 ? "Microphone" : `Speaker ${segment.speaker}`,
+        speaker: segment.speaker === 0 ? (systemAudioRef.current ? "Microphone + system audio" : "Microphone") : `Speaker ${segment.speaker}`,
         color:
           SPEAKER_COLORS[Math.abs(segment.speaker) % SPEAKER_COLORS.length],
         text: segment.text,
@@ -61,11 +63,13 @@ export function useTauriSession(
     );
   }, [backend]);
 
-  const start = useCallback(async () => {
+  const start = useCallback(async (includeSystemAudio = false) => {
     // The ref protects against double clicks before React renders the disabled button.
     if (phaseRef.current !== "idle") return;
     phaseRef.current = "starting";
     setPhase("starting");
+    systemAudioRef.current = includeSystemAudio;
+    setSystemAudio(includeSystemAudio);
     setError(null);
     setLines([]);
     setElapsed(0);
@@ -75,7 +79,7 @@ export function useTauriSession(
         cleanup();
         return;
       }
-      await backend.startCapture();
+      await backend.startCapture(undefined, includeSystemAudio);
       if (!mounted.current) {
         await backend.cancelCapture();
         cleanup();
@@ -159,6 +163,8 @@ export function useTauriSession(
             "An unsaved recording is waiting in memory. Retry saving or discard it.",
           );
         } else if (status.recording === true) {
+          systemAudioRef.current = status.system_audio_active === true;
+          setSystemAudio(systemAudioRef.current);
           phaseRef.current = "recording";
           startedAt.current = Date.now();
           setPhase("recording");
@@ -191,6 +197,7 @@ export function useTauriSession(
   }, [backend, cleanup]);
 
   return {
+    systemAudio,
     active: phase === "recording",
     busy: phase === "starting" || phase === "saving" || phase === "discarding",
     phase,

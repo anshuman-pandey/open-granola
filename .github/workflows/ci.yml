@@ -51,6 +51,11 @@ jobs:
       - run: npm ci
       - run: npm run build
       - run: npm run build:worker
+      - name: Mocked Core Audio lifecycle (no recording)
+        if: runner.os == 'macOS'
+        run: |
+          clang -mmacosx-version-min=14.4 -fobjc-arc -Wall -Wextra -Werror src-tauri/native/system_audio_test.m -framework Foundation -framework CoreAudio -o "$RUNNER_TEMP/system-audio-test"
+          "$RUNNER_TEMP/system-audio-test"
       - run: cargo fmt --manifest-path src-tauri/Cargo.toml --all --check
       - run: cargo clippy --manifest-path src-tauri/Cargo.toml --locked --workspace --all-targets -- -D warnings
       - run: cargo test --manifest-path src-tauri/Cargo.toml --locked --workspace

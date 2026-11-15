@@ -49,7 +49,7 @@ export interface Backend {
   ask(question: string, meetingId?: string): Promise<string>;
   search(query: string): Promise<SearchHit[]>;
   toggleAction(id: string, done: boolean): Promise<void>;
-  startCapture(meetingHint?: string): Promise<void>;
+  startCapture(meetingHint?: string, systemAudio?: boolean): Promise<void>;
   stopCapture(segments: LiveSegment[], template: string): Promise<string>;
   cancelCapture(): Promise<void>;
   onCaptureError(cb: (message: string) => void): Promise<() => void>;
@@ -355,8 +355,8 @@ const tauriBackend: Backend = {
 
   toggleAction: (id, done) => tauriInvoke("toggle_action_item", { id, done }),
 
-  startCapture: (meetingHint) =>
-    tauriInvoke("start_capture", { meetingHint: meetingHint ?? null }),
+  startCapture: (meetingHint, systemAudio = false) =>
+    tauriInvoke("start_capture", { meetingHint: meetingHint ?? null, systemAudio }),
 
   stopCapture: (segments, template) =>
     tauriInvoke<string>("stop_capture_and_enhance", {

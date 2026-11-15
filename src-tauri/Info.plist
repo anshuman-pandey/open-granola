@@ -4,5 +4,7 @@
 <dict>
     <key>NSMicrophoneUsageDescription</key>
     <string>Open Granola uses your microphone to transcribe meetings on this device. Recordings are not uploaded.</string>
+    <key>NSAudioCaptureUsageDescription</key>
+    <string>When you choose microphone and system audio, Open Granola captures audio from other apps, including call participants and notifications, for local transcription.</string>
 </dict>
 </plist>

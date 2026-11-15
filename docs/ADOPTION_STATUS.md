@@ -14,7 +14,7 @@ Updated **2026-10-12**. This record supplements the existing roadmap without cha
 | Check | Current status | What closes it |
 |---|---|---|
 | Fresh-install recording | Not independently validated | Synthetic microphone → Whisper → correct saved notes, with exact build and model identities |
-| Remote call participants | Not implemented | Platform-specific system audio, permissions and call/headphone tests |
+| Remote call participants | Experimental macOS implementation; hardware unverified | Core Audio tap + microphone aggregate, explicit opt-in; permission/call/headphone/route-change tests still required. Windows/Linux microphone-only. See [scope](SYSTEM_AUDIO.md). |
 | Automatic model setup | Not implemented | Trusted sources, verified downloads/imports and failure handling; current setup is manual |
 | Interrupted live capture | Not recoverable after a crash | Durable checkpoints and crash/restart validation; saved-summary retry is already implemented |
 | Publisher-verified Mac release | No signing secrets configured at review | Developer ID signing, helper inheritance, notarization and another-Mac install test |

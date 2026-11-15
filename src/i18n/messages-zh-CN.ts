@@ -1,5 +1,9 @@
 // Simplified Chinese interface messages. Preserve source content outside this catalog.
 export const simplifiedChineseMessages: Record<string, string> = {
+  "Choose audio sources": "选择音频来源",
+  "Microphone + system audio": "麦克风 + 系统音频",
+  "System audio includes other apps, call participants and notifications. Use headphones and get participants' consent. Audio stays in memory; your summary provider settings still apply.": "系统音频包括其他应用、通话参与者和通知的声音。请使用耳机并征得参与者同意。音频仅保留在内存中；摘要服务提供商设置仍然适用。",
+  "Unchecked: microphone only. System audio is experimental on macOS 14.4 or later.": "未勾选：仅麦克风。系统音频在 macOS 14.4 或更高版本上为实验性功能。",
   "Transcript JSON": "转录 JSON",
   "Transcript JSON downloaded.": "转录 JSON 已下载。",
   "Choose a meeting import smaller than 20 MB.":
