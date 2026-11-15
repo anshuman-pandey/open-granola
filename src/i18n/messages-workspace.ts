@@ -905,5 +905,17 @@ export const workspaceMessages: Record<string, { es: string }> = {
   },
   "Requested summary language: {language}": {
     "es": "Idioma solicitado para el resumen: {language}"
+  },
+  "Choose audio sources": {
+    "es": "Elegir fuentes de audio"
+  },
+  "Microphone + system audio": {
+    "es": "Micrófono + audio del sistema"
+  },
+  "System audio includes other apps, call participants and notifications. Use headphones and get participants' consent. Audio stays in memory; your summary provider settings still apply.": {
+    "es": "El audio del sistema incluye otras aplicaciones, participantes de la llamada y notificaciones. Usa auriculares y obtén el consentimiento de los participantes. El audio permanece en memoria; se siguen aplicando tus ajustes del proveedor de resúmenes."
+  },
+  "Unchecked: microphone only. System audio is experimental on macOS 14.4 or later.": {
+    "es": "Sin marcar: solo micrófono. El audio del sistema es experimental en macOS 14.4 o posterior."
   }
 };

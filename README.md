@@ -23,7 +23,7 @@
 
 **Development preview.** Open Granola records your microphone, transcribes with local Whisper, and turns the transcript into notes using a local model or a provider you connect. Your library stays in a local SQLite database. Cloud summaries send transcript text to the selected provider.
 
-System-audio capture is not implemented: this build does not record the remote side of a call through headphones. Real microphone/model sessions, provider accounts and packaged releases still need end-to-end testing on the intended hardware. The browser preview uses labeled sample meetings.
+On macOS 14.4 or later, recording offers an experimental **Microphone + system audio** option for audio from other apps, including remote call participants. It is off by default; Windows and Linux remain microphone-only. See [system-audio setup and validation limits](docs/SYSTEM_AUDIO.md). Real microphone/model sessions, provider accounts and packaged releases still need end-to-end testing on the intended hardware. The browser preview uses labeled sample meetings.
 
 ## What is implemented
 
@@ -35,7 +35,7 @@ System-audio capture is not implemented: this build does not record the remote s
 - **Local library:** keyword search, questions over retrieved text, actions, commitments, Markdown recipes, JSON import and Markdown export.
 - **Retention controls:** remove expired meetings or purge the local library. See the limits in [Privacy](PRIVACY.md).
 
-Generated notes and commitments need review. Speaker identification, semantic/vector search, calendar integration, direct imports from named meeting services, encrypted audio playback and native system-audio capture are not implemented.
+Generated notes and commitments need review. Speaker identification, semantic/vector search, calendar integration, direct imports from named meeting services and encrypted audio playback are not implemented.
 
 ## Models and connections
 

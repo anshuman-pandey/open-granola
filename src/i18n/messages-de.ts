@@ -522,5 +522,9 @@ export const germanMessages: Record<string, string> = {
   "Summary": "Zusammenfassung",
   "Chapters": "Kapitel",
   "Summary processing history": "Zusammenfassungsverlauf",
-  "Destinations recorded for summary attempts. Failed attempts may still have sent text. A local endpoint may forward requests according to its own configuration.": "Erfasste Ziele für Zusammenfassungsversuche. Auch bei fehlgeschlagenen Versuchen kann Text gesendet worden sein. Ein lokaler Endpunkt kann Anfragen gemäß seiner Konfiguration weiterleiten."
+  "Destinations recorded for summary attempts. Failed attempts may still have sent text. A local endpoint may forward requests according to its own configuration.": "Erfasste Ziele für Zusammenfassungsversuche. Auch bei fehlgeschlagenen Versuchen kann Text gesendet worden sein. Ein lokaler Endpunkt kann Anfragen gemäß seiner Konfiguration weiterleiten.",
+  "Choose audio sources": "Audioquellen wählen",
+  "Microphone + system audio": "Mikrofon + Systemaudio",
+  "System audio includes other apps, call participants and notifications. Use headphones and get participants' consent. Audio stays in memory; your summary provider settings still apply.": "Systemaudio umfasst andere Apps, Gesprächsteilnehmer und Benachrichtigungen. Verwende Kopfhörer und hole die Zustimmung der Teilnehmer ein. Audio bleibt im Arbeitsspeicher; deine Einstellungen für den Zusammenfassungsanbieter gelten weiterhin.",
+  "Unchecked: microphone only. System audio is experimental on macOS 14.4 or later.": "Nicht ausgewählt: nur Mikrofon. Systemaudio ist unter macOS 14.4 oder neuer experimentell."
 };

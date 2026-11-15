@@ -1,5 +1,9 @@
 // Traditional Chinese interface messages. Keep placeholders and confirmation tokens unchanged.
 export const traditionalChineseMessages: Record<string, string> = {
+  "Choose audio sources": "選擇音訊來源",
+  "Microphone + system audio": "麥克風 + 系統音訊",
+  "System audio includes other apps, call participants and notifications. Use headphones and get participants' consent. Audio stays in memory; your summary provider settings still apply.": "系統音訊包含其他應用程式、通話參與者和通知的聲音。請使用耳機並取得參與者同意。音訊僅保留在記憶體中；摘要服務供應商設定仍然適用。",
+  "Unchecked: microphone only. System audio is experimental on macOS 14.4 or later.": "未勾選：僅麥克風。系統音訊在 macOS 14.4 或更新版本上為實驗性功能。",
   "Transcript JSON": "逐字稿 JSON",
   "Transcript JSON downloaded.": "逐字稿 JSON 已下載。",
   "Choose a meeting import smaller than 20 MB.":

@@ -28,6 +28,21 @@ beforeEach(() => {
 });
 
 describe("desktop capture lifecycle", () => {
+  it("passes explicit system-audio consent and never retries as microphone-only", async () => {
+    backend.startCapture.mockRejectedValue(new Error("System audio permission denied"));
+    const { result } = renderHook(() => useTauriSession(vi.fn()));
+    await act(() => result.current.start(true));
+    expect(backend.startCapture).toHaveBeenCalledExactlyOnceWith(undefined, true);
+    expect(result.current.active).toBe(false);
+    expect(result.current.error).toContain("System audio permission denied");
+  });
+  it("labels the combined source without inventing a remote speaker identity", async () => {
+    const { result } = renderHook(() => useTauriSession(vi.fn()));
+    await act(() => result.current.start(true));
+    act(() => emit({ start_ms: 0, end_ms: 1000, speaker: 0, text: "Synthetic", final_: true }));
+    expect(result.current.lines[0].speaker).toBe("Microphone + system audio");
+    expect(result.current.systemAudio).toBe(true);
+  });
   it("reports startup failures and removes subscriptions", async () => {
     backend.startCapture.mockRejectedValue(
       new Error("Microphone permission denied"),

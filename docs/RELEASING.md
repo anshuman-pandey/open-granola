@@ -26,7 +26,7 @@ The installer contains the app and inference helper, **not the model files**.
 4. With LM Studio or Ollama, follow the corresponding [LM Studio](integrations/LM_STUDIO.md) or [Ollama](integrations/OLLAMA.md) guide. The built-in summarizer additionally requires `qwen3-4b-q4.gguf` from a trusted publisher. A renamed GGUF file alone does not prove compatible architecture or acceptable quality.
 5. Refresh the model status and run **Test connection**, then perform a short synthetic recording and inspect the saved transcript and notes.
 
-Model setup remains manual. RAM requirements, speed and note quality need measurements on the exact chosen models and machine; no minimum-memory claim is established by a successful build. The current recording path captures the microphone only, so remote voices through headphones are not recorded.
+Model setup remains manual. RAM requirements, speed and note quality need measurements on the exact chosen models and machine; no minimum-memory claim is established by a successful build. Microphone-only capture remains the default. macOS 14.4+ also offers experimental, explicit-opt-in microphone + system audio through a private Core Audio aggregate. See [system audio](SYSTEM_AUDIO.md); permission, headphone/call, long-session and route-change behavior still require hardware validation.
 
 ## Validation before a public release
 

@@ -24,7 +24,7 @@
 
 **Versión preliminar en desarrollo.** Open Granola graba el micrófono, transcribe con Whisper en tu dispositivo y convierte la transcripción en notas mediante un modelo local o un proveedor que conectes. Tu biblioteca permanece en una base de datos SQLite local. Los resúmenes en la nube envían el texto de la transcripción al proveedor seleccionado.
 
-La captura de audio del sistema no está implementada: esta versión no graba la voz de la otra parte de una llamada que escuchas por auriculares. Todavía falta probar de principio a fin las sesiones reales de micrófono y modelos, las cuentas de proveedores y las versiones empaquetadas en el hardware previsto. La vista previa del navegador utiliza reuniones de ejemplo identificadas como tales.
+En macOS 14.4 o posterior, la opción experimental **Micrófono + audio del sistema** captura audio de otras aplicaciones, incluidos participantes de llamadas. Está desactivada por defecto; Windows y Linux siguen usando solo el micrófono. [Configuración y límites de validación](../SYSTEM_AUDIO.md). Todavía falta probar de principio a fin las sesiones reales de micrófono y modelos, las cuentas de proveedores y las versiones empaquetadas en el hardware previsto. La vista previa del navegador utiliza reuniones de ejemplo identificadas como tales.
 
 ## Funciones implementadas
 
@@ -36,7 +36,7 @@ La captura de audio del sistema no está implementada: esta versión no graba la
 - **Biblioteca local:** búsqueda por palabras clave, preguntas sobre texto recuperado, tareas, compromisos, instrucciones en Markdown, importación JSON y exportación Markdown.
 - **Controles de conservación:** elimina reuniones caducadas o toda la biblioteca local. Consulta sus límites en [Privacidad](../../PRIVACY.md).
 
-Las notas y los compromisos generados necesitan revisión. No están implementados la identificación de hablantes, la búsqueda semántica/vectorial, la integración de calendario, las importaciones directas desde servicios de reuniones específicos, la reproducción de audio cifrado ni la captura nativa del audio del sistema.
+Las notas y los compromisos generados necesitan revisión. No están implementados la identificación de hablantes, la búsqueda semántica/vectorial, la integración de calendario, las importaciones directas desde servicios de reuniones específicos ni la reproducción de audio cifrado.
 
 <a id="models-and-connections"></a>
 

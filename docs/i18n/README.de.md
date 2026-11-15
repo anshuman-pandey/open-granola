@@ -7,7 +7,7 @@
 
 **Entwicklungsvorschau.** Open Granola zeichnet dein Mikrofon auf, transkribiert mit lokalem Whisper und wandelt das Transkript mit einem lokalen Modell oder einem von dir verbundenen Anbieter in Notizen um. Deine Bibliothek bleibt in einer lokalen SQLite-Datenbank. Cloud-Zusammenfassungen senden Transkripttext an den gewählten Anbieter.
 
-Die Aufnahme von Systemaudio ist nicht implementiert: Diese Version zeichnet die Gegenseite eines Anrufs über Kopfhörer nicht auf. Echte Mikrofon-/Modellsitzungen, Anbieterkonten und gebündelte Veröffentlichungen müssen noch auf der vorgesehenen Hardware vollständig getestet werden. Die Browservorschau verwendet gekennzeichnete Beispielmeetings.
+Unter macOS 14.4 oder neuer gibt es die experimentelle Option **Mikrofon + Systemaudio** für Audio anderer Apps, einschließlich Gesprächsteilnehmern. Sie ist standardmäßig deaktiviert; Windows und Linux bleiben auf das Mikrofon beschränkt. [Einrichtung und Validierungsgrenzen](../SYSTEM_AUDIO.md). Echte Mikrofon-/Modellsitzungen, Anbieterkonten und gebündelte Veröffentlichungen müssen noch auf der vorgesehenen Hardware vollständig getestet werden. Die Browservorschau verwendet gekennzeichnete Beispielmeetings.
 
 ## Was implementiert ist
 
@@ -19,7 +19,7 @@ Die Aufnahme von Systemaudio ist nicht implementiert: Diese Version zeichnet die
 - **Lokale Bibliothek:** Stichwortsuche, Fragen zu gefundenem Text, Aufgaben, Zusagen, Markdown-Vorlagen, JSON-Import und Markdown-Export.
 - **Aufbewahrung:** Abgelaufene Meetings entfernen oder die lokale Bibliothek leeren. Einschränkungen stehen unter [Datenschutz](../../PRIVACY.md).
 
-Generierte Notizen und Zusagen müssen geprüft werden. Sprecheridentifizierung, semantische/Vektorsuche, Kalenderintegration, direkte Importe aus bestimmten Meetingdiensten, verschlüsselte Audiowiedergabe und native Systemaudioaufnahme sind nicht implementiert.
+Generierte Notizen und Zusagen müssen geprüft werden. Sprecheridentifizierung, semantische/Vektorsuche, Kalenderintegration, direkte Importe aus bestimmten Meetingdiensten und verschlüsselte Audiowiedergabe sind nicht implementiert.
 
 <a id="modelle"></a>
 ## Modelle und Verbindungen

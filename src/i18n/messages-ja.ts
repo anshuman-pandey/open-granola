@@ -1,5 +1,9 @@
 // Japanese interface translations. Keep keys and placeholders aligned with the English catalogs.
 export const japaneseMessages: Record<string, string> = {
+  "Choose audio sources": "音声ソースを選択",
+  "Microphone + system audio": "マイク＋システム音声",
+  "System audio includes other apps, call participants and notifications. Use headphones and get participants' consent. Audio stays in memory; your summary provider settings still apply.": "システム音声には他のアプリ、通話相手、通知の音声が含まれます。ヘッドホンを使用し、参加者の同意を得てください。音声はメモリ内に保持され、要約プロバイダーの設定は引き続き適用されます。",
+  "Unchecked: microphone only. System audio is experimental on macOS 14.4 or later.": "未選択の場合はマイクのみです。システム音声はmacOS 14.4以降で試験的に利用できます。",
   "Transcript JSON": "文字起こしJSON",
   "Transcript JSON downloaded.": "文字起こしJSONをダウンロードしました。",
   "Choose a meeting import smaller than 20 MB.":
