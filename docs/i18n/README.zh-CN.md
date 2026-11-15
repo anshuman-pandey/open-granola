@@ -17,7 +17,7 @@
   <a href="../COMPETITIVE_RESEARCH.md">调研与优先事项</a>
 </p>
 
-[English](../../README.md) · [हिन्दी](README.hi.md) · [Español](README.es.md) · [日本語](README.ja.md) · **简体中文** · [繁體中文](README.zh-TW.md) · [语言支持](../I18N.md)
+[English](../../README.md) · [Deutsch](README.de.md) · [Español](README.es.md) · [日本語](README.ja.md) · **简体中文** · [繁體中文](README.zh-TW.md) · [语言支持](../I18N.md)
 
 <!-- English source: README.md at a25a58aece9c5337340c352eb431b83a041d1d47; reviewed 2026-10-10. -->
 <!-- Setup/export links updated with the adoption-readiness branch on 2026-10-12. -->

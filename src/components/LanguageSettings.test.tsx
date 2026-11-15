@@ -201,9 +201,9 @@ describe("independent language preferences", () => {
       screen.getByRole("button", { name: "Save meeting languages" }),
     ).toBeDisabled();
     fireEvent.change(screen.getByLabelText("Interface language"), {
-      target: { value: "hi" },
+      target: { value: "de" },
     });
-    expect(document.documentElement.lang).toBe("hi");
+    expect(document.documentElement.lang).toBe("de");
     expect(backend.getLanguageSettings).not.toHaveBeenCalled();
     expect(backend.saveLanguageSettings).not.toHaveBeenCalled();
   });

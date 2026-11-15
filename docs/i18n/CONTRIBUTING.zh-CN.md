@@ -1,6 +1,6 @@
 # 为 Open Granola 贡献
 
-[English](../../CONTRIBUTING.md) · [हिन्दी](CONTRIBUTING.hi.md) · [Español](CONTRIBUTING.es.md) · [日本語](CONTRIBUTING.ja.md) · **简体中文** · [繁體中文](CONTRIBUTING.zh-TW.md) · [翻译指南](../I18N.md)
+[English](../../CONTRIBUTING.md) · [Deutsch](CONTRIBUTING.de.md) · [Español](CONTRIBUTING.es.md) · [日本語](CONTRIBUTING.ja.md) · **简体中文** · [繁體中文](CONTRIBUTING.zh-TW.md) · [翻译指南](../I18N.md)
 
 <!-- English source: CONTRIBUTING.md at a25a58aece9c5337340c352eb431b83a041d1d47; reviewed 2026-10-10. -->
 

@@ -101,12 +101,6 @@
   .font-mono2 {
     font-family: "JetBrains Mono", ui-monospace, monospace;
   }
-  .font-display:lang(hi) {
-    font-family:
-      "Kohinoor Devanagari", "Nirmala UI", "Noto Sans Devanagari", sans-serif;
-    letter-spacing: normal;
-    line-height: 1.35;
-  }
   :root:lang(ja) {
     --cjk-font:
       "Hiragino Kaku Gothic ProN", "Yu Gothic", "Meiryo", "Noto Sans JP",

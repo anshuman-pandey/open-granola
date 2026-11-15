@@ -1,3 +1,4 @@
+import { germanMessages } from "./messages-de";
 import { workspaceMessages } from "./messages-workspace";
 import { settingsMessages } from "./messages-settings";
 import { japaneseMessages } from "./messages-ja";
@@ -6,7 +7,7 @@ import { traditionalChineseMessages } from "./messages-zh-TW";
 
 export const interfaceLanguages = [
   { locale: "en", label: "English", intlLocale: "en" },
-  { locale: "hi", label: "हिन्दी", intlLocale: "hi-IN" },
+  { locale: "de", label: "Deutsch", intlLocale: "de-DE" },
   { locale: "es", label: "Español", intlLocale: "es" },
   { locale: "ja", label: "日本語", intlLocale: "ja" },
   { locale: "zh-CN", label: "简体中文", intlLocale: "zh-CN" },
@@ -22,12 +23,7 @@ export const translationCatalogs: Record<
   Exclude<Locale, "en">,
   Record<string, string>
 > = {
-  hi: Object.fromEntries(
-    Object.entries(sourceMessages).map(([source, messages]) => [
-      source,
-      messages.hi,
-    ]),
-  ),
+  de: germanMessages,
   es: Object.fromEntries(
     Object.entries(sourceMessages).map(([source, messages]) => [
       source,

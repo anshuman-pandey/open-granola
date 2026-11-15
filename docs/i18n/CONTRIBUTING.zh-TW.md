@@ -1,7 +1,7 @@
 <!-- Translation of CONTRIBUTING.md at a25a58aece9c5337340c352eb431b83a041d1d47; reviewed 2026-10-10. English is the source of truth. -->
 # 為 Open Granola 貢獻
 
-[English](../../CONTRIBUTING.md) · [हिन्दी](CONTRIBUTING.hi.md) · [Español](CONTRIBUTING.es.md) · [日本語](CONTRIBUTING.ja.md) · [简体中文](CONTRIBUTING.zh-CN.md) · 繁體中文 · [翻譯指南](../I18N.md)
+[English](../../CONTRIBUTING.md) · [Deutsch](CONTRIBUTING.de.md) · [Español](CONTRIBUTING.es.md) · [日本語](CONTRIBUTING.ja.md) · [简体中文](CONTRIBUTING.zh-CN.md) · 繁體中文 · [翻譯指南](../I18N.md)
 
 維持以本機處理為預設，並明確說明每個選用的遠端目的地。功能必須說明限制；模型、權限或平台功能無法使用時，必須清楚顯示錯誤。
 
