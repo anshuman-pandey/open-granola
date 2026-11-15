@@ -152,21 +152,25 @@ fn microphone(
             "No microphone found. Connect an input device and check microphone permission.",
         )?
     };
-    let config = mic
-        .default_input_config()
-        .context("could not read microphone configuration")?;
+    let config = if system.is_some() {
+        let microphone = host
+            .default_input_device()
+            .context("Microphone disappeared during system-audio startup")?;
+        let rate = microphone.default_input_config()?.sample_rate();
+        let channels = microphone
+            .supported_input_configs()?
+            .next()
+            .context("Microphone has no supported input layout")?
+            .channels();
+        // Core Audio's legacy default stream format can expose only the first
+        // stream of an aggregate. Enumerated configs sum all input buffers.
+        combined_config(mic.supported_input_configs()?, channels, rate)?
+    } else {
+        mic.default_input_config()
+            .context("could not read microphone configuration")?
+    };
     if config.channels() == 0 {
         bail!("The capture device has no input channels.");
-    }
-    if system.is_some() {
-        let microphone_channels = host
-            .default_input_device()
-            .context("Microphone disappeared during system-audio startup")?
-            .default_input_config()?
-            .channels();
-        if Some(config.channels()) != microphone_channels.checked_add(1) {
-            bail!("The private capture device does not expose the expected microphone and mono system-audio channels. No microphone-only fallback was started.");
-        }
     }
     let rate = config.sample_rate().0 as usize;
     let resampler = AudioResampler::new(rate)?;
@@ -184,6 +188,20 @@ fn microphone(
         other => bail!("Unsupported microphone sample format: {other:?}"),
     };
     Ok((stream, consumer, resampler))
+}
+
+fn combined_config(
+    mut ranges: impl Iterator<Item = cpal::SupportedStreamConfigRange>,
+    microphone_channels: u16,
+    rate: cpal::SampleRate,
+) -> Result<cpal::SupportedStreamConfig> {
+    let channels = microphone_channels
+        .checked_add(1)
+        .context("Too many input channels")?;
+    let range = ranges.find(|range| {
+        range.channels() == channels && range.min_sample_rate() <= rate && rate <= range.max_sample_rate()
+    }).context("The private capture device does not expose the expected microphone and mono system-audio channels at the microphone rate. No microphone-only fallback was started.")?;
+    Ok(range.with_sample_rate(rate))
 }
 
 fn build_stream<T>(
@@ -319,6 +337,28 @@ pub const SYSTEM_AUDIO_SUPPORTED: bool = loopback::SUPPORTED;
 #[cfg(test)]
 mod tests {
     use super::*;
+    #[test]
+    fn aggregate_uses_complete_layout_and_rejects_partial_or_wrong_rate() {
+        let range = |channels| {
+            cpal::SupportedStreamConfigRange::new(
+                channels,
+                cpal::SampleRate(44100),
+                cpal::SampleRate(48000),
+                cpal::SupportedBufferSize::Unknown,
+                cpal::SampleFormat::F32,
+            )
+        };
+        let selected = combined_config(
+            vec![range(2), range(3)].into_iter(),
+            2,
+            cpal::SampleRate(48000),
+        )
+        .unwrap();
+        assert_eq!(selected.channels(), 3);
+        assert_eq!(selected.sample_rate().0, 48000);
+        assert!(combined_config(vec![range(2)].into_iter(), 2, cpal::SampleRate(48000)).is_err());
+        assert!(combined_config(vec![range(3)].into_iter(), 2, cpal::SampleRate(96000)).is_err());
+    }
     #[test]
     fn callback_watchdog_accepts_silence_but_rejects_stalled_capture() {
         let mut watch = InputFreshness::new();
